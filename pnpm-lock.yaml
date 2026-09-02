@@ -85,6 +85,12 @@ importers:
         specifier: 22.1.6
         version: 22.1.6
 
+  .angular/cache/angular-cli-tmp-packages-PzJOcP:
+    dependencies:
+      '@angular/cli':
+        specifier: 22.1.6
+        version: 22.1.6
+
 packages:
 
   '@acemir/cssom@0.9.31':
@@ -5833,7 +5839,7 @@ snapshots:
     dependencies:
       hosted-git-info: 10.1.1
       proc-log: 7.0.0
-      semver: 7.8.1
+      semver: 7.8.5
       validate-npm-package-name: 8.0.0
 
   npm-packlist@10.0.4:
