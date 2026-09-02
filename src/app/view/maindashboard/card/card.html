@@ -1,0 +1,27 @@
+<!-- Card 1 -->
+
+<div class="absolute top-0 left-0 w-1 h-full bg-secondary"></div>
+<div class="flex justify-between items-start">
+  <div>
+    <p class="text-on-surface-variant font-label-md uppercase">{{ title() }}</p>
+    <h3 class="font-display-lg text-display-lg text-primary mt-1">{{ dataNumber() }}</h3>
+  </div>
+  <span
+    class="material-symbols-outlined text-secondary-container bg-secondary/10 p-2 rounded"
+    data-icon="book_online"
+    >{{ dataIcon() }}</span
+  >
+</div>
+<div [class]="classText()">
+  <div class="bg-secondary h-full" [style.width.%]="barPercentage()"></div>
+  <span class="material-symbols-outlined text-xs mr-1" data-icon="trending_up">{{
+    emojiIcon()
+  }}</span>
+  {{ dataPercentage() }}
+</div>
+@if (showBar()) {
+  <div class="w-full bg-surface-variant h-1 mt-4 rounded-full overflow-hidden">
+    <div class="bg-secondary h-full" [style.width.%]="dataPercentage()"></div>
+    <p class="mt-1 text-[10px] text-on-surface-variant">{{ dataPercentage() }} % Ocupación</p>
+  </div>
+}

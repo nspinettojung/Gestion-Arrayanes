@@ -1,0 +1,125 @@
+<div class="max-w-7xl mx-auto space-y-gutter">
+  <!-- Header Section -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+      <h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">
+        Gestión de Huéspedes
+      </h2>
+      <p class="text-on-surface-variant font-body-md">
+        Administra y organiza la base de datos de tus clientes habituales y nuevos.
+      </p>
+    </div>
+  </div>
+
+  <gda-table [title]="'Listado de clientes'">
+    <tr class="bg-surface-container-high border-b border-outline-variant " column-header>
+      @for (col of columnsName(); track $index) {
+        <th
+          class="px-space-md py-4 text-xs font-extrabold text-on-surface-variant uppercase tracking-wider"
+        >
+          {{ col }}
+        </th>
+      }
+    </tr>
+    @for (client of pagedClients(); track client.id) {
+      <!-- Row 1 -->
+      <tr class="zebra-stripe hover:bg-secondary-container/5 transition-colors group" table-body>
+        <td class="px-space-md py-4">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-8 h-8 rounded bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs"
+            >
+              {{ client.clientName | initials: client.clientLastName }}
+            </div>
+            <div>
+              <p class="font-bold text-sm text-primary">
+                {{ client.clientName }} {{ client.clientLastName }}
+              </p>
+              <p class="text-[10px] text-on-surface-variant">ID: {{ client.clientDni }}</p>
+            </div>
+          </div>
+        </td>
+        <td class="px-space-md py-4">
+          <div class="text-xs space-y-0.5">
+            <p class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">phone</span>
+              {{ client.clientPhone }}
+            </p>
+          </div>
+        </td>
+        <td class="px-space-md py-4 text-xs font-medium">
+          {{ client.lastCheckIn ? (client.lastCheckIn | date: 'dd/MM/yyyy') : 'Nunca' }}
+        </td>
+        <td class="px-space-md py-4 text-right flex flex-colum justify-center">
+          <button
+            class="flex p-1.5 hover:bg-secondary/10 rounded-xl text-secondary transition-colors justify-center"
+          >
+            <span class="material-symbols-outlined" (click)="openEditClient(client)"
+              >edit_square</span
+            >
+          </button>
+          <button
+            class="flex p-1.5 hover:bg-error/10 rounded-xl text-error transition-colors justify-center"
+          >
+            <span class="material-symbols-outlined" (click)="deleteClient(client.id)">delete</span>
+          </button>
+        </td>
+      </tr>
+    }
+  </gda-table>
+</div>
+
+<form [formGroup]="clientForm" (ngSubmit)="onEdit()">
+  <gda-modal
+    [title]="'Editar Cliente'"
+    [show]="showModal"
+    (close)="showModal = false"
+     >
+    <div
+      class="border-b border-outline-variant pb-space-sm mb-space-md flex items-center gap-2 form-title"
+    >
+      <span class="material-symbols-outlined text-primary">person</span>
+      <h4 class="font-headline-sm text-headline-sm text-primary">Información del Huésped</h4>
+    </div>
+
+    <div class="grid grid-cols-2 gap-space-md form-body">
+      <div>
+        <label>Nombre</label>
+        <input
+          class="w-full px-3 py-2"
+          type="text"
+          placeholder="Nombre"
+          formControlName="clientName"
+        />
+      </div>
+
+      <div>
+        <label>Apellido</label>
+        <input
+          class="w-full px-3 py-2"
+          type="text"
+          placeholder="Apellido"
+          formControlName="clientLastName"
+        />
+      </div>
+      <div>
+        <label>DNI/Pasaporte</label>
+        <input
+          class="w-full px-3 py-2"
+          type="text"
+          placeholder="DNI/Pasaporte"
+          formControlName="clientDni"
+        />
+      </div>
+      <div>
+        <label>Teléfono</label>
+        <input
+          class="w-full px-3 py-2"
+          type="tel"
+          placeholder="Teléfono"
+          formControlName="clientPhone"
+        />
+      </div>
+    </div>
+  </gda-modal>
+</form>

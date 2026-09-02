@@ -1,0 +1,67 @@
+<!-- SideNavBar -->
+<aside
+  class="w-[240px] h-screen fixed left-0 top-0 bg-primary dark:bg-primary border-r border-outline shadow-sm flex flex-col h-full z-20"
+>
+  <div class="p-space-md border-b border-white/10">
+    <h1
+      class="font-headline-sm text-headline-sm text-on-primary-container font-extrabold tracking-tight"
+    >
+      Gestión Arrayanes
+    </h1>
+    <p class="text-[10px] uppercase tracking-widest text-on-primary-container/60 font-bold mt-1">
+      Enterprise Management
+    </p>
+  </div>
+  <nav class="flex-1 mt-space-md overflow-y-auto">
+    <div class="px-space-sm space-y-1">
+      <!-- Dashboard -->
+      <a
+        class="flex items-center gap-3 px-space-md py-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-primary-container/50 transition-colors rounded-lg group border-l-4 border-transparent focus:border-secondary-container focus:outline-none"
+        [routerLink]="'/dashboard'"
+      >
+        <span class="material-symbols-outlined text-lg" data-icon="dashboard">dashboard</span>
+        <span class="font-body-md text-body-md">Dashboard</span>
+      </a>
+      <!-- Calendar -->
+      <a
+        class="flex items-center gap-3 px-space-md py-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-primary-container/50 transition-colors rounded-lg group border-l-4 border-transparent focus:border-secondary-container focus:outline-none"
+        [routerLink]="'/booking'"
+      >
+        <span class="material-symbols-outlined text-lg" data-icon="calendar_month"
+          >calendar_month</span
+        >
+        <span class="font-body-md text-body-md">Reservas</span>
+      </a>
+      <!-- Clients (ACTIVE) -->
+      <a
+        class="flex items-center gap-3 px-space-md py-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-primary-container/50 rounded-lg group border-l-4 border-transparent focus:border-secondary-container focus:outline-none"
+        [routerLink]="'/clients'"
+      >
+        <span
+          class="material-symbols-outlined text-lg"
+          data-icon="group"
+          style="font-variation-settings: 'FILL' 1"
+          >group</span
+        >
+        <span class="font-body-md text-body-md font-semibold">Clientes</span>
+      </a>
+      <!-- Settings -->
+      <a
+        class="flex items-center gap-3 px-space-md py-3 text-on-primary-container/70 hover:text-on-primary-container hover:bg-primary-container/50 transition-colors rounded-lg group border-l-4 border-transparent focus:border-secondary-container focus:outline-none"
+        [routerLink]="'/apartments'"
+      >
+        <span class="material-symbols-outlined text-lg" data-icon="apartment">apartment</span>
+        <span class="font-body-md text-body-md">Departamentos</span>
+      </a>
+    </div>
+  </nav>
+  <div class="p-space-md bg-primary-container/20 border-t border-white/5 mt-auto">
+    <button
+      class="w-full btn-nimbus-primary text-on-primary py-2.5 rounded shadow-sm text-sm font-bold flex items-center justify-center gap-2 hover:brightness-110 active:brightness-90 transition-all"
+      [routerLink]="'/reservation'"
+    >
+      <span class="material-symbols-outlined text-sm">add_circle</span>
+      Nueva Reserva
+    </button>
+  </div>
+</aside>

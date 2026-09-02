@@ -1,0 +1,134 @@
+<div class="flex overflow-hidden rounded-xl h-full w-full">
+  <div class="grow p-space-md overflow-y-auto bg-surface">
+    <gda-calendar (daySelected)="onDaySelected($event)"></gda-calendar>
+  </div>
+
+  <!-- Right Side Detail Panel -->
+  <aside
+    class="w-[320px] bg-surface-container border-l border-outline-variant flex flex-col overflow-hidden"
+  >
+    <div class="p-space-md border-b border-outline-variant metal-header">
+      <h3 class="font-headline-sm text-headline-sm text-primary">
+        {{ selectedDay ? 'Día: ' + selectedDay : 'No hay Día seleccionado' }}
+      </h3>
+      <p class="text-body-sm text-on-surface-variant">Calendario de hoy &amp; Actividad</p>
+    </div>
+    <div class="grow overflow-y-auto p-space-md space-y-space-md">
+      <!-- Summary Stats -->
+      <div class="grid grid-cols-2 gap-space-sm">
+        <div
+          class="bg-white p-space-sm border border-outline-variant rounded shadow-sm text-center"
+        >
+          <p class="text-label-md uppercase text-on-surface-variant">Check-ins</p>
+          <p class="text-headline-sm font-bold text-secondary">{{ arrivalsCount() }}</p>
+        </div>
+        <div
+          class="bg-white p-space-sm border border-outline-variant rounded shadow-sm text-center"
+        >
+          <p class="text-label-md uppercase text-on-surface-variant">Check-outs</p>
+          <p class="text-headline-sm font-bold text-primary">{{ departuresCount() }}</p>
+        </div>
+      </div>
+      <!-- Activity List -->
+      <div class="space-y-space-sm">
+        <h4
+          class="text-label-md font-bold uppercase text-on-surface-variant tracking-wider flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined text-[16px]" data-icon="login">login</span>
+          Llegada
+        </h4>
+        @for (client of arrivalsByDate(); track $index) {
+          <div
+            class="bg-white border border-outline-variant rounded shadow-sm hover:shadow transition-all overflow-hidden group cursor-pointer"
+          >
+            <div class="flex items-center gap-3 p-3">
+              <div
+                class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary font-bold"
+              >
+                {{ client.clientName | initials: client.clientLastName }}
+              </div>
+              <div class="grow overflow-hidden">
+                <p class="text-body-sm font-bold truncate">
+                  {{ client.clientName }} {{ client.clientLastName }}
+                </p>
+                <p class="text-[11px] text-on-surface-variant">{{ client.apartmentName }}</p>
+              </div>
+              <span
+                class="material-symbols-outlined text-on-surface-variant/40 group-hover:text-secondary transition-all"
+                data-icon="more_vert"
+                >more_vert</span
+              >
+            </div>
+          </div>
+        }
+      </div>
+      <div class="space-y-space-sm">
+        <h4
+          class="text-label-md font-bold uppercase text-on-surface-variant tracking-wider flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined text-[16px]" data-icon="logout">logout</span>
+          Salida
+        </h4>
+        @for (client of departuresByDate(); track $index) {
+          <div
+            class="bg-white border border-outline-variant rounded shadow-sm hover:shadow transition-all overflow-hidden opacity-80"
+          >
+            <div class="flex items-center gap-3 p-3 bg-surface-container-lowest/50">
+              <div
+                class="w-10 h-10 rounded-full bg-outline/10 flex items-center justify-center text-outline font-bold"
+              >
+                {{ client.clientName | initials: client.clientLastName }}
+              </div>
+              <div class="grow">
+                <p class="text-body-sm font-bold truncate">
+                  {{ client.clientName }} {{ client.clientLastName }}
+                </p>
+                <p class="text-[11px] text-on-surface-variant">{{ client.apartmentName }}</p>
+              </div>
+              <span
+                class="text-[10px] font-bold text-success text-green-600 bg-green-50 px-1 border border-green-200"
+                >DONE</span
+              >
+            </div>
+          </div>
+        }
+      </div>
+      <!-- Action Spotlight Card -->
+      <div
+        class="bg-primary text-on-primary p-space-md rounded-xl shadow-lg relative overflow-hidden mt-space-xl"
+      >
+        <div class="relative z-10">
+          <p class="text-label-md font-bold text-secondary-container mb-1">System Insight</p>
+          <p class="text-body-sm leading-snug">
+            Oct 3 has high demand. Adjust pricing for the remaining 4 units.
+          </p>
+          <button
+            class="mt-3 text-[11px] font-bold bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full flex items-center gap-1 hover:brightness-110"
+          >
+            View Pricing
+            <span class="material-symbols-outlined text-[14px]" data-icon="trending_up"
+              >trending_up</span
+            >
+          </button>
+        </div>
+        <div class="absolute -right-4 -bottom-4 opacity-10">
+          <span
+            class="material-symbols-outlined text-[100px]"
+            data-icon="analytics"
+            style="font-variation-settings: 'FILL' 1"
+            >analytics</span
+          >
+        </div>
+      </div>
+    </div>
+    <!-- Quick Action Footer -->
+    <div class="p-space-md border-t border-outline-variant bg-white">
+      <button
+        class="w-full bg-surface-container border border-outline-variant py-2 text-body-sm font-bold hover:bg-surface-container-high active:bg-surface-container-highest transition-all rounded flex items-center justify-center gap-2"
+      >
+        <span class="material-symbols-outlined text-[18px]" data-icon="print">print</span>
+        Daily Report
+      </button>
+    </div>
+  </aside>
+</div>

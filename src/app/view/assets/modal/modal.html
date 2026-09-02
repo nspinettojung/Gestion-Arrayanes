@@ -1,0 +1,31 @@
+@if (show()) {
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-200 max-h-[90vh] overflow-y-auto">
+      <h2 class="text-lg font-bold mb-4">{{ title() }}</h2>
+
+      <div class="grid gap-space-lg">
+        <div class="col-span-12 lg:col-span-8 space-y-space-lg">
+          <div
+            class="bg-surface-container-lowest border border-outline-variant shadow-sm p-space-lg"
+          >
+            <ng-content select=".form-title"></ng-content>
+
+            <ng-content select=".form-body"></ng-content>
+          </div>
+
+          <div class="flex justify-end gap-2 mt-4">
+            <button type="button" (click)="onClose()" class="px-4 py-2 bg-gray-300 rounded">
+              Cancelar
+            </button>
+            <button
+              type="submit"
+                       class="px-4 py-2 bg-primary text-white rounded"
+            >
+              Guardar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}

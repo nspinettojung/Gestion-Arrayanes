@@ -1,0 +1,47 @@
+<div class="pt-4">
+  <gda-table [title]="'Historial'">
+    <tr class="" column-header>
+      @for (columnName of columnsName(); track $index) {
+        <th class="px-space-md py-3 border-b border-outline-variant font-bold">{{ columnName }}</th>
+      }
+    </tr>
+    @for (booking of pagedBookings(); track $index) {
+      <tr class="hover:bg-surface-container-low transition-colors group" table-body>
+        <td class="px-space-md py-4">
+          <div class="flex items-center space-x-3">
+            <div
+              class="h-8 w-8 rounded bg-primary-fixed text-primary flex items-center justify-center font-bold text-xs"
+            >
+              {{ booking.clientName | initials: booking.clientLastName }}
+            </div>
+            <div>
+              <p class="font-body-md font-semibold text-primary">
+                {{ booking.clientName }} {{ booking.clientLastName }}
+              </p>
+            </div>
+          </div>
+        </td>
+
+        <td class="px-space-md py-4 text-on-surface-variant">
+          {{ booking.apartmentName }}
+        </td>
+        <td class="px-space-md py-4 text-on-surface-variant">{{ booking.amountPeople }}</td>
+        <td class="px-space-md py-4 text-on-surface-variant">
+          {{ booking.arrivalDate ? (booking.arrivalDate | date: 'd MMMM') : 'No hay fecha' }}
+          -
+          {{ booking.departureDate ? (booking.departureDate | date: 'd MMMM') : 'No hay fecha' }}
+        </td>
+        <td class="px-space-md py-4 text-on-surface-variant">
+          {{ booking.totalPrice | currency: 'ARS' : 'code' : '1.0-0' }}
+        </td>
+        <td class="px-space-md py-4 text-right flex flex-colum justify-center">
+          <button
+            class="flex p-1.5 hover:bg-error/10 rounded-xl text-error transition-colors justify-center"
+          >
+            <span class="material-symbols-outlined">delete</span>
+          </button>
+        </td>
+      </tr>
+    }
+  </gda-table>
+</div>

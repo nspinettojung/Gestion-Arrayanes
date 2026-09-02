@@ -1,0 +1,145 @@
+<div class="max-w-7xl mx-auto space-y-gutter">
+  <!-- Header Section -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+      <h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">
+        Gestión de Departamentos
+      </h2>
+      <p class="text-on-surface-variant font-body-md">
+        Administra y organiza la base de datos de tus departamentos actuales y nuevos.
+      </p>
+    </div>
+  </div>
+  <!-- Advanced Filters Bar -->
+  <div>
+    <gda-table [title]="'Listado de Departamentos'">
+      <button
+        class="ml-space-sm bg-secondary text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:brightness-105 active:scale-95 transition-all flex items-center gap-2"
+        add-button
+        (click)="openAddApart()"
+      >
+        <span class="material-symbols-outlined text-sm">home</span>
+        Agregar Departamentos
+      </button>
+      <tr class="bg-surface-container-high border-b border-outline-variant" column-header>
+        @for (col of columnsName(); track $index) {
+          <th
+            class="px-space-md py-4 text-xs font-extrabold text-on-surface-variant uppercase tracking-wider"
+          >
+            {{ col }}
+          </th>
+        }
+      </tr>
+      @for (apart of apatmentList(); track $index) {
+        <!-- Row 1 -->
+        <tr class="zebra-stripe hover:bg-secondary-container/5 transition-colors group" table-body>
+          <td class="px-space-md py-4">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-8 h-8 rounded bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs"
+              >
+                AP
+              </div>
+              <div>
+                <p class="font-bold text-sm text-primary">{{ apart.apartmentName }}</p>
+                <p class="text-[10px] text-on-surface-variant">ID: {{ apart.id }}</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-space-md py-4">
+            <div class="text-xs space-y-0.5">
+              <p class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">man</span>
+                {{ apart.apartmentMaxNumber }}
+              </p>
+            </div>
+          </td>
+          <td class="px-space-md py-4">
+            <div class="flex flex-col">
+              @if (editingId() === apart.id) {
+                <div class="flex items-center gap-2">
+                  <input
+                    type="number"
+                    class="w-24 px-2 py-1 border rounded"
+                    [value]="apart.price"
+                    #priceInput
+                  />
+                  <button
+                    class="px-2 py-1 bg-primary text-white rounded"
+                    (click)="savePrice(apart.id, priceInput.value)"
+                  >
+                    ✔
+                  </button>
+                  <button class="px-2 py-1 bg-error text-white rounded" (click)="cancelEdit()">
+                    ✖
+                  </button>
+                </div>
+              } @else {
+                <span class="text-[10px] text-on-surface-variant">Total: ${{ apart.price }}</span>
+              }
+            </div>
+          </td>
+          <td class="px-space-md py-4 text-right flex flex-colum justify-center">
+            <button
+              class="flex p-1.5 hover:bg-secondary/10 rounded-xl text-secondary transition-colors justify-center"
+              (click)="startEdit(apart.id)"
+            >
+              <span class="material-symbols-outlined">edit_square</span>
+            </button>
+            <button
+              class="flex p-1.5 hover:bg-error/10 rounded-xl text-error transition-colors justify-center"
+              (click)="deleteApartment(apart.id)"
+            >
+              <span class="material-symbols-outlined">delete</span>
+            </button>
+          </td>
+        </tr>
+      }
+    </gda-table>
+  </div>
+</div>
+
+<form [formGroup]="apartForm" (ngSubmit)="createApartment()">
+  <gda-modal [title]="'Agregar Departamento'" [show]="showModal" (close)="showModal = false">
+    <div
+      class="border-b border-outline-variant pb-space-sm mb-space-md flex items-center gap-2 form-title"
+    >
+      <span class="material-symbols-outlined text-primary">apartment</span>
+      <h4 class="font-headline-sm text-headline-sm text-primary">Información del Departamento</h4>
+    </div>
+
+    <div class="grid grid-cols-1 gap-space-md form-body">
+      <div class="grid grid-cols-2 gap-space-md">
+        <div>
+          <label>Nombre</label>
+          <input
+            class="w-full px-3 py-2"
+            type="text"
+            placeholder="Nombre"
+            formControlName="apartmentName"
+          />
+        </div>
+        <div>
+          <label>Cantidad Max. Personas</label>
+          <input
+            class="w-full px-3 py-2"
+            type="number"
+            placeholder="Cantidad Max. Personas"
+            formControlName="apartmentMaxNumber"
+          />
+        </div>
+      </div>
+      <div class="w-full">
+        <div>
+          <label>Precio</label>
+          <input
+            class="w-full px-3 py-2"
+            type="number"
+            placeholder="Precio"
+            formControlName="price"
+          />
+        </div>
+      </div>
+    </div>
+  </gda-modal>
+</form>

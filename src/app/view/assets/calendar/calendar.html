@@ -1,0 +1,78 @@
+<div class="grow p-space-md overflow-y-auto bg-surface">
+  <div class="flex items-center justify-between mb-space-md">
+    <div class="flex items-center gap-4">
+      <h2 class="font-headline-md text-headline-md">{{ monthName | titlecase }}</h2>
+    </div>
+    <div class="flex bg-surface-container border border-outline-variant rounded-lg p-1">
+      <button
+        class="p-1 hover:bg-surface-container-high rounded transition-all"
+        (click)="previousMonth()"
+      >
+        ◀
+      </button>
+
+      <button class="px-4 py-1 text-body-sm font-bold" (click)="goToToday()">Hoy</button>
+
+      <button
+        class="p-1 hover:bg-surface-container-high rounded transition-all"
+        (click)="nextMonth()"
+      >
+        ▶
+      </button>
+    </div>
+  </div>
+
+  <div class="border border-outline-variant rounded-xl overflow-hidden bg-white shadow-sm">
+    <!-- Cabecera -->
+
+    <div class="calendar-grid metal-header border-b border-outline-variant">
+      @for (day of weekDays; track day) {
+        <div class="week-day">
+          {{ day }}
+        </div>
+      }
+    </div>
+
+    <!-- Días -->
+
+    <div class="calendar-grid h-[calc(100vh-280px)] min-h-125">
+      @for (day of days; track day.date) {
+        <div
+          (click)="selectDay(day)"
+          [ngClass]="{
+            'bg-secondary-container/5 ring-2 ring-secondary-container ring-inset':
+              selectedDay === day.day,
+            'hover:bg-surface-container-low': true,
+          }"
+          class="border-r border-b border-outline-variant/30 p-2 transition-all cursor-pointer relative"
+          [class.other-month]="!day.currentMonth"
+          [class.today]="isToday(day.date)"
+        >
+          <span
+            [class.text-on-surface]="selectedDay === day.day"
+            class="text-label-md font-bold text-on-surface-variant"
+            >{{ day.day }}</span
+          >
+          @for (res of day.reservations; track $index) {
+            <div class="mt-2 space-y-1">
+              @if (res.type === 'departure') {
+                <div
+                  class="bg-error/10 border-l-4 border-error text-[10px] px-1 py-0.5 font-bold text-error truncate"
+                >
+                  {{ res.booking.clientName }} - {{ res.booking.clientLastName }}
+                </div>
+              }
+              @if (res.type === 'arrival') {
+                <div
+                  class="bg-secondary/10 border-l-4 border-secondary text-[10px] px-1 py-0.5 font-bold text-secondary truncate"
+                >
+                  {{ res.booking.clientName }} - {{ res.booking.clientLastName }}
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>

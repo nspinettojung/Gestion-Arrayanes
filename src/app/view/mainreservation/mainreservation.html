@@ -1,0 +1,205 @@
+<main class="min-h-screen">
+  <div class="max-w-5xl mx-auto py-space-xl">
+    <!-- Header Section -->
+    <div class="mb-space-lg flex justify-between items-end">
+      <div>
+        <span class="text-secondary font-label-md text-label-md uppercase tracking-widest"
+          >Módulo de Gestión</span
+        >
+        <h3 class="font-display-lg text-display-lg text-primary tracking-tight">Nueva Reserva</h3>
+      </div>
+      <div class="text-right">
+        <p class="text-on-surface-variant text-body-sm italic">ID de transacción:</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-12 gap-space-lg">
+      <!-- Main Form (Col 1-8) -->
+      <form
+        [formGroup]="form"
+        (ngSubmit)="submit()"
+        class="col-span-12 lg:col-span-8 space-y-space-lg"
+      >
+        <!-- Información del Huésped -->
+        <div class="bg-surface-container-lowest border border-outline-variant shadow-sm p-space-lg">
+          <div
+            class="border-b border-outline-variant pb-space-sm mb-space-md flex items-center gap-2"
+          >
+            <span class="material-symbols-outlined text-primary">person</span>
+            <h4 class="font-headline-sm text-headline-sm text-primary">Información del Huésped</h4>
+          </div>
+          <div class="grid grid-cols-2 gap-space-md">
+            <div>
+              <label>Nombre</label>
+              <input
+                class="w-full px-3 py-2"
+                type="text"
+                placeholder="Nombre"
+                formControlName="clientName"
+              />
+            </div>
+            <div>
+              <label>Apellido</label>
+              <input
+                class="w-full px-3 py-2"
+                type="text"
+                placeholder="Apellido"
+                formControlName="clientLastName"
+              />
+            </div>
+            <div>
+              <label>DNI/Pasaporte</label>
+              <input
+                class="w-full px-3 py-2"
+                type="text"
+                placeholder="12345678X"
+                formControlName="clientDni"
+              />
+            </div>
+            <div>
+              <label>Teléfono</label>
+              <input
+                class="w-full px-3 py-2"
+                type="tel"
+                placeholder="+54 ..."
+                formControlName="clientPhone"
+              />
+            </div>
+            <div>
+              <label>Tipo de Habitación</label>
+              <select
+                class="w-full px-3 py-2"
+                formControlName="apartmentId"
+                (change)="onApartmentChange($event)"
+              >
+                <option [value]="null">Selecciona una opción</option>
+                @for (item of apartments(); track $index) {
+                  <option [value]="item.id">{{ item.apartmentName }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label>Número de Personas</label>
+              <input
+                class="w-full px-3 py-2"
+                type="number"
+                min="1"
+                [attr.max]="selectedMaxPeople()"
+                formControlName="amountPeople"
+              />
+            </div>
+          </div>
+        </div>
+        <!-- Detalles de la Estancia -->
+        <div class="bg-surface-container-lowest border border-outline-variant shadow-sm p-space-lg">
+          <div
+            class="border-b border-outline-variant pb-space-sm mb-space-md flex items-center gap-2"
+          >
+            <span class="material-symbols-outlined text-primary">event</span>
+            <h4 class="font-headline-sm text-headline-sm text-primary">Detalles de la Estancia</h4>
+          </div>
+
+          <div class="grid grid-cols-2 gap-space-md">
+            <div>
+              <label>Fecha de Entrada</label>
+              <input
+                class="w-full px-3 py-2"
+                type="date"
+                formControlName="arrivalDate"
+                [min]="today()"
+              />
+            </div>
+            <div>
+              <label>Fecha de Salida</label>
+              <input
+                class="w-full px-3 py-2"
+                type="date"
+                formControlName="departureDate"
+                [min]="tomorrowDate()"
+              />
+            </div>
+          </div>
+        </div>
+        <button
+          type="submit"
+          class="w-full btn-metal text-white py-3 px-4 font-bold flex items-center justify-center gap-2 group"
+        >
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1"
+            >check_circle</span
+          >
+          Confirmar Reserva
+        </button>
+      </form>
+
+      <!-- Price Breakdown Sidebar (Col 9-12) -->
+      <div class="col-span-12 lg:col-span-4">
+        <div class="sticky top-22 space-y-space-lg">
+          <div class="bg-primary text-on-primary shadow-lg p-space-lg">
+            <h4 class="font-headline-sm text-headline-sm border-b border-on-primary/20 pb-2 mb-4">
+              Resumen de Cargo
+            </h4>
+            <div class="space-y-3 font-body-sm">
+              <div class="flex justify-between">
+                <span class="opacity-80">Suite Ejecutiva (5 noches)</span>
+                <span>750,00€</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="opacity-80">Desayuno Buffet (x2)</span>
+                <span>120,00€</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="opacity-80">Impuestos (10%)</span>
+                <span>87,00€</span>
+              </div>
+              <div class="h-px bg-on-primary/20 my-2"></div>
+              <div class="flex justify-between items-baseline pt-2">
+                <span class="text-label-md font-bold uppercase tracking-wider">Total Estancia</span>
+                <span class="text-2xl font-bold">957,00€</span>
+              </div>
+            </div>
+            <div class="mt-6 pt-4 border-t border-on-primary/10">
+              <div
+                class="flex items-center gap-2 text-xs text-secondary-fixed bg-white/10 p-2 border border-white/20"
+              >
+                <span class="material-symbols-outlined text-sm">verified_user</span>
+                <span>Garantía de precio mejorado aplicado</span>
+              </div>
+            </div>
+          </div>
+          <!-- Action Buttons -->
+          <div class="space-y-space-sm">
+            <button
+              (click)="cancel()"
+              type="button"
+              class="w-full btn-secondary-metal text-on-surface-variant py-3 px-4 font-semibold hover:text-error transition-colors"
+            >
+              Cancelar y Volver
+            </button>
+          </div>
+          <!-- Card Preview / Visual Context -->
+          <div class="bg-surface-container border border-outline-variant overflow-hidden group">
+            <div class="relative h-32 w-full">
+              <img
+                alt="Suite Ejecutiva"
+                class="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-500"
+                data-alt="A luxurious executive hotel suite with a large king-sized bed, crisp white linens, and a dark wood headboard. The room features professional corporate interior design with muted blue and charcoal accents. Soft morning light enters through a large window, casting gentle shadows across the minimalist furniture and high-quality textures."
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRORMG-Rz0LOH539-oJ5__iG7xRqiTfjqqCdCMB8fzItVoWlpa5YG9uwf7lvC3VUuc7tCk0S0KT6V8TavqPhonUX_WyPyAnJehugtVwTllg4Hif7a-JnN6imtXJnWfc9BMEt_4tFLbnh8IQjVXFaSytLPqvAP9PcZI1n7REqBtZ4zFBssa7hxzbpgFP2tpytJUhH--pdYo8PYQuflc3y8M3twei5JHtlMYCQdN6A3FHnJ4mxrK5xPLXl_bdV691n5cNRMKXNxlUtGk"
+              />
+              <div
+                class="absolute bottom-0 left-0 bg-primary/90 text-white px-2 py-1 text-[10px] font-bold uppercase"
+              >
+                Vista Previa: Suite
+              </div>
+            </div>
+            <div class="p-3 text-xs text-on-surface-variant">
+              <p class="font-bold text-primary mb-1">Disponibilidad Garantizada</p>
+              <p>
+                La habitación seleccionada se encuentra bloqueada por 15 minutos mientras completa
+                el formulario.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
