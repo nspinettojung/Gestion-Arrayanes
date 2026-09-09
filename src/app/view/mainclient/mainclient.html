@@ -12,7 +12,7 @@
   </div>
 
   <gda-table [title]="'Listado de clientes'">
-    <tr class="bg-surface-container-high border-b border-outline-variant " column-header>
+    <tr class="bg-surface-container-high border-b border-outline-variant" column-header>
       @for (col of columnsName(); track $index) {
         <th
           class="px-space-md py-4 text-xs font-extrabold text-on-surface-variant uppercase tracking-wider"
@@ -23,7 +23,11 @@
     </tr>
     @for (client of pagedClients(); track client.id) {
       <!-- Row 1 -->
-      <tr class="zebra-stripe hover:bg-secondary-container/5 transition-colors group" table-body>
+      <tr
+        class="zebra-stripe hover:bg-secondary-container/5 transition-colors group cursor-pointer"
+        table-body
+        (click)="openEditClient(client)"
+      >
         <td class="px-space-md py-4">
           <div class="flex items-center gap-3">
             <div
@@ -70,11 +74,7 @@
 </div>
 
 <form [formGroup]="clientForm" (ngSubmit)="onEdit()">
-  <gda-modal
-    [title]="'Editar Cliente'"
-    [show]="showModal"
-    (close)="showModal = false"
-     >
+  <gda-modal [title]="'Editar Cliente'" [show]="showModal" (close)="showModal = false">
     <div
       class="border-b border-outline-variant pb-space-sm mb-space-md flex items-center gap-2 form-title"
     >

@@ -190,4 +190,56 @@ export class Maindashboard {
     const input = evento.target as HTMLInputElement;
     this.isSelected.set(input.checked);
   }
+
+  idSelected = signal<Set<string>>(new Set());
+
+  allSelected = computed(() => {
+    this.activeBookings().length > 0 && this.idSelected().size === this.activeBookings().length;
+  });
+
+  alternateSelectAll(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    if (input.checked) {
+      const allIds = this.activeBookings().map((booking) => booking.id);
+      this.idSelected.set(new Set(allIds));
+    } else {
+      this.idSelected.set(new Set());
+    }
+    console.log('Selected IDs:', Array.from(this.idSelected()));
+  }
+
+  alternateSelectRow(bookingId: string): void {
+    this.idSelected.update((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(bookingId)) {
+        newSet.delete(bookingId);
+      } else {
+        newSet.add(bookingId);
+      }
+      return newSet;
+    });
+    console.log('Selected IDs:', Array.from(this.idSelected()));
+  }
+
+  deleteSelectedBookings(): void {
+    if (this.idSelected().size === 0) {
+      alert('No hay reservas seleccionadas para eliminar.');
+      return;
+    }
+
+    if (confirm('¿Estás seguro de que quieres eliminar las reservas seleccionadas?')) {
+      const bookingsIds = Array.from(this.idSelected());
+      this.bookingService.deleteBookingList(bookingsIds).subscribe({
+        next: () => {
+          alert('Reservas eliminadas correctamente.');
+          this.idSelected.set(new Set());
+          this.dashboardService.loadDashboard();
+        },
+        error: () => {
+          alert('Error al eliminar las reservas. Por favor intenta nuevamente más tarde.');
+        },
+      });
+    }
+  }
 }

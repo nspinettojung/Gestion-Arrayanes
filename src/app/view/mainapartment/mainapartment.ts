@@ -16,8 +16,9 @@ export class Mainapartment {
   private apartmentService = inject(Apartment);
   apatmentList = computed(() => this.apartmentService.apartmentsData());
   columnsName = signal<string[]>(['Nombre', 'Cantidad Máxima de Personas', 'Precio', 'Acciones']);
-  editingId = signal<string | null>(null);
+  editingId = signal<number | string | null>(null);
   showModal: boolean = false;
+  isEditing = false;
   apartForm!: FormGroup;
 
   ngOnInit(): void {
@@ -63,31 +64,55 @@ export class Mainapartment {
     });
   }
 
-  openAddApart() {
+  openCreateModal() {
+    this.isEditing = false;
+    this.editingId.set(null);
+    this.apartForm.reset();
     this.showModal = true;
   }
 
-  createApartment(): void {
-    if (this.apartForm.valid) {
-      const { id, apartmentName, apartmentMaxNumber, price } = this.apartForm.value;
+  // Abrir modal en modo Edición pasándole el departamento a modificar
+  openEditModal(apartment: any) {
+    this.isEditing = true;
+    this.editingId.set(apartment.id);
+    this.apartForm.patchValue({
+      apartmentName: apartment.apartmentName,
+      apartmentMaxNumber: apartment.apartmentMaxNumber,
+      price: apartment.price,
+    });
+    this.showModal = true;
+  }
 
-      const apartRequest: IApartment = {
-        id,
-        apartmentName,
-        apartmentMaxNumber,
-        price,
-      };
+  // Cerrar y limpiar modal
+  closeModal() {
+    this.showModal = false;
+    this.apartForm.reset();
+    this.isEditing = false;
+    this.editingId.set(null);
+  }
 
-      this.apartmentService.addApartment(apartRequest).subscribe({
-        next: () => {
-          alert('El Departamento se agrego correctamente.');
-          this.showModal = false;
-          this.apartForm.reset();
-          this.apartmentService.getApartments();
-        },
-        error: () => {
-          alert('Error al agregar un departamento');
-        },
+  // Método unificado para guardar
+  saveApartment() {
+    if (this.apartForm.invalid) return;
+
+    const formData = this.apartForm.value;
+
+    const editingId = this.editingId();
+    if (this.isEditing && editingId !== null) {
+      this.apartmentService.editApartment(String(editingId), formData).subscribe(() => {
+        this.closeModal();
+        this.apartmentService.getApartments();
+        this.apartForm.reset();
+
+        // refrescar lista
+      });
+    } else {
+      this.apartmentService.addApartment(formData).subscribe(() => {
+        this.closeModal();
+        this.apartmentService.getApartments();
+        this.apartForm.reset();
+
+        // refrescar lista
       });
     }
   }

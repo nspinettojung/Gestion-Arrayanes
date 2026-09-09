@@ -34,4 +34,8 @@ export class Apartment {
   deleteApartment(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/apartments/delete/${id}`);
   }
+
+  editApartment(id: string, apartment: IApartment): Observable<IApartment> {
+    return this.http.put<IApartment>(`${this.apiUrl}/apartments/editapartment/${id}`, apartment);
+  }
 }

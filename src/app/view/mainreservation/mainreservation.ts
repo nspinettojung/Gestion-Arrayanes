@@ -43,8 +43,8 @@ export class Mainreservation {
     this.form = this.fb.group({
       clientName: ['', Validators.required],
       clientLastName: ['', Validators.required],
-      clientDni: ['', Validators.required],
-      clientPhone: ['', Validators.required],
+      clientDni: [''],
+      clientPhone: [''],
       amountPeople: [1, Validators.required],
       apartmentId: [null, ''],
       arrivalDate: [new Date().toISOString().split('T')[0], Validators.required],
@@ -96,10 +96,12 @@ export class Mainreservation {
         error: (err) => {
           if (err.status === 409) {
             alert(`❌ ${err.error.message}`);
+            this.resetForm();
             return;
           }
 
           alert(`❌ Error ${err.status}: ${err.error?.message ?? err.message}`);
+          this.resetForm();
         },
       });
     } else {

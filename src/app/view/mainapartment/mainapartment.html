@@ -16,7 +16,7 @@
       <button
         class="ml-space-sm bg-secondary text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:brightness-105 active:scale-95 transition-all flex items-center gap-2"
         add-button
-        (click)="openAddApart()"
+        (click)="openCreateModal()"
       >
         <span class="material-symbols-outlined text-sm">home</span>
         Agregar Departamentos
@@ -32,8 +32,11 @@
       </tr>
       @for (apart of apatmentList(); track $index) {
         <!-- Row 1 -->
-        <tr class="zebra-stripe hover:bg-secondary-container/5 transition-colors group" table-body>
-          <td class="px-space-md py-4">
+        <tr
+          class="zebra-stripe hover:bg-secondary-container/5 transition-colors group cursor-pointer"
+          table-body
+        >
+          <td class="px-space-md py-4" (click)="openEditModal(apart)">
             <div class="flex items-center gap-3">
               <div
                 class="w-8 h-8 rounded bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs"
@@ -46,7 +49,7 @@
               </div>
             </div>
           </td>
-          <td class="px-space-md py-4">
+          <td class="px-space-md py-4" (click)="openEditModal(apart)">
             <div class="text-xs space-y-0.5">
               <p class="flex items-center gap-1">
                 <span class="material-symbols-outlined text-[14px]">man</span>
@@ -54,35 +57,15 @@
               </p>
             </div>
           </td>
-          <td class="px-space-md py-4">
+          <td class="px-space-md py-4" (click)="openEditModal(apart)">
             <div class="flex flex-col">
-              @if (editingId() === apart.id) {
-                <div class="flex items-center gap-2">
-                  <input
-                    type="number"
-                    class="w-24 px-2 py-1 border rounded"
-                    [value]="apart.price"
-                    #priceInput
-                  />
-                  <button
-                    class="px-2 py-1 bg-primary text-white rounded"
-                    (click)="savePrice(apart.id, priceInput.value)"
-                  >
-                    ✔
-                  </button>
-                  <button class="px-2 py-1 bg-error text-white rounded" (click)="cancelEdit()">
-                    ✖
-                  </button>
-                </div>
-              } @else {
-                <span class="text-[10px] text-on-surface-variant">Total: ${{ apart.price }}</span>
-              }
+              <span class="text-[10px] text-on-surface-variant">Total: ${{ apart.price }}</span>
             </div>
           </td>
           <td class="px-space-md py-4 text-right flex flex-colum justify-center">
             <button
               class="flex p-1.5 hover:bg-secondary/10 rounded-xl text-secondary transition-colors justify-center"
-              (click)="startEdit(apart.id)"
+              (click)="openEditModal(apart)"
             >
               <span class="material-symbols-outlined">edit_square</span>
             </button>
@@ -99,13 +82,19 @@
   </div>
 </div>
 
-<form [formGroup]="apartForm" (ngSubmit)="createApartment()">
-  <gda-modal [title]="'Agregar Departamento'" [show]="showModal" (close)="showModal = false">
+<form [formGroup]="apartForm" (ngSubmit)="saveApartment()">
+  <gda-modal
+    [title]="isEditing ? 'Editar Departamento' : 'Agregar Departamento'"
+    [show]="showModal"
+    (close)="closeModal()"
+  >
     <div
       class="border-b border-outline-variant pb-space-sm mb-space-md flex items-center gap-2 form-title"
     >
       <span class="material-symbols-outlined text-primary">apartment</span>
-      <h4 class="font-headline-sm text-headline-sm text-primary">Información del Departamento</h4>
+      <h4 class="font-headline-sm text-headline-sm text-primary">
+        {{ isEditing ? 'Editar Información' : 'Información del Departamento' }}
+      </h4>
     </div>
 
     <div class="grid grid-cols-1 gap-space-md form-body">
