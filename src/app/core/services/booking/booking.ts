@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../../../environments/environment';
-import { IBooking } from '../../interface/booking/booking';
+import { BookingCreateRequest, IBooking } from '../../interface/booking/booking';
 import { Observable } from 'rxjs';
 import { CalendarDayDTO } from '../../interface/booking/calendar-day-dto';
 
@@ -57,20 +57,8 @@ export class Booking {
       });
   }
 
-  createBookingWithClient(booking: {
-    arrivalDate: string;
-    departureDate: string;
-    nights: number;
-    amountPeople: number;
-    apartmentId: string;
-    client: {
-      clientName: string;
-      clientLastName: string;
-      clientDni: string;
-      clientPhone: string;
-    };
-  }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/bookings/createWithClient`, booking);
+  createBookingWithClient(booking: BookingCreateRequest): Observable<IBooking> {
+    return this.http.post<IBooking>(`${this.apiUrl}/bookings/createWithClient`, booking);
   }
 
   generateTransactionCode(): Observable<string> {

@@ -20,6 +20,20 @@ export class Mainapartment {
   showModal: boolean = false;
   isEditing = false;
   apartForm!: FormGroup;
+  pageSize = 5;
+  currentPage = signal(0);
+
+  pagedApartments = computed(() => {
+    const startIndex = this.currentPage() * this.pageSize;
+    return this.apatmentList().slice(startIndex, startIndex + this.pageSize);
+  });
+
+  setPage(page: number): void {
+    const totalPages = Math.ceil(this.apatmentList().length / this.pageSize);
+    if (page >= 0 && page < totalPages) {
+      this.currentPage.set(page);
+    }
+  }
 
   ngOnInit(): void {
     this.apartmentService.getApartments();
@@ -72,7 +86,7 @@ export class Mainapartment {
   }
 
   // Abrir modal en modo Edición pasándole el departamento a modificar
-  openEditModal(apartment: any) {
+  openEditModal(apartment: IApartment): void {
     this.isEditing = true;
     this.editingId.set(apartment.id);
     this.apartForm.patchValue({

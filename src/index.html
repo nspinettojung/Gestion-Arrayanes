@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
       rel="stylesheet"
     />
-   <script id="tailwind-config">
+    <script id="tailwind-config">
       tailwind.config = {
         darkMode: 'class',
         theme: {
@@ -126,68 +126,5 @@
   </head>
   <body class="bg-background font-body-md text-on-background">
     <app-root></app-root>
-    <script>
-      // Simple micro-interactions for table rows
-      document.querySelectorAll('tbody tr').forEach((row) => {
-        row.addEventListener('click', function (e) {
-          // Ignore if clicking on button
-          if (e.target.closest('button')) return;
-
-          // Visual feedback
-          this.classList.add('bg-secondary-container/10');
-          setTimeout(() => {
-            this.classList.remove('bg-secondary-container/10');
-          }, 300);
-
-          console.log('Selected customer row');
-        });
-      });
-
-      // Custom search bar behavior
-      const searchInput = document.querySelector('input[type="text"]');
-      searchInput.addEventListener('focus', () => {
-        searchInput.parentElement.classList.add('scale-[1.01]');
-      });
-      searchInput.addEventListener('blur', () => {
-        searchInput.parentElement.classList.remove('scale-[1.01]');
-      });
-
-      // Calendar Cell Click Interaction
-      document.querySelectorAll('.calendar-grid > div').forEach((cell) => {
-        cell.addEventListener('click', function () {
-          // Clear previous selection
-          document
-            .querySelectorAll('.calendar-grid > div')
-            .forEach((c) =>
-              c.classList.remove(
-                'ring-2',
-                'ring-secondary-container',
-                'ring-inset',
-                'bg-secondary-container/5',
-              ),
-            );
-          // Apply new selection if it's a day
-          if (this.querySelector('span')) {
-            this.classList.add(
-              'ring-2',
-              'ring-secondary-container',
-              'ring-inset',
-              'bg-secondary-container/5',
-            );
-            const day = this.querySelector('span').innerText;
-            document.querySelector('aside h3').innerText = `Selected: Oct ${day}`;
-          }
-        });
-      });
-
-      // Simple Fade in effect for the main container
-      document.addEventListener('DOMContentLoaded', () => {
-        document.querySelector('main').style.opacity = '0';
-        setTimeout(() => {
-          document.querySelector('main').style.transition = 'opacity 0.6s ease-out';
-          document.querySelector('main').style.opacity = '1';
-        }, 100);
-      });
-    </script>
   </body>
 </html>

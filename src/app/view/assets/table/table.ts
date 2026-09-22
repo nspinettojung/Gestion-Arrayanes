@@ -1,4 +1,4 @@
-import { Component, computed, input, signal } from '@angular/core';
+import { Component, computed, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -10,22 +10,25 @@ import { CommonModule } from '@angular/common';
 export class Table {
   title = input<string>('');
   columns = input<string[]>([]);
-  pageSize = 6;
+  data = input<unknown[]>([]);
+  pageSize = input(5);
+  pageChange = output<number>();
   currentPage = signal(0);
 
-  pagedBookings = computed(() => {
-    // const data = this.bookings();
-    // const startIndex = this.currentPage() * this.pageSize;
-    // return data.slice(startIndex, startIndex + this.pageSize);
+  pagedData = computed(() => {
+    const data = this.data();
+    const startIndex = this.currentPage() * this.pageSize();
+    return data.slice(startIndex, startIndex + this.pageSize());
   });
 
   totalPages = computed(() => {
-    // return Math.ceil(this.bookings().length / this.pageSize);
+    return Math.ceil(this.data().length / this.pageSize());
   });
 
   setPage(page: number) {
-    // if (page >= 0 && page < this.totalPages()) {
-    //   this.currentPage.set(page);
-    // }
+    if (page >= 0 && page < this.totalPages()) {
+      this.currentPage.set(page);
+      this.pageChange.emit(page);
+    }
   }
 }

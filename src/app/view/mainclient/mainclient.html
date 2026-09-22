@@ -11,7 +11,12 @@
     </div>
   </div>
 
-  <gda-table [title]="'Listado de clientes'">
+  <gda-table
+    [title]="'Listado de clientes'"
+    [data]="clientslist()"
+    [pageSize]="pageSize"
+    (pageChange)="setPage($event)"
+  >
     <tr class="bg-surface-container-high border-b border-outline-variant" column-header>
       @for (col of columnsName(); track $index) {
         <th
@@ -26,9 +31,8 @@
       <tr
         class="zebra-stripe hover:bg-secondary-container/5 transition-colors group cursor-pointer"
         table-body
-        (click)="openEditClient(client)"
       >
-        <td class="px-space-md py-4">
+        <td class="px-space-md py-4" (click)="openEditClient(client)">
           <div class="flex items-center gap-3">
             <div
               class="w-8 h-8 rounded bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs"
@@ -43,7 +47,7 @@
             </div>
           </div>
         </td>
-        <td class="px-space-md py-4">
+        <td class="px-space-md py-4" (click)="openEditClient(client)">
           <div class="text-xs space-y-0.5">
             <p class="flex items-center gap-1">
               <span class="material-symbols-outlined text-[14px]">phone</span>
@@ -51,7 +55,7 @@
             </p>
           </div>
         </td>
-        <td class="px-space-md py-4 text-xs font-medium">
+        <td class="px-space-md py-4 text-xs font-medium" (click)="openEditClient(client)">
           {{ client.lastCheckIn ? (client.lastCheckIn | date: 'dd/MM/yyyy') : 'Nunca' }}
         </td>
         <td class="px-space-md py-4 text-right flex flex-colum justify-center">

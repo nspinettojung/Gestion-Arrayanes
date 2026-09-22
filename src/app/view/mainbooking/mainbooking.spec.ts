@@ -1,6 +1,39 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
+import { of } from 'rxjs';
 
 import { Mainbooking } from './mainbooking';
+import { Booking } from '../../core/services/booking/booking';
+import { Dashboard } from '../../core/services/dashboard/dashboard';
+
+const bookingMock = {
+  days: signal([]),
+  bookinglist: signal([]),
+  getBookings: () => undefined,
+  getCurrentDate: () => of('2026-09-22'),
+  getCalendar: () => undefined,
+};
+
+const dashboardMock = {
+  dashboardSignal: signal([]),
+  monthlyArrivals: signal(0),
+  monthlyDepartures: signal(0),
+  monthlyArrivalsList: signal([]),
+  monthlyDeparturesList: signal([]),
+  arrivalsByDate: signal([]),
+  departuresByDate: signal([]),
+  arrivalsCount: signal(0),
+  departuresCount: signal(0),
+  loadDashboard: () => undefined,
+  getArrivalsByDate: () => undefined,
+  getDeparturesByDate: () => undefined,
+  getArrivalsCountByDate: () => undefined,
+  getDeparturesCountByDate: () => undefined,
+  getMonthlyArrivals: () => undefined,
+  getMonthlyDepartures: () => undefined,
+  getMonthlyArrivalsList: () => of([]),
+  getMonthlyDeparturesList: () => of([]),
+};
 
 describe('Mainbooking', () => {
   let component: Mainbooking;
@@ -9,6 +42,10 @@ describe('Mainbooking', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Mainbooking],
+      providers: [
+        { provide: Booking, useValue: bookingMock },
+        { provide: Dashboard, useValue: dashboardMock },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Mainbooking);

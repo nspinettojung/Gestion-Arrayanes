@@ -6,6 +6,7 @@ import { Modal } from '../assets/modal/modal';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { InitialsPipe } from '../assets/pipes/initials-pipe';
 import { Table } from '../assets/table/table';
+import { IClients } from '../../core/interface/clients/clients';
 
 @Component({
   selector: 'gda-mainclient',
@@ -18,7 +19,6 @@ export class Mainclient {
   private bookingService = inject(Booking);
 
   showModal: boolean = false;
-  selectedData: any;
   columnsName = signal<string[]>(['Nombre del Cliente', 'Contacto', 'Última Estancia', 'Acciones']);
 
   clientslist = computed(() => this.clientService.clientslist());
@@ -58,7 +58,6 @@ export class Mainclient {
       this.clientService.deleteClient(clientId).subscribe({
         next: () => {
           alert('Cliente eliminado correctamente.');
-          this.clientService.getClients();
         },
         error: (error) => {
           // console.error('Error eliminando cliente :', error);
@@ -68,7 +67,7 @@ export class Mainclient {
     }
   }
 
-  openEditClient(client: any): void {
+  openEditClient(client: IClients): void {
     this.clientForm.patchValue({
       id: client.id,
       clientName: client.clientName,

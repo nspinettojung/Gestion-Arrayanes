@@ -46,12 +46,11 @@ export class Maindashboard {
     'Cantidad Personas',
     'Fecha',
     'Precio Total',
-    'Acciones',
   ]);
 
   bookingForm!: FormGroup;
 
-  pageSize = 6;
+  pageSize = 5;
   currentPage = signal(0);
   showModal: boolean = false;
 
@@ -206,7 +205,6 @@ export class Maindashboard {
     } else {
       this.idSelected.set(new Set());
     }
-    console.log('Selected IDs:', Array.from(this.idSelected()));
   }
 
   alternateSelectRow(bookingId: string): void {
@@ -219,7 +217,6 @@ export class Maindashboard {
       }
       return newSet;
     });
-    console.log('Selected IDs:', Array.from(this.idSelected()));
   }
 
   deleteSelectedBookings(): void {

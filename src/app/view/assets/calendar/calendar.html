@@ -5,15 +5,21 @@
     </div>
     <div class="flex bg-surface-container border border-outline-variant rounded-lg p-1">
       <button
+        type="button"
+        aria-label="Mes anterior"
         class="p-1 hover:bg-surface-container-high rounded transition-all"
         (click)="previousMonth()"
       >
         ◀
       </button>
 
-      <button class="px-4 py-1 text-body-sm font-bold" (click)="goToToday()">Hoy</button>
+      <button type="button" class="px-4 py-1 text-body-sm font-bold" (click)="goToToday()">
+        Hoy
+      </button>
 
       <button
+        type="button"
+        aria-label="Mes siguiente"
         class="p-1 hover:bg-surface-container-high rounded transition-all"
         (click)="nextMonth()"
       >
@@ -39,11 +45,11 @@
       @for (day of days; track day.date) {
         <div
           (click)="selectDay(day)"
-          [ngClass]="{
-            'bg-secondary-container/5 ring-2 ring-secondary-container ring-inset':
-              selectedDay === day.day,
-            'hover:bg-surface-container-low': true,
-          }"
+          [class.bg-secondary-container/5]="selectedDay === day.day"
+          [class.ring-2]="selectedDay === day.day"
+          [class.ring-secondary-container]="selectedDay === day.day"
+          [class.ring-inset]="selectedDay === day.day"
+          [class.hover:bg-surface-container-low]="true"
           class="border-r border-b border-outline-variant/30 p-2 transition-all cursor-pointer relative"
           [class.other-month]="!day.currentMonth"
           [class.today]="isToday(day.date)"

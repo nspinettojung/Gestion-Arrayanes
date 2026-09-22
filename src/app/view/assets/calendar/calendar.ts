@@ -36,7 +36,7 @@ export class Calendar {
   currentDate = new Date();
   currentMonth!: number;
   currentYear!: number;
-  @Output() daySelected = new EventEmitter<number>();
+  @Output() daySelected = new EventEmitter<Date>();
   selectedDay: number | null = null;
   monthName = '';
 
@@ -63,8 +63,6 @@ export class Calendar {
       month: 'long',
       year: 'numeric',
     });
-
-    this.loadReservations();
 
     const firstDay = new Date(this.currentYear, this.currentMonth, 1);
     const lastDay = new Date(this.currentYear, this.currentMonth + 1, 0);
@@ -100,6 +98,8 @@ export class Calendar {
         reservations: [],
       });
     }
+
+    this.loadReservations();
   }
 
   loadReservations(): void {
@@ -161,7 +161,8 @@ export class Calendar {
 
   selectDay(day: CalendarDay): void {
     if (day.currentMonth && day.day) {
-      this.daySelected.emit(day.day);
+      this.selectedDay = day.day;
+      this.daySelected.emit(day.date);
       this.selectedDayReservations = day.reservations.map((r) => r.booking);
     }
   }

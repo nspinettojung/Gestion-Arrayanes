@@ -12,7 +12,12 @@
   </div>
   <!-- Advanced Filters Bar -->
   <div>
-    <gda-table [title]="'Listado de Departamentos'">
+    <gda-table
+      [title]="'Listado de Departamentos'"
+      [data]="apatmentList()"
+      [pageSize]="pageSize"
+      (pageChange)="setPage($event)"
+    >
       <button
         class="ml-space-sm bg-secondary text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:brightness-105 active:scale-95 transition-all flex items-center gap-2"
         add-button
@@ -30,7 +35,7 @@
           </th>
         }
       </tr>
-      @for (apart of apatmentList(); track $index) {
+      @for (apart of pagedApartments(); track $index) {
         <!-- Row 1 -->
         <tr
           class="zebra-stripe hover:bg-secondary-container/5 transition-colors group cursor-pointer"

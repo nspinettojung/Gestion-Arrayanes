@@ -31,6 +31,8 @@
       > -->
       <div class="flex items-center gap-1">
         <button
+          type="button"
+          aria-label="Página anterior"
           class="p-1 border border-outline-variant rounded bg-surface hover:bg-surface-container transition-all active:scale-95"
           (click)="setPage(currentPage() - 1)"
           [disabled]="currentPage() === 0"
@@ -39,6 +41,8 @@
         </button>
         @for (page of [].constructor(totalPages()); track $index; let i = $index) {
           <button
+            type="button"
+            [attr.aria-label]="'Ir a la página ' + (i + 1)"
             class="px-3 py-1 border border-outline-variant rounded text-xs font-medium hover:bg-surface-container transition-all"
             (click)="setPage(i)"
           >
@@ -46,8 +50,11 @@
           </button>
         }
         <button
+          type="button"
+          aria-label="Página siguiente"
           class="p-1 border border-outline-variant rounded bg-surface hover:bg-surface-container transition-all active:scale-95"
           (click)="setPage(currentPage() + 1)"
+          [disabled]="currentPage() >= totalPages() - 1"
         >
           <span class="material-symbols-outlined text-sm">chevron_right</span>
         </button>

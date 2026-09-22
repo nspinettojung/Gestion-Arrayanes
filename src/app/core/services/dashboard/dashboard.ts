@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { IDashboard } from '../../interface/dashboard/dashboard';
+import { DashboardPageResponse, IDashboard } from '../../interface/dashboard/dashboard';
 import { ClientApartmentDTO } from '../../interface/clients/client-apartment-dto';
 import { Observable } from 'rxjs';
 
@@ -29,7 +29,7 @@ export class Dashboard {
 
   loadDashboard(page = 0, size = 10): void {
     this.http
-      .get<any>(`${this.apiUrl}/dashboard/filter`, {
+      .get<DashboardPageResponse>(`${this.apiUrl}/dashboard/filter`, {
         params: {
           page,
           size,

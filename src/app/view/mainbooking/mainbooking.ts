@@ -4,7 +4,7 @@ import { Booking } from '../../core/services/booking/booking';
 import { Dashboard } from '../../core/services/dashboard/dashboard';
 import { Calendar } from '../assets/calendar/calendar';
 import { IDashboard } from '../../core/interface/dashboard/dashboard';
-import { InitialsPipe } from "../assets/pipes/initials-pipe";
+import { InitialsPipe } from '../assets/pipes/initials-pipe';
 
 export interface CalendarDay {
   day: number;
@@ -58,16 +58,16 @@ export class Mainbooking implements OnInit {
     this.dashboardService.getDeparturesByDate(year, month, day);
     this.dashboardService.getMonthlyArrivals(month, year);
     this.dashboardService.getMonthlyDepartures(month, year);
-    this.dashboardService.getMonthlyArrivalsList(month, year);
-    this.dashboardService.getMonthlyDeparturesList(month, year);
+    this.dashboardService.getArrivalsCountByDate(year, month, day);
+    this.dashboardService.getDeparturesCountByDate(year, month, day);
   }
 
-  onDaySelected(day: number) {
-    this.selectedDay = day;
+  onDaySelected(date: Date) {
+    this.selectedDay = date.getDate();
 
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
 
     this.dashboardService.getArrivalsByDate(year, month, day);
     this.dashboardService.getDeparturesByDate(year, month, day);

@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map, mergeMap } from 'rxjs';
 
@@ -9,6 +10,7 @@ import { filter, map, mergeMap } from 'rxjs';
   styleUrl: './navbar.css',
 })
 export class Navbar {
+  private destroyRef = inject(DestroyRef);
   pageTitle: string = 'Mi App';
   pageIcon: string = '';
 
@@ -30,6 +32,7 @@ export class Navbar {
         }),
         mergeMap((route) => route.data),
       )
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((data) => {
         this.pageTitle = data['title'] || 'Bienvenido';
         this.pageIcon = data['icon'];

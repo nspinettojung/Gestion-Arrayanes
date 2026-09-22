@@ -38,14 +38,17 @@
   </div>
 </div>
 
-<gda-table [title]="'Reservas Recientes'">
+<gda-table
+  [title]="'Reservas Recientes'"
+  [data]="bookings()"
+  [pageSize]="pageSize"
+  (pageChange)="setPage($event)"
+>
   <tr class="" column-header>
     @for (columnName of columnsName(); track $index) {
       <th class="px-space-md py-3 border-b border-outline-variant font-bold">{{ columnName }}</th>
     }
-    <th class="px-space-md py-3 border-b border-outline-variant font-bold">
-      <input type="checkbox" [checked]="allSelected()" (change)="alternateSelectAll($event)" />
-    </th>
+
     <th class="px-space-md py-3 border-b border-outline-variant font-bold">
       <button
         class="flex p-1.5 hover:bg-error/10 rounded-xl text-error transition-colors justify-center"
@@ -53,6 +56,9 @@
       >
         <span class="material-symbols-outlined">delete</span>
       </button>
+    </th>
+    <th class="px-space-md py-3 border-b border-outline-variant font-bold">
+      <input type="checkbox" [checked]="allSelected()" (change)="alternateSelectAll($event)" />
     </th>
   </tr>
   @for (booking of activeBookings(); track booking.id) {

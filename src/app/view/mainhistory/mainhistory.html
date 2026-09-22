@@ -1,12 +1,33 @@
 <div class="pt-4">
-  <gda-table [title]="'Historial'">
+  <gda-table
+    [title]="'Historial'"
+    [data]="bookings()"
+    [pageSize]="pageSize"
+    (pageChange)="setPage($event)"
+  >
     <tr class="" column-header>
       @for (columnName of columnsName(); track $index) {
         <th class="px-space-md py-3 border-b border-outline-variant font-bold">{{ columnName }}</th>
       }
+
+      <th class="px-space-md py-3 border-b border-outline-variant font-bold">
+        <button
+          class="flex p-1.5 hover:bg-error/10 rounded-xl text-error transition-colors justify-center"
+          (click)="deleteSelectedBookings()"
+        >
+          <span class="material-symbols-outlined">delete</span>
+        </button>
+      </th>
+      <th class="px-space-md py-3 border-b border-outline-variant font-bold">
+        <input type="checkbox" [checked]="allSelected()" (change)="alternateSelectAll($event)" />
+      </th>
     </tr>
     @for (booking of pagedBookings(); track $index) {
-      <tr class="hover:bg-surface-container-low transition-colors group" table-body>
+      <tr
+        class="hover:bg-surface-container-low transition-colors group cursor-pointer"
+        table-body
+        (click)="alternateSelectRow(booking.id)"
+      >
         <td class="px-space-md py-4">
           <div class="flex items-center space-x-3">
             <div
@@ -37,10 +58,22 @@
         <td class="px-space-md py-4 text-right flex flex-colum justify-center">
           <button
             class="flex p-1.5 hover:bg-error/10 rounded-xl text-error transition-colors justify-center"
+            (click)="deleteBooking(booking.id)"
           >
             <span class="material-symbols-outlined">delete</span>
           </button>
         </td>
+        <td class="px-space-md py-3 border-b border-outline-variant font-bold">
+          <input
+            class="cursor-pointer"
+            type="checkbox"
+            id="rowChecked"
+            [checked]="idSelected().has(booking.id)"
+            (click)="$event.stopPropagation()"
+            (change)="alternateSelectRow(booking.id)"
+          />
+        </td>
+        <td></td>
       </tr>
     }
   </gda-table>

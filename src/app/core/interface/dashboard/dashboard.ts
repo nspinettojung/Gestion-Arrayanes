@@ -9,3 +9,11 @@ export interface IDashboard {
   amountPeople: number; // cantidad de personas
   totalPrice: number; // precio total de la reserva
 }
+
+export interface DashboardPageResponse {
+  content: IDashboard[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+}
