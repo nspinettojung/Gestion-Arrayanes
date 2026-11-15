@@ -5,12 +5,14 @@ import com.Gestion.Arrayanes.Clients.dto.ClientRequestDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.lang.reflect.Method;
 import java.util.UUID;
@@ -90,6 +92,17 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
         assertBody(response, 409, "Conflict", "La operación entra en conflicto con datos existentes.");
+    }
+
+    @Test
+    void missingResourceShouldReturnNotFound() {
+        NoResourceFoundException ex =
+                new NoResourceFoundException(HttpMethod.GET, "api/no-existe", "/api/no-existe");
+
+        ResponseEntity<ErrorResponseDTO> response = handler.handleNoResourceFound(ex);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertBody(response, 404, "Not Found", "El recurso solicitado no existe.");
     }
 
     @Test

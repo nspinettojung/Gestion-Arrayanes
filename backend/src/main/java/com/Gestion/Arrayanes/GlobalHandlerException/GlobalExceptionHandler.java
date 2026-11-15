@@ -13,6 +13,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.DateTimeException;
 import java.time.LocalDateTime;
@@ -85,6 +86,11 @@ public class GlobalExceptionHandler {
         log.warn("Violación de integridad de datos: {}", ex.getMostSpecificCause().getMessage());
         return buildResponse(HttpStatus.CONFLICT,
                 "La operación entra en conflicto con datos existentes.");
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleNoResourceFound(NoResourceFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, "El recurso solicitado no existe.");
     }
 
     @ExceptionHandler(Exception.class)
