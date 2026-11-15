@@ -1,18 +1,16 @@
 {
   "name": "gestion-arrayanes",
-  "version": "0.0.0",
-  "main": "main.js",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build --base-href ./",
+    "start": "node scripts/build-info.mjs && ng serve",
+    "dev": "npm start",
+    "build": "node scripts/build-info.mjs && ng build",
+    "build:static": "npm run build && node scripts/prepare-static.mjs",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test",
-    "electron": "electron .",
-    "electron:dev": "ELECTRON_DEV=true electron .",
-    "dev": "concurrently \"ng serve\" \"wait-on http-get://localhost:4200 && npm run electron:dev\""
+    "test": "ng test"
   },
-  "private": true,
   "packageManager": "pnpm@11.3.0",
   "dependencies": {
     "@angular/cdk": "^21.2.12",
@@ -32,13 +30,10 @@
     "@angular/cli": "^21.2.12",
     "@angular/compiler-cli": "^21.2.0",
     "@tailwindcss/postcss": "^4.1.12",
-    "concurrently": "^10.0.4",
-    "electron": "^43.2.0",
     "jsdom": "^28.0.0",
     "postcss": "^8.5.3",
     "prettier": "^3.8.1",
     "typescript": "~5.9.2",
-    "vitest": "^4.0.8",
-    "wait-on": "^9.1.0"
+    "vitest": "^4.0.8"
   }
 }

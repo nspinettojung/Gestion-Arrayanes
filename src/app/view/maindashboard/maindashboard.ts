@@ -1,44 +1,118 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { Dashboard } from '../../core/services/dashboard/dashboard';
-import { CurrencyPipe, DatePipe } from '@angular/common';
-import { Booking } from '../../core/services/booking/booking';
-import { InitialsPipe } from '../assets/pipes/initials-pipe';
-
-import { Modal } from '../assets/modal/modal';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { Apartment } from '../../core/services/apartment/apartment';
-import { Card } from './card/card';
-import { Table } from '../assets/table/table';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { IDashboard } from '../../core/interface/dashboard/dashboard';
+import { BookingUpdateRequest } from '../../core/interface/booking/booking';
+import { daysBetween, parseLocalDate, toLocalIsoDate } from '../../core/utils/date';
+import { calculateBookingPrice } from '../../core/utils/booking-price';
+import { Apartment } from '../../core/services/apartment/apartment';
+import { Booking } from '../../core/services/booking/booking';
+import { ConfirmationService } from '../../core/services/confirmation/confirmation';
+import { Dashboard } from '../../core/services/dashboard/dashboard';
+import { NotificationService } from '../../core/services/notification/notification';
+import { InitialsPipe } from '../assets/pipes/initials-pipe';
+import { LocalDatePipe } from '../assets/pipes/local-date-pipe';
+import { ArsCurrencyPipe } from '../assets/pipes/ars-currency-pipe';
+import { SearchInput } from '../assets/search-input/search-input';
+import { Modal } from '../assets/modal/modal';
+import { Table } from '../assets/table/table';
+import { Card } from './card/card';
+
+interface EditPreview {
+  nights: number;
+  totalPrice: number;
+  apartmentName: string;
+}
 
 @Component({
   selector: 'app-maindashboard',
-  imports: [Modal, Card, CurrencyPipe, InitialsPipe, DatePipe, Table, ReactiveFormsModule],
+  imports: [
+    Modal,
+    Card,
+    InitialsPipe,
+    LocalDatePipe,
+    ArsCurrencyPipe,
+    SearchInput,
+    Table,
+    ReactiveFormsModule,
+  ],
   templateUrl: './maindashboard.html',
   styleUrl: './maindashboard.css',
 })
-export class Maindashboard {
+export class Maindashboard implements OnInit {
   private dashboardService = inject(Dashboard);
   private bookingService = inject(Booking);
   private apartmentService = inject(Apartment);
+  private notifications = inject(NotificationService);
+  private confirmation = inject(ConfirmationService);
+  private destroyRef = inject(DestroyRef);
+
+  bookingsLoading = this.dashboardService.loadingDashboard;
+  loadingStats = this.dashboardService.loadingStats;
+  saving = signal(false);
+  deletingId = signal<string | null>(null);
+  deletingSelection = signal(false);
+  editPreview = signal<EditPreview | null>(null);
 
   apartments = this.apartmentService.apartmentsData;
-  apartmentId = computed(() => this.apartments().map((ap) => ap.id));
-  apartmentMaxNumber = computed(() => this.apartments().map((ap) => ap.apartmentMaxNumber));
-  totalApartments = computed(() => this.dashboardService.totalApartments());
-  totalBookings = computed(() => this.dashboardService.totalBookings());
-  occupancy = computed(() => this.dashboardService.occupancy());
-  growth = computed(() => this.dashboardService.growth());
-  todayBookings = computed(() => this.dashboardService.todayBookings());
-  bookingEditData = computed(() => this.bookingService.bookinglist());
-  bookings = computed(() => this.dashboardService.dashboardSignal());
-  today = new Date();
-  todaySignal = signal<string>('');
-  tomorrowDate = computed(() => {
-    const tomorrow = new Date(this.todaySignal());
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
+  totalApartments = this.dashboardService.totalApartments;
+  totalBookings = this.dashboardService.totalBookings;
+  occupancy = this.dashboardService.occupancy;
+  growth = this.dashboardService.growth;
+  todayBookings = this.dashboardService.todayBookings;
+  bookings = this.dashboardService.dashboardSignal;
+
+  /**
+   * El dashboard muestra solo reservas activas: las que todavía no hicieron
+   * check-out. Se compara en fecha local para evitar el corrimiento UTC.
+   */
+  private isActiveBooking(departureDate: string): boolean {
+    if (!departureDate) {
+      return false;
+    }
+
+    const departure = parseLocalDate(departureDate);
+    const today = parseLocalDate(toLocalIsoDate());
+
+    return departure >= today;
+  }
+
+  filteredBookings = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    const bookings = this.bookings()
+      .filter((booking) => this.isActiveBooking(booking.departureDate))
+      .sort((a, b) => b.arrivalDate.localeCompare(a.arrivalDate));
+
+    if (!term) {
+      return bookings;
+    }
+
+    return bookings.filter((booking) =>
+      `${booking.clientName} ${booking.clientLastName}`.toLowerCase().includes(term),
+    );
   });
+
+  pagedBookings = computed(() => {
+    const startIndex = this.currentPage() * this.pageSize;
+
+    return this.filteredBookings().slice(startIndex, startIndex + this.pageSize);
+  });
+
+  total = computed(() => this.filteredBookings().length);
+
+  growthLabel = computed(() => {
+    const value = Math.round(this.growth() * 10) / 10;
+    const sign = value >= 0 ? '+' : '';
+
+    return `${sign}${value}% vs ayer`;
+  });
+
+  growthClass = computed(() =>
+    this.growth() >= 0
+      ? 'mt-4 flex items-center text-xs text-green-600 font-bold'
+      : 'mt-4 flex items-center text-xs text-error font-bold',
+  );
 
   columnsName = signal<string[]>([
     'Huésped',
@@ -52,19 +126,24 @@ export class Maindashboard {
 
   pageSize = 5;
   currentPage = signal(0);
-  showModal: boolean = false;
+  searchTerm = signal('');
+  showModal = false;
 
-  ngOnInit() {
-    this.dashboardService.getTotal('bookings');
-    this.dashboardService.getTotal('apartments');
-    this.dashboardService.getOccupancy();
-    this.dashboardService.getBookingsGrowth();
-    this.dashboardService.getTodayBookings();
-    this.dashboardService.loadDashboard();
+  ngOnInit(): void {
+    this.dashboardService.loadStats();
+    this.dashboardService.getDashboardData();
     this.apartmentService.getApartments();
-    this.bookings();
     this.buildForm();
-    this.activeBookings();
+  }
+
+  onSearch(term: string): void {
+    this.searchTerm.set(term);
+    this.currentPage.set(0);
+    this.idSelected.set(new Set());
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
   }
 
   buildForm(): void {
@@ -73,134 +152,155 @@ export class Maindashboard {
       clientId: new FormControl(''),
       clientName: new FormControl({ value: '', disabled: true }),
       clientLastName: new FormControl({ value: '', disabled: true }),
-      apartmentId: new FormControl(''),
-      amountPeople: new FormControl(''),
-      arrivalDate: new FormControl(''),
-      departureDate: new FormControl(''),
-      nights: new FormControl(''),
-      totalPrice: new FormControl(''),
+      apartmentId: new FormControl(null, Validators.required),
+      amountPeople: new FormControl(1, [Validators.required, Validators.min(1)]),
+      arrivalDate: new FormControl('', Validators.required),
+      departureDate: new FormControl('', Validators.required),
     });
+
+    this.bookingForm.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.updatePreview());
   }
 
-  isActiveBooking(departureDate: string | Date): boolean {
-    let departure: Date;
+  private updatePreview(): void {
+    const { apartmentId, amountPeople, arrivalDate, departureDate } =
+      this.bookingForm.getRawValue();
+    const apartment = this.apartments().find((item) => item.id === apartmentId);
+    const people = Number(amountPeople);
 
-    if (typeof departureDate === 'string') {
-      const [year, month, day] = departureDate.split('-').map(Number);
-      departure = new Date(year, month - 1, day);
-    } else {
-      departure = new Date(departureDate);
+    if (!apartment || !arrivalDate || !departureDate || !Number.isFinite(people)) {
+      this.editPreview.set(null);
+      return;
     }
 
-    const today = new Date();
+    const nights = daysBetween(arrivalDate, departureDate);
 
-    departure.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
-
-    return departure >= today;
-  }
-
-  private parseLocalDate(date: string | Date): Date {
-    if (date instanceof Date) {
-      const result = new Date(date);
-      result.setHours(0, 0, 0, 0);
-      return result;
+    if (nights < 1) {
+      this.editPreview.set(null);
+      return;
     }
 
-    const [year, month, day] = date.split('-').map(Number);
+    const totalPrice = calculateBookingPrice(apartment.price, people, nights);
 
-    return new Date(year, month - 1, day);
+    this.editPreview.set({ nights, totalPrice, apartmentName: apartment.apartmentName });
   }
 
-  pagedBookings = computed(() => {
-    const data = this.bookings();
-    const startIndex = this.currentPage() * this.pageSize;
-    return data.slice(startIndex, startIndex + this.pageSize);
-  });
+  async deleteBooking(bookingId: string): Promise<void> {
+    if (this.deletingId()) {
+      return;
+    }
 
-  activeBookings = computed(() =>
-    this.pagedBookings().filter((booking) => this.isActiveBooking(booking.departureDate)),
-  );
+    const confirmed = await this.confirmation.confirmDelete(
+      '¿Seguro que querés eliminar esta reserva? Esta acción no se puede deshacer.',
+    );
 
-  deleteBooking(bookingId: string): void {
-    if (confirm('¿Estás seguro de que quieres eliminar esta reserva?')) {
-      this.bookingService.deleteBooking(bookingId).subscribe({
+    if (!confirmed) {
+      return;
+    }
+
+    this.deletingId.set(bookingId);
+    this.bookingService
+      .deleteBooking(bookingId)
+      .pipe(finalize(() => this.deletingId.set(null)))
+      .subscribe({
         next: () => {
-          alert('Reserva eliminada correctamente.');
-          this.dashboardService.loadDashboard();
+          this.notifications.success('Reserva eliminada correctamente.');
+          this.dashboardService.getDashboardData();
+          this.dashboardService.loadStats();
         },
         error: () => {
-          alert('Failed to delete booking. Please try again later.');
+          // El interceptor global ya muestra el error.
         },
       });
-    }
   }
 
-  openEditBooking(bookingData: any): void {
+  openEditBooking(booking: IDashboard): void {
     this.bookingForm.patchValue({
-      id: bookingData.id,
-      clientId: bookingData.clientId,
-      clientName: bookingData.clientName,
-      clientLastName: bookingData.clientLastName,
-      apartmentId: bookingData.apartmentId,
-      amountPeople: bookingData.amountPeople,
-      arrivalDate: bookingData.arrivalDate,
-      departureDate: bookingData.departureDate,
-      nights: bookingData.nights,
-      totalPrice: bookingData.totalPrice,
+      id: booking.id,
+      clientId: booking.clientId,
+      clientName: booking.clientName,
+      clientLastName: booking.clientLastName,
+      apartmentId: booking.apartmentId,
+      amountPeople: booking.amountPeople,
+      arrivalDate: booking.arrivalDate,
+      departureDate: booking.departureDate,
     });
 
+    this.updatePreview();
     this.showModal = true;
   }
 
-  onEdit(): void {
-    const bookingData = this.bookingForm.getRawValue();
-
-    this.bookingService.editBooking(bookingData.id, bookingData).subscribe({
-      next: () => {
-        alert('Reserva editada correctamente.');
-        this.showModal = false;
-        this.bookingForm.reset();
-        this.dashboardService.loadDashboard();
-      },
-      error: (err) => {
-        alert('Error al editar la reserva. Por favor intenta nuevamente más tarde.' + err);
-      },
-    });
-  }
-
-  totalPages = computed(() => {
-    return Math.ceil(this.bookings().length / this.pageSize);
-  });
-
-  setPage(page: number) {
-    if (page >= 0 && page < this.totalPages()) {
-      this.currentPage.set(page);
+  closeModal(): void {
+    if (this.saving()) {
+      return;
     }
+
+    this.showModal = false;
+    this.editPreview.set(null);
   }
 
-  isSelected = signal<boolean>(false);
+  onEdit(): void {
+    if (this.saving()) {
+      return;
+    }
 
-  isRowChecked(): void {
-    this.isSelected.update((prev) => !prev);
-  }
+    if (this.bookingForm.invalid) {
+      this.bookingForm.markAllAsTouched();
+      this.notifications.error('Revisá los datos de la reserva antes de guardar.');
+      return;
+    }
 
-  inputCheckbox(evento: Event): void {
-    const input = evento.target as HTMLInputElement;
-    this.isSelected.set(input.checked);
+    const bookingData = this.bookingForm.getRawValue();
+    const nights = daysBetween(bookingData.arrivalDate, bookingData.departureDate);
+
+    if (nights < 1) {
+      this.notifications.error('La fecha de salida debe ser posterior a la fecha de llegada.');
+      return;
+    }
+
+    const payload: BookingUpdateRequest = {
+      arrivalDate: bookingData.arrivalDate,
+      departureDate: bookingData.departureDate,
+      nights,
+      clientId: bookingData.clientId,
+      apartmentId: bookingData.apartmentId,
+      amountPeople: Number(bookingData.amountPeople),
+    };
+
+    this.saving.set(true);
+
+    this.bookingService
+      .editBooking(bookingData.id, payload)
+      .pipe(finalize(() => this.saving.set(false)))
+      .subscribe({
+        next: () => {
+          this.notifications.success('Reserva editada correctamente.');
+          this.showModal = false;
+          this.editPreview.set(null);
+          this.bookingForm.reset({ amountPeople: 1 });
+          this.dashboardService.getDashboardData();
+          this.dashboardService.loadStats();
+        },
+        error: () => {
+          // Conservamos los datos cargados para que el usuario pueda reintentar.
+        },
+      });
   }
 
   idSelected = signal<Set<string>>(new Set());
 
   allSelected = computed(() => {
-    this.activeBookings().length > 0 && this.idSelected().size === this.activeBookings().length;
+    const page = this.pagedBookings();
+
+    return page.length > 0 && page.every((booking) => this.idSelected().has(booking.id));
   });
 
   alternateSelectAll(event: Event): void {
     const input = event.target as HTMLInputElement;
 
     if (input.checked) {
-      const allIds = this.activeBookings().map((booking) => booking.id);
+      const allIds = this.pagedBookings().map((booking) => booking.id);
       this.idSelected.set(new Set(allIds));
     } else {
       this.idSelected.set(new Set());
@@ -219,24 +319,40 @@ export class Maindashboard {
     });
   }
 
-  deleteSelectedBookings(): void {
-    if (this.idSelected().size === 0) {
-      alert('No hay reservas seleccionadas para eliminar.');
+  async deleteSelectedBookings(): Promise<void> {
+    if (this.deletingSelection()) {
       return;
     }
 
-    if (confirm('¿Estás seguro de que quieres eliminar las reservas seleccionadas?')) {
-      const bookingsIds = Array.from(this.idSelected());
-      this.bookingService.deleteBookingList(bookingsIds).subscribe({
+    if (this.idSelected().size === 0) {
+      this.notifications.info('No hay reservas seleccionadas para eliminar.');
+      return;
+    }
+
+    const confirmed = await this.confirmation.confirmDelete(
+      `¿Seguro que querés eliminar ${this.idSelected().size} reserva(s)? Esta acción no se puede deshacer.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const bookingsIds = Array.from(this.idSelected());
+    this.deletingSelection.set(true);
+
+    this.bookingService
+      .deleteBookingList(bookingsIds)
+      .pipe(finalize(() => this.deletingSelection.set(false)))
+      .subscribe({
         next: () => {
-          alert('Reservas eliminadas correctamente.');
+          this.notifications.success('Reservas eliminadas correctamente.');
           this.idSelected.set(new Set());
-          this.dashboardService.loadDashboard();
+          this.dashboardService.getDashboardData();
+          this.dashboardService.loadStats();
         },
         error: () => {
-          alert('Error al eliminar las reservas. Por favor intenta nuevamente más tarde.');
+          // El interceptor global ya muestra el error.
         },
       });
-    }
   }
 }

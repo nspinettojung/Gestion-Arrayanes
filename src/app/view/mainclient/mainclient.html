@@ -9,13 +9,27 @@
         Administra y organiza la base de datos de tus clientes habituales y nuevos.
       </p>
     </div>
+    <div class="w-full md:w-80">
+      <gda-search-input
+        [value]="searchTerm()"
+        (valueChange)="onSearch($event)"
+        [placeholder]="'Buscar por nombre, DNI o teléfono'"
+      ></gda-search-input>
+    </div>
   </div>
 
   <gda-table
     [title]="'Listado de clientes'"
-    [data]="clientslist()"
+    [data]="filteredClients()"
     [pageSize]="pageSize"
-    (pageChange)="setPage($event)"
+    [page]="currentPage()"
+    [loading]="clientsLoading()"
+    [emptyMessage]="
+      searchTerm()
+        ? 'No hay clientes que coincidan con la búsqueda.'
+        : 'No hay clientes cargados todavía. Podés agregar uno desde una reserva.'
+    "
+    (pageChange)="onPageChange($event)"
   >
     <tr class="bg-surface-container-high border-b border-outline-variant" column-header>
       @for (col of columnsName(); track $index) {
@@ -56,7 +70,7 @@
           </div>
         </td>
         <td class="px-space-md py-4 text-xs font-medium" (click)="openEditClient(client)">
-          {{ client.lastCheckIn ? (client.lastCheckIn | date: 'dd/MM/yyyy') : 'Nunca' }}
+          {{ client.lastCheckIn ? (client.lastCheckIn | localDate: 'short') : 'Nunca' }}
         </td>
         <td class="px-space-md py-4 text-right flex flex-colum justify-center">
           <button
@@ -67,9 +81,19 @@
             >
           </button>
           <button
-            class="flex p-1.5 hover:bg-error/10 rounded-xl text-error transition-colors justify-center"
+            class="flex p-1.5 hover:bg-error/10 rounded-xl text-error transition-colors justify-center disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label="Eliminar cliente"
+            [disabled]="deletingId() === client.id"
+            (click)="deleteClient(client.id)"
           >
-            <span class="material-symbols-outlined" (click)="deleteClient(client.id)">delete</span>
+            @if (deletingId() === client.id) {
+              <span
+                class="h-4 w-4 animate-spin rounded-full border-2 border-error/30 border-t-error"
+                aria-hidden="true"
+              ></span>
+            } @else {
+              <span class="material-symbols-outlined">delete</span>
+            }
           </button>
         </td>
       </tr>
@@ -78,7 +102,12 @@
 </div>
 
 <form [formGroup]="clientForm" (ngSubmit)="onEdit()">
-  <gda-modal [title]="'Editar Cliente'" [show]="showModal" (close)="showModal = false">
+  <gda-modal
+    [title]="'Editar Cliente'"
+    [show]="showModal"
+    [busy]="saving()"
+    (close)="showModal = false"
+  >
     <div
       class="border-b border-outline-variant pb-space-sm mb-space-md flex items-center gap-2 form-title"
     >

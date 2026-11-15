@@ -1,9 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../../../environments/environment';
-import { BookingCreateRequest, IBooking } from '../../interface/booking/booking';
-import { Observable } from 'rxjs';
+import {
+  BookingCreateRequest,
+  BookingUpdateRequest,
+  IBooking,
+} from '../../interface/booking/booking';
+import { Observable, finalize } from 'rxjs';
 import { CalendarDayDTO } from '../../interface/booking/calendar-day-dto';
+import { parseLocalDate } from '../../utils/date';
 
 interface CalendarDay {
   dayNumber: number | null;
@@ -18,15 +23,22 @@ interface CalendarDay {
 export class Booking {
   private apiUrl = environment.apiUrl;
   private http = inject(HttpClient);
+  private loadingSignal = signal(false);
   bookingData = signal<IBooking[]>([]);
   bookinglist = this.bookingData.asReadonly();
+  loading = this.loadingSignal.asReadonly();
   days = signal<CalendarDay[]>([]);
 
   getBookings(): void {
-    this.http.get<IBooking[]>(`${this.apiUrl}/bookings/bookinglist`).subscribe({
-      next: (data) => this.bookingData.set(data),
-      error: (error) => console.error('Error fetching bookings:', error),
-    });
+    this.loadingSignal.set(true);
+
+    this.http
+      .get<IBooking[]>(`${this.apiUrl}/bookings/bookinglist`)
+      .pipe(finalize(() => this.loadingSignal.set(false)))
+      .subscribe({
+        next: (data) => this.bookingData.set(data),
+        error: (error) => console.error('Error fetching bookings:', error),
+      });
   }
 
   getCurrentDate(): Observable<string> {
@@ -42,7 +54,7 @@ export class Booking {
 
           // convertir respuesta en estructura para el grid
           data.forEach((dto) => {
-            const dayNumber = new Date(dto.date).getDate();
+            const dayNumber = parseLocalDate(dto.date).getDate();
             calendarGrid.push({
               dayNumber,
               isCurrentMonth: true,
@@ -75,7 +87,7 @@ export class Booking {
     return this.http.delete<void>(`${this.apiUrl}/bookings`, { body: bookingsIds });
   }
 
-  editBooking(bookingId: string, bookingData: IBooking): Observable<IBooking> {
+  editBooking(bookingId: string, bookingData: BookingUpdateRequest): Observable<IBooking> {
     return this.http.put<IBooking>(`${this.apiUrl}/bookings/editbooking/${bookingId}`, bookingData);
   }
 }

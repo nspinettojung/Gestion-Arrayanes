@@ -1,7 +1,9 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
-import { filter, map, mergeMap } from 'rxjs';
+import { filter, finalize, map, mergeMap } from 'rxjs';
+import { SystemService } from '../../core/services/system/system-service';
+import { ConfirmationService } from '../../core/services/confirmation/confirmation';
 
 @Component({
   selector: 'gda-navbar',
@@ -11,8 +13,13 @@ import { filter, map, mergeMap } from 'rxjs';
 })
 export class Navbar {
   private destroyRef = inject(DestroyRef);
+  private systemService = inject(SystemService);
+  private confirmation = inject(ConfirmationService);
+
   pageTitle: string = 'Mi App';
   pageIcon: string = '';
+  closing = signal(false);
+  closed = signal(false);
 
   constructor(
     private router: Router,
@@ -37,5 +44,47 @@ export class Navbar {
         this.pageTitle = data['title'] || 'Bienvenido';
         this.pageIcon = data['icon'];
       });
+  }
+
+  async closeSystem(): Promise<void> {
+    if (this.closing()) {
+      return;
+    }
+
+    const confirmed = await this.confirmation.confirm({
+      title: 'Salir de la aplicación',
+      message: '¿Seguro que querés cerrar la aplicación? Se cerrarán las ventanas abiertas.',
+      confirmText: 'Salir',
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.closing.set(true);
+    this.systemService
+      .closeApp()
+      .pipe(finalize(() => this.closing.set(false)))
+      .subscribe({
+        next: () => {
+          this.tryCloseWindow();
+        },
+        error: () => {
+          // Aunque falle la respuesta por el apagado repentino, intentamos cerrar igual.
+          this.tryCloseWindow();
+        },
+      });
+  }
+
+  private tryCloseWindow() {
+    // En la ventana en modo app el cierre funciona; si el navegador lo bloquea,
+    // mostramos una pantalla de despedida para que el usuario cierre la ventana.
+    window.close();
+
+    setTimeout(() => {
+      if (!window.closed) {
+        this.closed.set(true);
+      }
+    }, 600);
   }
 }

@@ -1,19 +1,27 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Table } from '../assets/table/table';
-import { CurrencyPipe, DatePipe } from '@angular/common';
 import { InitialsPipe } from '../assets/pipes/initials-pipe';
 import { Dashboard } from '../../core/services/dashboard/dashboard';
 import { Booking } from '../../core/services/booking/booking';
+import { NotificationService } from '../../core/services/notification/notification';
+import { ConfirmationService } from '../../core/services/confirmation/confirmation';
+import { finalize } from 'rxjs';
+import { SearchInput } from '../assets/search-input/search-input';
+import { ArsCurrencyPipe } from '../assets/pipes/ars-currency-pipe';
+import { LocalDatePipe } from '../assets/pipes/local-date-pipe';
 
 @Component({
   selector: 'app-mainhistory',
-  imports: [Table, CurrencyPipe, InitialsPipe, DatePipe],
+  imports: [Table, InitialsPipe, SearchInput, ArsCurrencyPipe, LocalDatePipe],
   templateUrl: './mainhistory.html',
   styleUrl: './mainhistory.scss',
 })
 export class Mainhistory {
   private dashboardService = inject(Dashboard);
   private bookingService = inject(Booking);
+  private notifications = inject(NotificationService);
+  private confirmation = inject(ConfirmationService);
+
   columnsName = signal<string[]>([
     'Huésped',
     'Habitación',
@@ -23,6 +31,10 @@ export class Mainhistory {
   ]);
   pageSize = 5;
   currentPage = signal(0);
+  searchTerm = signal('');
+  loading = this.dashboardService.loadingDashboard;
+  deletingId = signal<string | null>(null);
+  deletingSelection = signal(false);
 
   ngOnInit(): void {
     this.dashboardService.getDashboardData();
@@ -30,44 +42,51 @@ export class Mainhistory {
 
   bookings = computed(() => this.dashboardService.dashboardSignal());
 
-  pagedBookings = computed(() => {
-    const data = this.bookings();
-    const startIndex = this.currentPage() * this.pageSize;
-    return data.slice(startIndex, startIndex + this.pageSize);
-  });
+  filteredBookings = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    const bookings = [...this.bookings()].sort((a, b) =>
+      b.arrivalDate.localeCompare(a.arrivalDate),
+    );
 
-  totalPages = computed(() => {
-    return Math.ceil(this.bookings().length / this.pageSize);
-  });
-
-  setPage(page: number) {
-    if (page >= 0 && page < this.totalPages()) {
-      this.currentPage.set(page);
+    if (!term) {
+      return bookings;
     }
+
+    return bookings.filter((booking) =>
+      `${booking.clientName} ${booking.clientLastName}`.toLowerCase().includes(term),
+    );
+  });
+
+  pagedBookings = computed(() => {
+    const startIndex = this.currentPage() * this.pageSize;
+
+    return this.filteredBookings().slice(startIndex, startIndex + this.pageSize);
+  });
+
+  total = computed(() => this.filteredBookings().length);
+
+  onSearch(term: string): void {
+    this.searchTerm.set(term);
+    this.currentPage.set(0);
   }
 
-  isSelected = signal<boolean>(false);
-
-  isRowChecked(): void {
-    this.isSelected.update((prev) => !prev);
-  }
-
-  inputCheckbox(evento: Event): void {
-    const input = evento.target as HTMLInputElement;
-    this.isSelected.set(input.checked);
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
   }
 
   idSelected = signal<Set<string>>(new Set());
 
   allSelected = computed(() => {
-    this.bookings().length > 0 && this.idSelected().size === this.bookings().length;
+    const page = this.pagedBookings();
+
+    return page.length > 0 && page.every((booking) => this.idSelected().has(booking.id));
   });
 
   alternateSelectAll(event: Event): void {
     const input = event.target as HTMLInputElement;
 
     if (input.checked) {
-      const allIds = this.bookings().map((booking) => booking.id);
+      const allIds = this.pagedBookings().map((booking) => booking.id);
       this.idSelected.set(new Set(allIds));
     } else {
       this.idSelected.set(new Set());
@@ -86,38 +105,67 @@ export class Mainhistory {
     });
   }
 
-  deleteSelectedBookings(): void {
-    if (this.idSelected().size === 0) {
-      alert('No hay reservas seleccionadas para eliminar.');
+  async deleteSelectedBookings(): Promise<void> {
+    if (this.deletingSelection()) {
       return;
     }
 
-    if (confirm('¿Estás seguro de que quieres eliminar las reservas seleccionadas?')) {
-      const bookingsIds = Array.from(this.idSelected());
-      this.bookingService.deleteBookingList(bookingsIds).subscribe({
+    if (this.idSelected().size === 0) {
+      this.notifications.info('No hay reservas seleccionadas para eliminar.');
+      return;
+    }
+
+    const confirmed = await this.confirmation.confirmDelete(
+      `¿Seguro que querés eliminar ${this.idSelected().size} reserva(s)? Esta acción no se puede deshacer.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const bookingsIds = Array.from(this.idSelected());
+    this.deletingSelection.set(true);
+
+    this.bookingService
+      .deleteBookingList(bookingsIds)
+      .pipe(finalize(() => this.deletingSelection.set(false)))
+      .subscribe({
         next: () => {
-          alert('Reservas eliminadas correctamente.');
+          this.notifications.success('Reservas eliminadas correctamente.');
           this.idSelected.set(new Set());
-          this.dashboardService.loadDashboard();
+          this.dashboardService.getDashboardData();
         },
         error: () => {
-          alert('Error al eliminar las reservas. Por favor intenta nuevamente más tarde.');
+          // El interceptor global ya muestra el error.
         },
       });
-    }
   }
 
-  deleteBooking(bookingId: string): void {
-    if (confirm('¿Estás seguro de que quieres eliminar esta reserva?')) {
-      this.bookingService.deleteBooking(bookingId).subscribe({
+  async deleteBooking(bookingId: string): Promise<void> {
+    if (this.deletingId()) {
+      return;
+    }
+
+    const confirmed = await this.confirmation.confirmDelete(
+      '¿Seguro que querés eliminar esta reserva? Esta acción no se puede deshacer.',
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.deletingId.set(bookingId);
+    this.bookingService
+      .deleteBooking(bookingId)
+      .pipe(finalize(() => this.deletingId.set(null)))
+      .subscribe({
         next: () => {
-          alert('Reserva eliminada correctamente.');
-          this.dashboardService.loadDashboard();
+          this.notifications.success('Reserva eliminada correctamente.');
+          this.dashboardService.getDashboardData();
         },
         error: () => {
-          alert('Failed to delete booking. Please try again later.');
+          // El interceptor global ya muestra el error.
         },
       });
-    }
   }
 }

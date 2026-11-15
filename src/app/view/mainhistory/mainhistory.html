@@ -1,9 +1,33 @@
-<div class="pt-4">
+<div class="pt-4 space-y-4">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+      <h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">Historial</h2>
+      <p class="text-on-surface-variant font-body-md">
+        Consultá, filtrá y administrá todas las reservas registradas.
+      </p>
+    </div>
+    <div class="w-full md:w-80">
+      <gda-search-input
+        [value]="searchTerm()"
+        (valueChange)="onSearch($event)"
+        [placeholder]="'Buscar por apellido'"
+      ></gda-search-input>
+    </div>
+  </div>
+
   <gda-table
-    [title]="'Historial'"
-    [data]="bookings()"
+    [title]="'Reservas registradas'"
+    [data]="filteredBookings()"
     [pageSize]="pageSize"
-    (pageChange)="setPage($event)"
+    [page]="currentPage()"
+    [totalElements]="total()"
+    [loading]="loading()"
+    [emptyMessage]="
+      searchTerm()
+        ? 'No hay reservas que coincidan con la búsqueda.'
+        : 'Todavía no hay reservas en el historial.'
+    "
+    (pageChange)="onPageChange($event)"
   >
     <tr class="" column-header>
       @for (columnName of columnsName(); track $index) {
@@ -12,17 +36,27 @@
 
       <th class="px-space-md py-3 border-b border-outline-variant font-bold">
         <button
-          class="flex p-1.5 hover:bg-error/10 rounded-xl text-error transition-colors justify-center"
+          class="flex p-1.5 hover:bg-error/10 rounded-xl text-error transition-colors justify-center disabled:cursor-not-allowed disabled:opacity-50"
+          type="button"
+          aria-label="Eliminar reservas seleccionadas"
+          [disabled]="deletingSelection()"
           (click)="deleteSelectedBookings()"
         >
-          <span class="material-symbols-outlined">delete</span>
+          @if (deletingSelection()) {
+            <span
+              class="h-4 w-4 animate-spin rounded-full border-2 border-error/30 border-t-error"
+              aria-hidden="true"
+            ></span>
+          } @else {
+            <span class="material-symbols-outlined">delete</span>
+          }
         </button>
       </th>
       <th class="px-space-md py-3 border-b border-outline-variant font-bold">
         <input type="checkbox" [checked]="allSelected()" (change)="alternateSelectAll($event)" />
       </th>
     </tr>
-    @for (booking of pagedBookings(); track $index) {
+    @for (booking of pagedBookings(); track booking.id) {
       <tr
         class="hover:bg-surface-container-low transition-colors group cursor-pointer"
         table-body
@@ -48,32 +82,39 @@
         </td>
         <td class="px-space-md py-4 text-on-surface-variant">{{ booking.amountPeople }}</td>
         <td class="px-space-md py-4 text-on-surface-variant">
-          {{ booking.arrivalDate ? (booking.arrivalDate | date: 'd MMMM') : 'No hay fecha' }}
-          -
-          {{ booking.departureDate ? (booking.departureDate | date: 'd MMMM') : 'No hay fecha' }}
+          {{ booking.arrivalDate | localDate }} - {{ booking.departureDate | localDate }}
         </td>
         <td class="px-space-md py-4 text-on-surface-variant">
-          {{ booking.totalPrice | currency: 'ARS' : 'code' : '1.0-0' }}
+          {{ booking.totalPrice | arsCurrency }}
         </td>
         <td class="px-space-md py-4 text-right flex flex-colum justify-center">
           <button
-            class="flex p-1.5 hover:bg-error/10 rounded-xl text-error transition-colors justify-center"
-            (click)="deleteBooking(booking.id)"
+            class="flex p-1.5 hover:bg-error/10 rounded-xl text-error transition-colors justify-center disabled:cursor-not-allowed disabled:opacity-50"
+            type="button"
+            aria-label="Eliminar reserva"
+            [disabled]="deletingId() === booking.id"
+            (click)="deleteBooking(booking.id); $event.stopPropagation()"
           >
-            <span class="material-symbols-outlined">delete</span>
+            @if (deletingId() === booking.id) {
+              <span
+                class="h-4 w-4 animate-spin rounded-full border-2 border-error/30 border-t-error"
+                aria-hidden="true"
+              ></span>
+            } @else {
+              <span class="material-symbols-outlined">delete</span>
+            }
           </button>
         </td>
         <td class="px-space-md py-3 border-b border-outline-variant font-bold">
           <input
             class="cursor-pointer"
             type="checkbox"
-            id="rowChecked"
+            aria-label="Seleccionar reserva"
             [checked]="idSelected().has(booking.id)"
             (click)="$event.stopPropagation()"
             (change)="alternateSelectRow(booking.id)"
           />
         </td>
-        <td></td>
       </tr>
     }
   </gda-table>

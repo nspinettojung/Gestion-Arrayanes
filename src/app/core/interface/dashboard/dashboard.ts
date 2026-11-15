@@ -3,17 +3,11 @@ export interface IDashboard {
   clientId: string;
   clientName: string;
   clientLastName: string;
+  apartmentId: string;
   apartmentName: string;
   arrivalDate: string; // formato yyyy-MM-dd
   departureDate: string; // formato yyyy-MM-dd
+  nights: number; // cantidad de noches
   amountPeople: number; // cantidad de personas
   totalPrice: number; // precio total de la reserva
-}
-
-export interface DashboardPageResponse {
-  content: IDashboard[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
 }

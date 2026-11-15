@@ -11,6 +11,7 @@ import {
 import { Dashboard } from '../../../core/services/dashboard/dashboard';
 import { IDashboard } from '../../../core/interface/dashboard/dashboard';
 import { Booking } from '../../../core/services/booking/booking';
+import { toLocalIsoDate } from '../../../core/utils/date';
 
 export interface CalendarDay {
   day: number;
@@ -168,5 +169,5 @@ export class Calendar {
   }
 }
 function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0];
+  return toLocalIsoDate(date);
 }

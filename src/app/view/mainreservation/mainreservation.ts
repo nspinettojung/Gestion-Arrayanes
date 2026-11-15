@@ -1,14 +1,29 @@
-import { ChangeDetectorRef, Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, HostListener, inject, signal } from '@angular/core';
 import { Apartment } from '../../core/services/apartment/apartment';
 import { Booking } from '../../core/services/booking/booking';
 import { CommonModule } from '@angular/common';
-import { FormGroup, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NotificationService } from '../../core/services/notification/notification';
+import { finalize } from 'rxjs';
+import { addDays, daysBetween, toLocalIsoDate } from '../../core/utils/date';
+import { calculateBookingPrice, EXTRA_PERSON_PRICE } from '../../core/utils/booking-price';
+import { BookingCreateRequest } from '../../core/interface/booking/booking';
+import { IApartment } from '../../core/interface/apartment/apartment';
+import { ArsCurrencyPipe } from '../assets/pipes/ars-currency-pipe';
 
 @Component({
   selector: 'app-mainreservation',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ArsCurrencyPipe],
   templateUrl: './mainreservation.html',
   styleUrl: './mainreservation.scss',
 })
@@ -18,24 +33,30 @@ export class Mainreservation {
   private router = inject(Router);
   private fb = inject(FormBuilder);
   private destroyRef = inject(DestroyRef);
-  private cdr = inject(ChangeDetectorRef);
-  today = signal<string>('');
+  private notifications = inject(NotificationService);
+
+  today = signal<string>(toLocalIsoDate());
   form!: FormGroup;
+  saving = signal(false);
 
   apartments = this.apartmentsService.apartmentsData;
-  apartmentId = computed(() => this.apartments().map((ap) => ap.id));
-  apartmentMaxNumber = computed(() => this.apartments().map((ap) => ap.apartmentMaxNumber));
-  tomorrowDate = computed(() => {
-    const tomorrow = new Date(this.today());
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
-  });
+  selectedApartment = signal<IApartment | null>(null);
   selectedMaxPeople = signal<number | null>(null);
+  nights = signal(0);
+  extraPeopleCount = signal(0);
+  totalPrice = signal(0);
+  extraPersonPrice = EXTRA_PERSON_PRICE;
+
+  tomorrowDate = computed(() => addDays(this.today(), 1));
+
+  departureMin(): string {
+    const arrival = this.form?.get('arrivalDate')?.value as string | undefined;
+
+    return arrival ? addDays(arrival, 1) : this.tomorrowDate();
+  }
 
   ngOnInit(): void {
-    const now = new Date();
-
-    this.today.set(now.toISOString().split('T')[0]);
+    this.buildForm();
 
     this.apartmentsService.getApartments();
     this.bookingsService.getBookings();
@@ -45,120 +66,162 @@ export class Mainreservation {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (date) => {
+          const previousToday = this.today();
           this.today.set(date);
-          this.cdr.detectChanges();
-        },
-        error: (error) => alert('❌ Error fetching current date: ' + error.message),
-      });
 
+          if (this.form.get('arrivalDate')?.value === previousToday) {
+            this.form.patchValue({
+              arrivalDate: date,
+              departureDate: addDays(date, 1),
+            });
+          }
+        },
+        error: () => {
+          // El interceptor global ya muestra el error; seguimos con la fecha local.
+        },
+      });
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onGlobalKeydown(event: KeyboardEvent): void {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault();
+      this.submit();
+    }
+  }
+
+  private buildForm(): void {
     this.form = this.fb.group({
       clientName: ['', Validators.required],
       clientLastName: ['', Validators.required],
       clientDni: [''],
       clientPhone: [''],
-      amountPeople: [1, Validators.required],
-      apartmentId: [null, ''],
-      arrivalDate: [new Date().toISOString().split('T')[0], Validators.required],
+      amountPeople: [1, [Validators.required, Validators.min(1)]],
+      apartmentId: [null, Validators.required],
+      arrivalDate: [this.today(), Validators.required],
       departureDate: [this.tomorrowDate(), Validators.required],
     });
 
-    setTimeout(() => {
-      // 1. Llamada a la API segura expuesta por tu preload.js
-      if ((window as any).electron) {
-        (window as any).electron.restaurarFoco();
-      }
+    this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.updateSummary();
+    });
 
-      // 2. Fallback nativo mejorado con .select() para asegurar la activación en Chromium
-      const primerInput = document.querySelector(
-        'input[type="number"], input[type="text"]',
-      ) as HTMLInputElement;
-      if (primerInput) {
-        primerInput.blur();
-        setTimeout(() => {
-          primerInput.focus();
-          primerInput.select(); // Selecciona el texto para forzar el enganche del teclado
-        }, 50);
-      }
-
-      // 3. Forzar sincronización visual de Angular
-      this.cdr.detectChanges();
-    }, 200);
+    this.updateSummary();
   }
 
-  ngOnDestroy(): void {
-    console.log('BOOKING FORM DESTRUIDO');
+  private updateSummary(): void {
+    const { apartmentId, amountPeople, arrivalDate, departureDate } = this.form.getRawValue();
+    const apartment = this.apartments().find((item) => item.id === apartmentId) ?? null;
+    const people = Number(amountPeople);
+    const stayNights =
+      arrivalDate && departureDate ? Math.max(0, daysBetween(arrivalDate, departureDate)) : 0;
+
+    this.selectedApartment.set(apartment);
+    this.selectedMaxPeople.set(apartment?.apartmentMaxNumber ?? null);
+    this.nights.set(stayNights);
+    this.extraPeopleCount.set(Math.max(0, (Number.isFinite(people) ? people : 0) - 1));
+    this.applyMaxPeopleValidator(apartment?.apartmentMaxNumber ?? null);
+
+    if (!apartment || stayNights < 1 || !Number.isFinite(people) || people < 1) {
+      this.totalPrice.set(0);
+      return;
+    }
+
+    this.totalPrice.set(calculateBookingPrice(apartment.price, people, stayNights));
   }
 
-  onApartmentChange(event: Event): void {
-    const selectedId = (event.target as HTMLSelectElement).value;
-    const apartment = this.apartments().find((ap) => ap.id === selectedId);
+  private applyMaxPeopleValidator(max: number | null): void {
+    const control = this.form.get('amountPeople');
 
-    this.selectedMaxPeople.set(apartment ? apartment.apartmentMaxNumber : null);
+    if (!control) {
+      return;
+    }
+
+    const validators: ValidatorFn[] = [Validators.required, Validators.min(1)];
+
+    if (max && max > 0) {
+      validators.push(this.maxPeopleValidator(max));
+    }
+
+    control.setValidators(validators);
+    control.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private maxPeopleValidator(max: number): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = Number(control.value);
+
+      return Number.isFinite(value) && value > max ? { maxPeople: { max, actual: value } } : null;
+    };
   }
 
   submit(): void {
-    if (this.form.valid) {
-      const {
+    if (this.saving()) {
+      return;
+    }
+
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.notifications.error('Revisá los campos obligatorios de la reserva.');
+      return;
+    }
+
+    const {
+      clientName,
+      clientLastName,
+      clientDni,
+      clientPhone,
+      apartmentId,
+      amountPeople,
+      arrivalDate,
+      departureDate,
+    } = this.form.getRawValue();
+
+    const nights = daysBetween(arrivalDate, departureDate);
+
+    if (nights < 1) {
+      this.notifications.error('La fecha de salida debe ser posterior a la fecha de llegada.');
+      return;
+    }
+
+    const apartment = this.apartments().find((item) => item.id === apartmentId);
+
+    if (apartment && Number(amountPeople) > apartment.apartmentMaxNumber) {
+      this.notifications.error(
+        `El departamento admite hasta ${apartment.apartmentMaxNumber} personas.`,
+      );
+      return;
+    }
+
+    const bookingRequest: BookingCreateRequest = {
+      arrivalDate,
+      departureDate,
+      nights,
+      amountPeople: Number(amountPeople),
+      apartmentId,
+      client: {
         clientName,
         clientLastName,
         clientDni,
         clientPhone,
-        apartmentId,
-        amountPeople,
-        arrivalDate,
-        departureDate,
-      } = this.form.value;
+      },
+    };
 
-      const nights = this.calculateNights(arrivalDate, departureDate);
-      if (nights < 1) {
-        alert('❌ La fecha de salida debe ser posterior a la fecha de llegada');
-        return;
-      }
+    this.saving.set(true);
 
-      const bookingRequest = {
-        arrivalDate,
-        departureDate,
-        nights,
-        amountPeople,
-        apartmentId,
-        client: {
-          clientName,
-          clientLastName,
-          clientDni,
-          clientPhone,
-        },
-      };
-
-      this.bookingsService.createBookingWithClient(bookingRequest).subscribe({
-        next: (bookingRequest) => {
-          alert(`Reserva guardada con éxito. Código: ${bookingRequest.id}`);
+    this.bookingsService
+      .createBookingWithClient(bookingRequest)
+      .pipe(finalize(() => this.saving.set(false)))
+      .subscribe({
+        next: (booking) => {
+          this.notifications.success(`Reserva guardada con éxito. Código: ${booking.id}`);
           this.resetForm();
-          setTimeout(() => {
-            this.router.navigate(['/dashboard']);
-          }, 50);
+          this.router.navigate(['/dashboard']);
         },
-        error: (err) => {
-          if (err.status === 409) {
-            alert(`❌ ${err.error.message}`);
-            this.resetForm();
-            return;
-          }
-
-          alert(`❌ Error ${err.status}: ${err.error?.message ?? err.message}`);
-          this.resetForm();
+        error: () => {
+          // Conservamos los datos cargados para que el usuario pueda reintentar.
         },
       });
-    } else {
-      alert('❌ Formulario inválido');
-    }
-  }
-
-  private calculateNights(arrivalDate: string, departureDate: string): number {
-    const arrival = new Date(`${arrivalDate}T00:00:00`);
-    const departure = new Date(`${departureDate}T00:00:00`);
-    const millisecondsPerDay = 24 * 60 * 60 * 1000;
-
-    return Math.round((departure.getTime() - arrival.getTime()) / millisecondsPerDay);
   }
 
   resetForm(): void {
@@ -169,9 +232,10 @@ export class Mainreservation {
       clientPhone: '',
       amountPeople: 1,
       apartmentId: null,
-      arrivalDate: new Date().toISOString().split('T')[0],
+      arrivalDate: this.today(),
       departureDate: this.tomorrowDate(),
     });
+    this.updateSummary();
   }
 
   cancel(): void {

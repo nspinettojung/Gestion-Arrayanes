@@ -5,7 +5,17 @@ export interface IBooking {
   departureDate: string;
   clientId: string;
   apartmentId: string;
-  bookingPrice: number;
+  amountPeople: number;
+  totalPrice: number;
+}
+
+export interface BookingUpdateRequest {
+  arrivalDate: string;
+  departureDate: string;
+  nights: number;
+  clientId: string;
+  apartmentId: string;
+  amountPeople: number;
 }
 
 export interface BookingCreateRequest {

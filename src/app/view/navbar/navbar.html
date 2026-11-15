@@ -4,7 +4,7 @@
 >
   <div class="flex items-center gap-space-lg flex-1">
     <div class="flex items-center gap-2">
-      <span class="material-symbols-outlined text-primary text-2xl" data-icon="diversity_3" >{{
+      <span class="material-symbols-outlined text-primary text-2xl" data-icon="diversity_3">{{
         pageIcon
       }}</span>
       <span class="font-headline-sm text-headline-sm font-bold text-primary">{{ pageTitle }}</span>
@@ -29,6 +29,37 @@
         <span class="material-symbols-outlined text-sm">person_add</span>
         Agregar Reserva
       </button>
+      <button
+        type="button"
+        class="flex items-center gap-2 rounded-lg border border-outline-variant px-4 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:border-error/40 hover:text-error disabled:cursor-not-allowed disabled:opacity-50"
+        [disabled]="closing()"
+        (click)="closeSystem()"
+      >
+        @if (closing()) {
+          <span
+            class="h-4 w-4 animate-spin rounded-full border-2 border-on-surface-variant/30 border-t-on-surface-variant"
+            aria-hidden="true"
+          ></span>
+          Cerrando…
+        } @else {
+          <span class="material-symbols-outlined text-sm">power_settings_new</span>
+          Salir
+        }
+      </button>
     </div>
   </div>
 </header>
+
+@if (closed()) {
+  <div
+    class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-surface px-6 text-center"
+  >
+    <span class="material-symbols-outlined text-5xl text-primary" aria-hidden="true"
+      >power_settings_new</span
+    >
+    <h1 class="font-display-lg text-display-lg text-primary">Aplicación cerrada</h1>
+    <p class="max-w-md font-body-md text-on-surface-variant">
+      La aplicación se cerró correctamente. Ya podés cerrar esta ventana del navegador.
+    </p>
+  </div>
+}

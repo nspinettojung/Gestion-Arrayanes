@@ -9,7 +9,11 @@
         <h3 class="font-display-lg text-display-lg text-primary tracking-tight">Nueva Reserva</h3>
       </div>
       <div class="text-right">
-        <p class="text-on-surface-variant text-body-sm italic">ID de transacción:</p>
+        <p class="text-on-surface-variant text-body-sm italic">
+          Atajo: <kbd class="rounded border border-outline-variant px-1.5 py-0.5">Ctrl</kbd> +
+          <kbd class="rounded border border-outline-variant px-1.5 py-0.5">Enter</kbd> para
+          confirmar
+        </p>
       </div>
     </div>
     <div class="grid grid-cols-12 gap-space-lg">
@@ -29,26 +33,36 @@
           </div>
           <div class="grid grid-cols-2 gap-space-md">
             <div>
-              <label>Nombre</label>
+              <label for="reservation-client-name">Nombre</label>
               <input
+                id="reservation-client-name"
                 class="w-full px-3 py-2"
                 type="text"
                 placeholder="Nombre"
                 formControlName="clientName"
+                autofocus
               />
+              @if (form.get('clientName')?.touched && form.get('clientName')?.invalid) {
+                <p class="mt-1 text-xs text-error">Ingresá el nombre del huésped.</p>
+              }
             </div>
             <div>
-              <label>Apellido</label>
+              <label for="reservation-client-lastname">Apellido</label>
               <input
+                id="reservation-client-lastname"
                 class="w-full px-3 py-2"
                 type="text"
                 placeholder="Apellido"
                 formControlName="clientLastName"
               />
+              @if (form.get('clientLastName')?.touched && form.get('clientLastName')?.invalid) {
+                <p class="mt-1 text-xs text-error">Ingresá el apellido del huésped.</p>
+              }
             </div>
             <div>
-              <label>DNI/Pasaporte</label>
+              <label for="reservation-client-dni">DNI/Pasaporte</label>
               <input
+                id="reservation-client-dni"
                 class="w-full px-3 py-2"
                 type="text"
                 placeholder="12345678X"
@@ -56,8 +70,9 @@
               />
             </div>
             <div>
-              <label>Teléfono</label>
+              <label for="reservation-client-phone">Teléfono</label>
               <input
+                id="reservation-client-phone"
                 class="w-full px-3 py-2"
                 type="tel"
                 placeholder="+54 ..."
@@ -65,27 +80,39 @@
               />
             </div>
             <div>
-              <label>Tipo de Habitación</label>
+              <label for="reservation-apartment">Tipo de Habitación</label>
               <select
+                id="reservation-apartment"
                 class="w-full px-3 py-2"
                 formControlName="apartmentId"
-                (change)="onApartmentChange($event)"
               >
                 <option [value]="null">Selecciona una opción</option>
-                @for (item of apartments(); track $index) {
+                @for (item of apartments(); track item.id) {
                   <option [value]="item.id">{{ item.apartmentName }}</option>
                 }
               </select>
+              @if (form.get('apartmentId')?.touched && form.get('apartmentId')?.invalid) {
+                <p class="mt-1 text-xs text-error">Seleccioná un departamento.</p>
+              }
             </div>
             <div>
-              <label>Número de Personas</label>
+              <label for="reservation-amount-people">Número de Personas</label>
               <input
+                id="reservation-amount-people"
                 class="w-full px-3 py-2"
                 type="number"
                 min="1"
                 [attr.max]="selectedMaxPeople()"
                 formControlName="amountPeople"
               />
+              @if (selectedMaxPeople(); as maxPeople) {
+                <p class="mt-1 text-xs text-on-surface-variant">Máximo {{ maxPeople }} personas.</p>
+              }
+              @if (form.get('amountPeople')?.touched && form.get('amountPeople')?.invalid) {
+                <p class="mt-1 text-xs text-error">
+                  Ingresá una cantidad de personas válida para el departamento.
+                </p>
+              }
             </div>
           </div>
         </div>
@@ -100,33 +127,55 @@
 
           <div class="grid grid-cols-2 gap-space-md">
             <div>
-              <label>Fecha de Entrada</label>
+              <label for="reservation-arrival-date">Fecha de Entrada</label>
               <input
+                id="reservation-arrival-date"
                 class="w-full px-3 py-2"
                 type="date"
                 formControlName="arrivalDate"
                 [min]="today()"
               />
+              @if (form.get('arrivalDate')?.touched && form.get('arrivalDate')?.invalid) {
+                <p class="mt-1 text-xs text-error">Ingresá la fecha de entrada.</p>
+              }
             </div>
             <div>
-              <label>Fecha de Salida</label>
+              <label for="reservation-departure-date">Fecha de Salida</label>
               <input
+                id="reservation-departure-date"
                 class="w-full px-3 py-2"
                 type="date"
                 formControlName="departureDate"
-                [min]="tomorrowDate()"
+                [min]="departureMin()"
               />
+              @if (form.get('departureDate')?.touched && form.get('departureDate')?.invalid) {
+                <p class="mt-1 text-xs text-error">Ingresá la fecha de salida.</p>
+              }
+              @if (nights() > 0) {
+                <p class="mt-1 text-xs text-on-surface-variant">
+                  {{ nights() }} noche(s) de estadía.
+                </p>
+              }
             </div>
           </div>
         </div>
         <button
           type="submit"
-          class="w-full btn-metal text-white py-3 px-4 font-bold flex items-center justify-center gap-2 group"
+          class="w-full btn-metal text-white py-3 px-4 font-bold flex items-center justify-center gap-2 group disabled:cursor-not-allowed disabled:opacity-60"
+          [disabled]="saving()"
         >
-          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1"
-            >check_circle</span
-          >
-          Confirmar Reserva
+          @if (saving()) {
+            <span
+              class="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white"
+              aria-hidden="true"
+            ></span>
+            Guardando reserva…
+          } @else {
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1"
+              >check_circle</span
+            >
+            Confirmar Reserva
+          }
         </button>
       </form>
 
@@ -137,31 +186,50 @@
             <h4 class="font-headline-sm text-headline-sm border-b border-on-primary/20 pb-2 mb-4">
               Resumen de Cargo
             </h4>
-            <div class="space-y-3 font-body-sm">
-              <div class="flex justify-between">
-                <span class="opacity-80">Suite Ejecutiva (5 noches)</span>
-                <span>750,00€</span>
+
+            @if (selectedApartment(); as apartment) {
+              <div class="space-y-3 font-body-sm">
+                <div class="flex justify-between gap-3">
+                  <span class="opacity-80"
+                    >{{ apartment.apartmentName }} ({{ nights() }} noche(s))</span
+                  >
+                  <span class="whitespace-nowrap">{{
+                    apartment.price * nights() | arsCurrency
+                  }}</span>
+                </div>
+                @if (extraPeopleCount() > 0) {
+                  <div class="flex justify-between gap-3">
+                    <span class="opacity-80"
+                      >Personas extra (x{{ extraPeopleCount() }} ×
+                      {{ extraPersonPrice | arsCurrency }})</span
+                    >
+                    <span class="whitespace-nowrap">{{
+                      extraPeopleCount() * extraPersonPrice * nights() | arsCurrency
+                    }}</span>
+                  </div>
+                }
+                <div class="h-px bg-on-primary/20 my-2"></div>
+                <div class="flex justify-between items-baseline pt-2 gap-3">
+                  <span class="text-label-md font-bold uppercase tracking-wider"
+                    >Total Estancia</span
+                  >
+                  <span class="text-2xl font-bold whitespace-nowrap">{{
+                    totalPrice() | arsCurrency
+                  }}</span>
+                </div>
               </div>
-              <div class="flex justify-between">
-                <span class="opacity-80">Desayuno Buffet (x2)</span>
-                <span>120,00€</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="opacity-80">Impuestos (10%)</span>
-                <span>87,00€</span>
-              </div>
-              <div class="h-px bg-on-primary/20 my-2"></div>
-              <div class="flex justify-between items-baseline pt-2">
-                <span class="text-label-md font-bold uppercase tracking-wider">Total Estancia</span>
-                <span class="text-2xl font-bold">957,00€</span>
-              </div>
-            </div>
+            } @else {
+              <p class="font-body-sm opacity-80">
+                Seleccioná un departamento y las fechas para ver el precio estimado.
+              </p>
+            }
+
             <div class="mt-6 pt-4 border-t border-on-primary/10">
               <div
                 class="flex items-center gap-2 text-xs text-secondary-fixed bg-white/10 p-2 border border-white/20"
               >
                 <span class="material-symbols-outlined text-sm">verified_user</span>
-                <span>Garantía de precio mejorado aplicado</span>
+                <span>El precio se calcula automáticamente según las personas y las noches.</span>
               </div>
             </div>
           </div>
@@ -177,25 +245,19 @@
           </div>
           <!-- Card Preview / Visual Context -->
           <div class="bg-surface-container border border-outline-variant overflow-hidden group">
-            <div class="relative h-32 w-full">
-              <img
-                alt="Suite Ejecutiva"
-                class="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-500"
-                data-alt="A luxurious executive hotel suite with a large king-sized bed, crisp white linens, and a dark wood headboard. The room features professional corporate interior design with muted blue and charcoal accents. Soft morning light enters through a large window, casting gentle shadows across the minimalist furniture and high-quality textures."
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRORMG-Rz0LOH539-oJ5__iG7xRqiTfjqqCdCMB8fzItVoWlpa5YG9uwf7lvC3VUuc7tCk0S0KT6V8TavqPhonUX_WyPyAnJehugtVwTllg4Hif7a-JnN6imtXJnWfc9BMEt_4tFLbnh8IQjVXFaSytLPqvAP9PcZI1n7REqBtZ4zFBssa7hxzbpgFP2tpytJUhH--pdYo8PYQuflc3y8M3twei5JHtlMYCQdN6A3FHnJ4mxrK5xPLXl_bdV691n5cNRMKXNxlUtGk"
-              />
-              <div
-                class="absolute bottom-0 left-0 bg-primary/90 text-white px-2 py-1 text-[10px] font-bold uppercase"
-              >
-                Vista Previa: Suite
+            <div class="p-space-md text-xs text-on-surface-variant">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="material-symbols-outlined text-primary">apartment</span>
+                <p class="font-bold text-primary">
+                  {{ selectedApartment()?.apartmentName ?? 'Sin departamento seleccionado' }}
+                </p>
               </div>
-            </div>
-            <div class="p-3 text-xs text-on-surface-variant">
-              <p class="font-bold text-primary mb-1">Disponibilidad Garantizada</p>
-              <p>
-                La habitación seleccionada se encuentra bloqueada por 15 minutos mientras completa
-                el formulario.
-              </p>
+              @if (selectedApartment(); as apartment) {
+                <p>Capacidad máxima: {{ apartment.apartmentMaxNumber }} personas.</p>
+                <p class="mt-1">Precio base por noche: {{ apartment.price | arsCurrency }}</p>
+              } @else {
+                <p>Elegí un departamento para ver su capacidad y precio base.</p>
+              }
             </div>
           </div>
         </div>

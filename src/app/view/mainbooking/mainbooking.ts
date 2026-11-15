@@ -28,7 +28,6 @@ export class Mainbooking implements OnInit {
   today = signal<string>('');
   days = computed(() => this.bookingService.days());
   selectedDay: number | null = null;
-  dashboard = computed(() => this.dashboardService.dashboardSignal());
   monthlyArrivals = computed(() => this.dashboardService.monthlyArrivals());
   monthlyDepartures = computed(() => this.dashboardService.monthlyDepartures());
   monthlyArrivalsList = computed(() => this.dashboardService.monthlyArrivalsList());
@@ -52,7 +51,6 @@ export class Mainbooking implements OnInit {
 
     this.bookingService.getBookings();
     this.bookingService.getCurrentDate().subscribe((date) => this.today.set(date));
-    this.dashboardService.loadDashboard();
     this.bookingService.getCalendar(year, month);
     this.dashboardService.getArrivalsByDate(year, month, day);
     this.dashboardService.getDeparturesByDate(year, month, day);

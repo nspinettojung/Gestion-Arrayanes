@@ -1,20 +1,43 @@
-import { Component, EventEmitter, inject, input, output, Output } from '@angular/core';
-import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { Component, effect, HostListener, input, output } from '@angular/core';
 
 @Component({
   selector: 'gda-modal',
-  imports: [ReactiveFormsModule],
   templateUrl: './modal.html',
   styleUrl: './modal.scss',
 })
 export class Modal {
   title = input<string>('');
   show = input<boolean>(false);
+  busy = input<boolean>(false);
   close = output<void>();
-  
 
-  onClose() {
+  constructor() {
+    effect((onCleanup) => {
+      const isOpen = this.show();
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+      onCleanup(() => {
+        document.body.style.overflow = '';
+      });
+    });
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.show()) {
+      this.onClose();
+    }
+  }
+
+  onBackdrop(event: MouseEvent): void {
+    if (event.target === event.currentTarget) {
+      this.onClose();
+    }
+  }
+
+  onClose(): void {
+    if (this.busy()) {
+      return;
+    }
     this.close.emit();
   }
- 
 }

@@ -1,59 +1,72 @@
-# GestionArrayanes
+# Gestión Arrayanes — Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.12.
+Aplicación Angular (standalone + signals) que sirve como interfaz del backend Spring Boot
+`ApiGestionArrayanes`. El backend empaqueta este build en `src/main/resources/static` y abre el
+navegador en `http://localhost:<puerto>`.
 
-## Development server
+No usa Electron: el ejecutable abre el navegador en modo app (Brave → Chrome → Edge → Opera) contra la API en el mismo origen, y al cerrar esa ventana se apaga la API.
 
-To start a local development server, run:
+## Requisitos
 
-```bash
-ng serve
-```
+- Node.js 20+
+- El backend `ApiGestionArrayanes` corriendo en `http://localhost:8080` para desarrollo.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Desarrollo
 
 ```bash
-ng generate component component-name
+npm start
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Abre `http://localhost:4200`. La API se consume desde `http://localhost:8080/api`
+(`src/environments/environment.development.ts`), y los controllers del backend permiten ese origen.
+
+## Build de producción
 
 ```bash
-ng generate --help
+npm run build
 ```
 
-## Building
+1. `scripts/build-info.mjs` escribe `public/build-info.json` con versión, commit, rama y fecha.
+2. `ng build` genera el build en `dist/GestionArrayanes/browser` con `<base href="/">`.
 
-To build the project run:
+La versión y el commit se muestran al pie del sidebar, para saber siempre qué build está corriendo.
+
+## Publicar en el backend
 
 ```bash
-ng build
+# Copia local para revisar el resultado (dist/static)
+npm run build:static
+
+# Copiar al static del backend (reemplaza el contenido anterior)
+$env:STATIC_TARGET = "D:\VsCode\ApiGestionArrayanes\Arrayanes\src\main\resources\static"
+npm run build:static
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+`prepare-static.mjs` **borra el destino** antes de copiar, así no quedan `main-*.js` viejos
+acumulados. Sin `STATIC_TARGET` escribe solamente en `dist/static`; nunca toca el backend por su cuenta.
 
-## Running unit tests
+Después de copiar, recompilá/empaquetá la API para que el nuevo `static/` quede dentro del jar o del
+ejecutable nativo.
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Estilos y fuentes
+
+- Tailwind v4 con los tokens del design system en `src/tailwind.css` (`@theme`). No se usa el CDN.
+- Inter y Material Symbols están en `public/fonts` y se cargan con `@font-face` (`src/styles.scss`),
+  así la interfaz funciona sin internet y sin flash de estilos.
+- El modo oscuro se activa con la clase `.dark` en `<html>`.
+
+## Estructura
+
+```
+src/app/core/services/    servicios de API + build-info
+src/app/view/             páginas (dashboard, reservas, clientes, departamentos, historial)
+src/app/view/assets/      componentes compartidos (tabla, modal, calendario, pipes)
+src/environments/         URL de la API por entorno
+scripts/                  build-info y copia del build al static
+```
+
+## Tests
 
 ```bash
-ng test
+npm test
 ```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

@@ -42,3 +42,6 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Build metadata (generado por scripts/build-info.mjs)
+/public/build-info.json

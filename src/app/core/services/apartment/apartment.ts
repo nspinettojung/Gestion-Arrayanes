@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { IApartment } from '../../interface/apartment/apartment';
-import { Observable } from 'rxjs';
+import { Observable, finalize } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -10,15 +10,22 @@ import { Observable } from 'rxjs';
 export class Apartment {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
+  private loadingSignal = signal(false);
   apartmentsData = signal<IApartment[]>([]);
+  loading = this.loadingSignal.asReadonly();
 
   getApartments(): void {
-    this.http.get<IApartment[]>(`${this.apiUrl}/apartments/listapartment`).subscribe({
-      next: (data) => {
-        this.apartmentsData.set(data);
-      },
-      error: (error) => console.error('Error fetching apartments:', error),
-    });
+    this.loadingSignal.set(true);
+
+    this.http
+      .get<IApartment[]>(`${this.apiUrl}/apartments/listapartment`)
+      .pipe(finalize(() => this.loadingSignal.set(false)))
+      .subscribe({
+        next: (data) => {
+          this.apartmentsData.set(data);
+        },
+        error: (error) => console.error('Error fetching apartments:', error),
+      });
   }
 
   editPrice(id: string, newPrice: number): Observable<IApartment> {

@@ -5,34 +5,65 @@ import { Table } from '../assets/table/table';
 import { Modal } from '../assets/modal/modal';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { IApartment } from '../../core/interface/apartment/apartment';
+import { NotificationService } from '../../core/services/notification/notification';
+import { ConfirmationService } from '../../core/services/confirmation/confirmation';
+import { finalize } from 'rxjs';
+import { SearchInput } from '../assets/search-input/search-input';
+import { ArsCurrencyPipe } from '../assets/pipes/ars-currency-pipe';
+import { formatArs } from '../../core/utils/currency';
 
 @Component({
   selector: 'gda-mainapartment',
-  imports: [Table, Modal, ReactiveFormsModule],
+  imports: [Table, Modal, ReactiveFormsModule, SearchInput, ArsCurrencyPipe],
   templateUrl: './mainapartment.html',
   styleUrl: './mainapartment.scss',
 })
 export class Mainapartment {
   private apartmentService = inject(Apartment);
+  private notifications = inject(NotificationService);
+  private confirmation = inject(ConfirmationService);
+
   apatmentList = computed(() => this.apartmentService.apartmentsData());
+  apartmentsLoading = this.apartmentService.loading;
   columnsName = signal<string[]>(['Nombre', 'Cantidad Máxima de Personas', 'Precio', 'Acciones']);
   editingId = signal<number | string | null>(null);
   showModal: boolean = false;
   isEditing = false;
+  saving = signal(false);
+  deletingId = signal<string | null>(null);
+  priceSavingId = signal<string | null>(null);
   apartForm!: FormGroup;
   pageSize = 5;
   currentPage = signal(0);
+  searchTerm = signal('');
+
+  filteredApartments = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    const apartments = this.apatmentList();
+
+    if (!term) {
+      return apartments;
+    }
+
+    return apartments.filter((apartment) =>
+      [apartment.apartmentName, String(apartment.id)]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(term)),
+    );
+  });
 
   pagedApartments = computed(() => {
     const startIndex = this.currentPage() * this.pageSize;
-    return this.apatmentList().slice(startIndex, startIndex + this.pageSize);
+    return this.filteredApartments().slice(startIndex, startIndex + this.pageSize);
   });
 
-  setPage(page: number): void {
-    const totalPages = Math.ceil(this.apatmentList().length / this.pageSize);
-    if (page >= 0 && page < totalPages) {
-      this.currentPage.set(page);
-    }
+  onSearch(term: string): void {
+    this.searchTerm.set(term);
+    this.currentPage.set(0);
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
   }
 
   ngOnInit(): void {
@@ -49,24 +80,31 @@ export class Mainapartment {
   }
 
   savePrice(id: string, newPriceStr: string): void {
+    if (this.priceSavingId()) {
+      return;
+    }
+
     const newPrice = Number(newPriceStr);
-    if (isNaN(newPrice) || newPrice <= 0) {
-      alert('❌ Precio inválido');
+    if (!Number.isFinite(newPrice) || newPrice <= 0) {
+      this.notifications.error('Ingresá un precio válido mayor a cero.');
       this.editingId.set(null);
       return;
     }
 
-    this.apartmentService.editPrice(id, newPrice).subscribe({
-      next: (updated) => {
-        alert(`✅ Precio actualizado a $${updated.price}`);
-        this.editingId.set(null); // 👈 cerrar modo edición
-        this.apartmentService.getApartments();
-      },
-      error: (err) => {
-        alert('❌ Error actualizando precio: ' + err.message);
-        this.editingId.set(null);
-      },
-    });
+    this.priceSavingId.set(id);
+    this.apartmentService
+      .editPrice(id, newPrice)
+      .pipe(finalize(() => this.priceSavingId.set(null)))
+      .subscribe({
+        next: (updated) => {
+          this.notifications.success(`Precio actualizado a ${formatArs(updated.price)}.`);
+          this.editingId.set(null);
+          this.apartmentService.getApartments();
+        },
+        error: () => {
+          // El interceptor global ya muestra el error.
+        },
+      });
   }
 
   buildForm(): void {
@@ -107,41 +145,65 @@ export class Mainapartment {
 
   // Método unificado para guardar
   saveApartment() {
-    if (this.apartForm.invalid) return;
+    if (this.saving()) {
+      return;
+    }
+
+    if (this.apartForm.invalid) {
+      this.apartForm.markAllAsTouched();
+      this.notifications.error('Revisá los datos del departamento antes de guardar.');
+      return;
+    }
 
     const formData = this.apartForm.value;
-
     const editingId = this.editingId();
-    if (this.isEditing && editingId !== null) {
-      this.apartmentService.editApartment(String(editingId), formData).subscribe(() => {
+    const request =
+      this.isEditing && editingId !== null
+        ? this.apartmentService.editApartment(String(editingId), formData)
+        : this.apartmentService.addApartment(formData);
+
+    this.saving.set(true);
+    request.pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => {
+        this.notifications.success(
+          this.isEditing
+            ? 'Departamento actualizado correctamente.'
+            : 'Departamento agregado correctamente.',
+        );
         this.closeModal();
         this.apartmentService.getApartments();
-        this.apartForm.reset();
-
-        // refrescar lista
-      });
-    } else {
-      this.apartmentService.addApartment(formData).subscribe(() => {
-        this.closeModal();
-        this.apartmentService.getApartments();
-        this.apartForm.reset();
-
-        // refrescar lista
-      });
-    }
+      },
+      error: () => {
+        // Conservamos los datos cargados para que el usuario pueda reintentar.
+      },
+    });
   }
 
-  deleteApartment(id: string): void {
-    if (confirm('¿Estás seguro de eliminar el departamento?')) {
-      this.apartmentService.deleteApartment(id).subscribe({
+  async deleteApartment(id: string): Promise<void> {
+    if (this.deletingId()) {
+      return;
+    }
+
+    const confirmed = await this.confirmation.confirmDelete(
+      '¿Seguro que querés eliminar este departamento? Esta acción no se puede deshacer.',
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.deletingId.set(id);
+    this.apartmentService
+      .deleteApartment(id)
+      .pipe(finalize(() => this.deletingId.set(null)))
+      .subscribe({
         next: () => {
-          alert('Departamento eliminado correctamente.');
+          this.notifications.success('Departamento eliminado correctamente.');
           this.apartmentService.getApartments();
         },
         error: () => {
-          alert('Error al eliminar el departamento.');
+          // El interceptor global ya muestra el error.
         },
       });
-    }
   }
 }

@@ -1,9 +1,9 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { DashboardPageResponse, IDashboard } from '../../interface/dashboard/dashboard';
+import { IDashboard } from '../../interface/dashboard/dashboard';
 import { ClientApartmentDTO } from '../../interface/clients/client-apartment-dto';
-import { Observable } from 'rxjs';
+import { Observable, finalize, forkJoin } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -11,6 +11,10 @@ import { Observable } from 'rxjs';
 export class Dashboard {
   private apiUrl = environment.apiUrl;
   private http = inject(HttpClient);
+  private loadingDashboardSignal = signal(false);
+  private loadingStatsSignal = signal(false);
+  loadingDashboard = this.loadingDashboardSignal.asReadonly();
+  loadingStats = this.loadingStatsSignal.asReadonly();
   totalBookings = signal<number>(0);
   totalApartments = signal<number>(0);
   todayBookings = signal<number>(0);
@@ -27,27 +31,46 @@ export class Dashboard {
 
   dashboardSignal = signal<IDashboard[]>([]);
 
-  loadDashboard(page = 0, size = 10): void {
+  getDashboardData(): void {
+    this.loadingDashboardSignal.set(true);
+
     this.http
-      .get<DashboardPageResponse>(`${this.apiUrl}/dashboard/filter`, {
-        params: {
-          page,
-          size,
-          sortBy: 'arrivalDate',
-          sortDir: 'asc',
-        },
-      })
+      .get<IDashboard[]>(`${this.apiUrl}/dashboard`)
+      .pipe(finalize(() => this.loadingDashboardSignal.set(false)))
       .subscribe({
-        next: (data) => this.dashboardSignal.set(data.content),
-        error: (err) => console.error('❌ Error fetching dashboard:', err),
+        next: (data) => {
+          this.dashboardSignal.set(data);
+        },
+        error: (err) => console.error('❌ Error fetching dashboard data:', err),
       });
   }
 
-  getDashboardData(): void {
-    this.http.get<IDashboard[]>(`${this.apiUrl}/dashboard`).subscribe({
-      next: (data) => this.dashboardSignal.set(data),
-      error: (err) => console.error('❌ Error fetching dashboard data:', err),
-    });
+  /**
+   * Agrupa los indicadores del dashboard en una sola carga coordinada.
+   * La API no expone un endpoint agregado, así que se combinan en paralelo
+   * con `forkJoin`: un único estado de loading y una sola notificación de error.
+   */
+  loadStats(): void {
+    this.loadingStatsSignal.set(true);
+
+    forkJoin({
+      bookings: this.http.get<{ total: number }>(`${this.apiUrl}/dashboard/total/bookings`),
+      apartments: this.http.get<{ total: number }>(`${this.apiUrl}/dashboard/total/apartments`),
+      occupancy: this.http.get<number>(`${this.apiUrl}/dashboard/occupancy`),
+      growth: this.http.get<number>(`${this.apiUrl}/dashboard/bookingsgrowth`),
+      today: this.http.get<number>(`${this.apiUrl}/dashboard/todaybookings`),
+    })
+      .pipe(finalize(() => this.loadingStatsSignal.set(false)))
+      .subscribe({
+        next: (stats) => {
+          this.totalBookings.set(stats.bookings.total);
+          this.totalApartments.set(stats.apartments.total);
+          this.occupancy.set(stats.occupancy);
+          this.growth.set(stats.growth);
+          this.todayBookings.set(stats.today);
+        },
+        error: (error) => console.error('❌ Error fetching dashboard stats:', error),
+      });
   }
 
   getTotal(entity: 'bookings' | 'apartments'): void {

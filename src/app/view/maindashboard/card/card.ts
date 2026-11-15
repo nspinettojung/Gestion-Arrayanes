@@ -8,11 +8,11 @@ import { Component, input } from '@angular/core';
 })
 export class Card {
   title = input<string>('');
-  dataNumber = input<number>();
+  dataNumber = input<number | string>('—');
   dataIcon = input<string>('');
   emojiIcon = input<string>('');
   dataPercentage = input<number | string>();
   classText = input<string>('');
-  barPercentage = input<number>();
+  barPercentage = input<number>(0);
   showBar = input<boolean>(false);
 }

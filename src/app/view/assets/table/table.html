@@ -10,7 +10,6 @@
       >
         {{ title() }}
       </h2>
-      <!-- agregar ng-template -->
       <ng-content select="[add-button]"></ng-content>
     </div>
     <div class="overflow-x-auto">
@@ -19,46 +18,81 @@
           <ng-content select="[column-header]"></ng-content>
         </thead>
         <tbody class="divide-y divide-outline-variant">
-          <ng-content select="[table-body]"></ng-content>
+          @if (loading()) {
+            @for (row of skeletonRows; track $index) {
+              <tr class="animate-pulse">
+                <td colspan="99" class="px-space-md py-4">
+                  <div class="h-4 w-2/3 max-w-md rounded bg-surface-container-high"></div>
+                </td>
+              </tr>
+            }
+          } @else {
+            <ng-content select="[table-body]"></ng-content>
+
+            @if (!hasData()) {
+              <tr>
+                <td colspan="99" class="px-space-md py-12 text-center text-on-surface-variant">
+                  <span class="material-symbols-outlined mb-1 block text-4xl opacity-60"
+                    >inbox</span
+                  >
+                  <p class="text-sm font-medium">{{ emptyMessage() }}</p>
+                </td>
+              </tr>
+            }
+          }
         </tbody>
       </table>
     </div>
     <div
-      class="metal-gradient px-space-md py-3 border-t border-outline-variant flex items-center justify-between"
+      class="metal-gradient px-space-md py-3 border-t border-outline-variant flex items-center justify-between gap-3"
     >
-      <!-- <span class="text-xs text-on-surface-variant font-medium"
-        >Mostrando 1-10 de 1,248 resultados</span
-      > -->
-      <div class="flex items-center gap-1">
-        <button
-          type="button"
-          aria-label="Página anterior"
-          class="p-1 border border-outline-variant rounded bg-surface hover:bg-surface-container transition-all active:scale-95"
-          (click)="setPage(currentPage() - 1)"
-          [disabled]="currentPage() === 0"
-        >
-          <span class="material-symbols-outlined text-sm">chevron_left</span>
-        </button>
-        @for (page of [].constructor(totalPages()); track $index; let i = $index) {
+      <span class="text-xs text-on-surface-variant font-medium">
+        @if (loading()) {
+          Cargando…
+        } @else if (hasData()) {
+          Mostrando {{ shownFrom() }}–{{ shownTo() }} de {{ totalItems() }}
+        } @else {
+          Sin resultados
+        }
+      </span>
+      @if (totalPages() > 1) {
+        <div class="flex items-center gap-1">
           <button
             type="button"
-            [attr.aria-label]="'Ir a la página ' + (i + 1)"
-            class="px-3 py-1 border border-outline-variant rounded text-xs font-medium hover:bg-surface-container transition-all"
-            (click)="setPage(i)"
+            aria-label="Página anterior"
+            class="p-1 border border-outline-variant rounded bg-surface hover:bg-surface-container transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+            (click)="setPage(page() - 1)"
+            [disabled]="page() === 0"
           >
-            {{ i + 1 }}
+            <span class="material-symbols-outlined text-sm">chevron_left</span>
           </button>
-        }
-        <button
-          type="button"
-          aria-label="Página siguiente"
-          class="p-1 border border-outline-variant rounded bg-surface hover:bg-surface-container transition-all active:scale-95"
-          (click)="setPage(currentPage() + 1)"
-          [disabled]="currentPage() >= totalPages() - 1"
-        >
-          <span class="material-symbols-outlined text-sm">chevron_right</span>
-        </button>
-      </div>
+          @for (pageNumber of pages(); track pageNumber) {
+            <button
+              type="button"
+              [attr.aria-label]="'Ir a la página ' + (pageNumber + 1)"
+              [attr.aria-current]="page() === pageNumber ? 'page' : null"
+              class="px-3 py-1 border rounded text-xs font-medium transition-all"
+              [class.border-primary]="page() === pageNumber"
+              [class.bg-primary]="page() === pageNumber"
+              [class.text-white]="page() === pageNumber"
+              [class.border-outline-variant]="page() !== pageNumber"
+              [class.hover:bg-surface-container]="page() !== pageNumber"
+              (click)="setPage(pageNumber)"
+            >
+              {{ pageNumber + 1 }}
+            </button>
+          }
+          <button
+            type="button"
+            aria-label="Página siguiente"
+            class="p-1 border border-outline-variant rounded bg-surface hover:bg-surface-container transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+            (click)="setPage(page() + 1)"
+            [disabled]="page() >= totalPages() - 1"
+          >
+            <span class="material-symbols-outlined text-sm">chevron_right</span>
+          </button>
+        </div>
+      }
     </div>
   </div>
 </div>
