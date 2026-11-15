@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, finalize, map, mergeMap } from 'rxjs';
@@ -11,13 +11,13 @@ import { ConfirmationService } from '../../core/services/confirmation/confirmati
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
 })
-export class Navbar {
+export class Navbar implements OnInit {
   private destroyRef = inject(DestroyRef);
   private systemService = inject(SystemService);
   private confirmation = inject(ConfirmationService);
 
-  pageTitle: string = 'Mi App';
-  pageIcon: string = '';
+  pageTitle = 'Mi App';
+  pageIcon = '';
   closing = signal(false);
   closed = signal(false);
 

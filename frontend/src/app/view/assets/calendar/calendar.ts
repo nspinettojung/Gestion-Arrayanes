@@ -5,12 +5,11 @@ import {
   computed,
   EventEmitter,
   inject,
+  OnInit,
   Output,
-  signal,
 } from '@angular/core';
 import { Dashboard } from '../../../core/services/dashboard/dashboard';
 import { IDashboard } from '../../../core/interface/dashboard/dashboard';
-import { Booking } from '../../../core/services/booking/booking';
 import { toLocalIsoDate } from '../../../core/utils/date';
 
 export interface CalendarDay {
@@ -29,7 +28,7 @@ export interface CalendarDay {
   templateUrl: './calendar.html',
   styleUrl: './calendar.scss',
 })
-export class Calendar {
+export class Calendar implements OnInit {
   private dashboardService = inject(Dashboard);
   private cdr = inject(ChangeDetectorRef);
   arrivalsCount = computed(() => this.dashboardService.arrivalsCount());

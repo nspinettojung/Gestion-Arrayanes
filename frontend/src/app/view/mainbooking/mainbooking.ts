@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal, Signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Booking } from '../../core/services/booking/booking';
 import { Dashboard } from '../../core/services/dashboard/dashboard';
 import { Calendar } from '../assets/calendar/calendar';

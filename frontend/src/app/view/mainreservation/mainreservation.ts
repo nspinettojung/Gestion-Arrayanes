@@ -1,4 +1,12 @@
-import { Component, computed, DestroyRef, HostListener, inject, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  HostListener,
+  inject,
+  signal,
+  OnInit,
+} from '@angular/core';
 import { Apartment } from '../../core/services/apartment/apartment';
 import { Booking } from '../../core/services/booking/booking';
 import { CommonModule } from '@angular/common';
@@ -27,7 +35,7 @@ import { ArsCurrencyPipe } from '../assets/pipes/ars-currency-pipe';
   templateUrl: './mainreservation.html',
   styleUrl: './mainreservation.scss',
 })
-export class Mainreservation {
+export class Mainreservation implements OnInit {
   private apartmentsService = inject(Apartment);
   private bookingsService = inject(Booking);
   private router = inject(Router);

@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, OnInit } from '@angular/core';
 import { Clients } from '../../core/services/clients/clients';
 import { CommonModule } from '@angular/common';
 import { Modal } from '../assets/modal/modal';
@@ -26,12 +26,12 @@ import { LocalDatePipe } from '../assets/pipes/local-date-pipe';
   templateUrl: './mainclient.html',
   styleUrl: './mainclient.scss',
 })
-export class Mainclient {
+export class Mainclient implements OnInit {
   private clientService = inject(Clients);
   private notifications = inject(NotificationService);
   private confirmation = inject(ConfirmationService);
 
-  showModal: boolean = false;
+  showModal = false;
   saving = signal(false);
   deletingId = signal<string | null>(null);
   columnsName = signal<string[]>(['Nombre del Cliente', 'Contacto', 'Última Estancia', 'Acciones']);

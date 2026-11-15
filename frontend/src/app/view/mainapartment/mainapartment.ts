@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, OnInit } from '@angular/core';
 import { Apartment } from '../../core/services/apartment/apartment';
 import { Table } from '../assets/table/table';
 
@@ -18,7 +18,7 @@ import { formatArs } from '../../core/utils/currency';
   templateUrl: './mainapartment.html',
   styleUrl: './mainapartment.scss',
 })
-export class Mainapartment {
+export class Mainapartment implements OnInit {
   private apartmentService = inject(Apartment);
   private notifications = inject(NotificationService);
   private confirmation = inject(ConfirmationService);
@@ -27,7 +27,7 @@ export class Mainapartment {
   apartmentsLoading = this.apartmentService.loading;
   columnsName = signal<string[]>(['Nombre', 'Cantidad Máxima de Personas', 'Precio', 'Acciones']);
   editingId = signal<number | string | null>(null);
-  showModal: boolean = false;
+  showModal = false;
   isEditing = false;
   saving = signal(false);
   deletingId = signal<string | null>(null);

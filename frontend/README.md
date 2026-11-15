@@ -1,52 +1,68 @@
-# Gestión Arrayanes — Frontend
+# Gestión Arrayanes - Frontend
 
-Aplicación Angular (standalone + signals) que sirve como interfaz del backend Spring Boot
-`ApiGestionArrayanes`. El backend empaqueta este build en `src/main/resources/static` y abre el
-navegador en `http://localhost:<puerto>`.
-
-No usa Electron: el ejecutable abre el navegador en modo app (Brave → Chrome → Edge → Opera) contra la API en el mismo origen, y al cerrar esa ventana se apaga la API.
+Aplicación Angular (standalone + signals) que consume la API Spring Boot del monorepo.
+El build se copia a `backend/src/main/resources/static` y la API abre el navegador en modo app
+contra el mismo origen.
 
 ## Requisitos
 
-- Node.js 20+
-- El backend `ApiGestionArrayanes` corriendo en `http://localhost:8080` para desarrollo.
+- Node.js 22+
+- pnpm 11
+- API corriendo en `http://127.0.0.1:8080` para desarrollo
 
 ## Desarrollo
 
-```bash
-npm start
-```
-
-Abre `http://localhost:4200`. La API se consume desde `http://localhost:8080/api`
-(`src/environments/environment.development.ts`), y los controllers del backend permiten ese origen.
-
-## Build de producción
+Desde la raíz del repo:
 
 ```bash
-npm run build
+pnpm dev
 ```
 
-1. `scripts/build-info.mjs` escribe `public/build-info.json` con versión, commit, rama y fecha.
-2. `ng build` genera el build en `dist/GestionArrayanes/browser` con `<base href="/">`.
+Abre `http://localhost:4200`. La URL de la API está en
+`src/environments/environment.development.ts` y el backend permite ese origen por CORS.
 
-La versión y el commit se muestran al pie del sidebar, para saber siempre qué build está corriendo.
-
-## Publicar en el backend
+También se puede levantar solo el frontend:
 
 ```bash
-# Copia local para revisar el resultado (dist/static)
-npm run build:static
-
-# Copiar al static del backend (reemplaza el contenido anterior)
-$env:STATIC_TARGET = "D:\VsCode\ApiGestionArrayanes\Arrayanes\src\main\resources\static"
-npm run build:static
+pnpm --dir frontend start
 ```
 
-`prepare-static.mjs` **borra el destino** antes de copiar, así no quedan `main-*.js` viejos
-acumulados. Sin `STATIC_TARGET` escribe solamente en `dist/static`; nunca toca el backend por su cuenta.
+## Build
 
-Después de copiar, recompilá/empaquetá la API para que el nuevo `static/` quede dentro del jar o del
-ejecutable nativo.
+Desde la raíz:
+
+```bash
+pnpm build
+```
+
+Ese comando compila Angular, copia `dist/GestionArrayanes/browser` al `static/` del backend y
+empaqueta el jar.
+
+Pasos sueltos:
+
+```bash
+pnpm --dir frontend build          # build-info + ng build
+pnpm --dir frontend build:static   # además copia a dist/static
+```
+
+Con `STATIC_TARGET` se puede copiar a otra ruta:
+
+```powershell
+$env:STATIC_TARGET = "D:\ruta\a\static"
+pnpm --dir frontend build:static
+```
+
+`prepare-static.mjs` **borra el destino** antes de copiar, así no quedan `main-*.js` viejos.
+
+## Tests y calidad
+
+```bash
+pnpm --dir frontend test
+pnpm --dir frontend test:ci
+pnpm --dir frontend lint
+pnpm --dir frontend format
+pnpm --dir frontend format:check
+```
 
 ## Estilos y fuentes
 
@@ -63,10 +79,4 @@ src/app/view/             páginas (dashboard, reservas, clientes, departamentos
 src/app/view/assets/      componentes compartidos (tabla, modal, calendario, pipes)
 src/environments/         URL de la API por entorno
 scripts/                  build-info y copia del build al static
-```
-
-## Tests
-
-```bash
-npm test
 ```

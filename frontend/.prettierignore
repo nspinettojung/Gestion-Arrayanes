@@ -1,0 +1,6 @@
+dist/
+.angular/
+node_modules/
+coverage/
+public/build-info.json
+pnpm-lock.yaml

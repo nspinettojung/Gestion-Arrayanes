@@ -10,7 +10,7 @@ export class SystemService {
   private url = `${environment.apiUrl}/system/shutdown`;
   private http = inject(HttpClient);
 
-  closeApp(): Observable<any> {
-    return this.http.post(this.url, {});
+  closeApp(): Observable<void> {
+    return this.http.post<void>(this.url, {});
   }
 }

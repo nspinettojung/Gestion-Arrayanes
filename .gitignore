@@ -21,4 +21,5 @@ frontend/.vite/
 
 # Raíz
 node_modules/
+.tools/
 *.log

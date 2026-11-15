@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, OnInit } from '@angular/core';
 import { Table } from '../assets/table/table';
 import { InitialsPipe } from '../assets/pipes/initials-pipe';
 import { Dashboard } from '../../core/services/dashboard/dashboard';
@@ -16,7 +16,7 @@ import { LocalDatePipe } from '../assets/pipes/local-date-pipe';
   templateUrl: './mainhistory.html',
   styleUrl: './mainhistory.scss',
 })
-export class Mainhistory {
+export class Mainhistory implements OnInit {
   private dashboardService = inject(Dashboard);
   private bookingService = inject(Booking);
   private notifications = inject(NotificationService);

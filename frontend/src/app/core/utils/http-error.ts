@@ -24,9 +24,7 @@ function extractBackendMessage(body: unknown): string | null {
  */
 export function describeHttpError(error: unknown): string {
   if (!(error instanceof HttpErrorResponse)) {
-    return error instanceof Error && error.message
-      ? error.message
-      : 'Ocurrió un error inesperado.';
+    return error instanceof Error && error.message ? error.message : 'Ocurrió un error inesperado.';
   }
 
   if (error.status === 0) {

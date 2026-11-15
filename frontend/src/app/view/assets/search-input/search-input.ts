@@ -1,12 +1,4 @@
-import {
-  Component,
-  ElementRef,
-  HostListener,
-  inject,
-  input,
-  model,
-  viewChild,
-} from '@angular/core';
+import { Component, ElementRef, HostListener, input, model, viewChild } from '@angular/core';
 
 @Component({
   selector: 'gda-search-input',

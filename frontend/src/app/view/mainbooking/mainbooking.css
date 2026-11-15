@@ -4,9 +4,7 @@
 }
 
 .nimbus-gradient {
-  background: linear-gradient(to bottom,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(0, 0, 0, 0.05) 100);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.05) 100);
 }
 
 .metal-header {

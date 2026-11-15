@@ -2,22 +2,17 @@
   display: flex;
   flex-direction: row;
   width: 67vw;
-
-
 }
 
 .cardapartment-container {
   width: 300px;
-
 }
 
 .cardapartment {
   width: 200px;
   margin-bottom: 30px;
-
 }
 
 .cardbooking {
   width: 100%;
-
 }
