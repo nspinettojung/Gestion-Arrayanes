@@ -18,8 +18,10 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -51,7 +53,7 @@ class DashboardControllerTest {
     @Test
     void filterDashboardShouldReturnPage() throws Exception {
         when(dashboardService.getDashboard(
-                any(), any(), any(), any(), anyInt(), anyInt(), anyString(), anyString()))
+                any(), any(), any(), any(), anyInt(), anyInt(), anyString(), anyString(), anyBoolean()))
                 .thenReturn(new PageImpl<>(List.of(dashboardDto())));
 
         mockMvc.perform(get("/api/dashboard/filter")
@@ -61,6 +63,19 @@ class DashboardControllerTest {
                         .param("sortDir", "desc"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(dashboardDto().getId().toString()));
+    }
+
+    @Test
+    void filterDashboardShouldForwardOnlyActiveFlag() throws Exception {
+        when(dashboardService.getDashboard(
+                any(), any(), any(), any(), anyInt(), anyInt(), anyString(), anyString(), anyBoolean()))
+                .thenReturn(new PageImpl<>(List.of(dashboardDto())));
+
+        mockMvc.perform(get("/api/dashboard/filter")
+                        .param("onlyActive", "true"))
+                .andExpect(status().isOk());
+
+        verify(dashboardService).getDashboard(null, null, null, null, 0, 10, "arrivalDate", "asc", true);
     }
 
     @Test

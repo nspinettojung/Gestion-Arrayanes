@@ -38,10 +38,11 @@ public class DashboardController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "arrivalDate") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(defaultValue = "false") boolean onlyActive) {
 
         return ResponseEntity.ok(
-                dashboardService.getDashboard(lastName, start, end, apartmentId, page, size, sortBy, sortDir)
+                dashboardService.getDashboard(lastName, start, end, apartmentId, page, size, sortBy, sortDir, onlyActive)
         );
     }
 

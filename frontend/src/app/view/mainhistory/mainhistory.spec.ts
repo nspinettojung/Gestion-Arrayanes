@@ -43,10 +43,10 @@ describe('Mainhistory', () => {
   });
 
   it('permite buscar reservas por código de transacción', () => {
-    dashboard.dashboardSignal.set([
-      buildBooking('uno', 'RS-2026-0001'),
-      buildBooking('dos', 'RS-2026-0002'),
-    ]);
+    dashboard.filteredBookingsSignal.set({
+      content: [buildBooking('uno', 'RS-2026-0001'), buildBooking('dos', 'RS-2026-0002')],
+      totalElements: 2,
+    });
     component.searchTerm.set('RS-2026-0002');
     fixture.detectChanges();
 
@@ -54,7 +54,10 @@ describe('Mainhistory', () => {
   });
 
   it('incluye reservas sin código en el listado', () => {
-    dashboard.dashboardSignal.set([buildBooking('sin-codigo', null)]);
+    dashboard.filteredBookingsSignal.set({
+      content: [buildBooking('sin-codigo', null)],
+      totalElements: 1,
+    });
     fixture.detectChanges();
 
     expect(component.filteredBookings().map((booking) => booking.id)).toEqual(['sin-codigo']);

@@ -1,4 +1,4 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal, computed, Signal, WritableSignal } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { IDashboard } from '../../interface/dashboard/dashboard';
@@ -12,9 +12,7 @@ import { Observable, finalize } from 'rxjs';
 export class Dashboard {
   private apiUrl = environment.apiUrl;
   private http = inject(HttpClient);
-  private loadingDashboardSignal = signal(false);
   private loadingStatsSignal = signal(false);
-  loadingDashboard = this.loadingDashboardSignal.asReadonly();
   loadingStats = this.loadingStatsSignal.asReadonly();
   totalBookings = signal<number>(0);
   totalApartments = signal<number>(0);
@@ -30,26 +28,21 @@ export class Dashboard {
   arrivalsByDate = signal<ClientApartmentDTO[]>([]);
   departuresByDate = signal<ClientApartmentDTO[]>([]);
 
-  dashboardSignal = signal<IDashboard[]>([]);
+  filteredBookingsSignal: WritableSignal<{ content: IDashboard[]; totalElements: number }> = signal(
+    {
+      content: [],
+      totalElements: 0,
+    },
+  );
+  loadingFilteredSignal = signal(false);
+  loadingDashboard = this.loadingFilteredSignal.asReadonly();
+  filteredBookings: Signal<IDashboard[]> = computed(() => this.filteredBookingsSignal().content);
+  totalElements: Signal<number> = computed(() => this.filteredBookingsSignal().totalElements);
 
   getDashboardData(): void {
-    this.loadingDashboardSignal.set(true);
-
-    this.http
-      .get<IDashboard[]>(`${this.apiUrl}/dashboard`)
-      .pipe(finalize(() => this.loadingDashboardSignal.set(false)))
-      .subscribe({
-        next: (data) => {
-          this.dashboardSignal.set(data);
-        },
-        error: (err) => console.error('❌ Error fetching dashboard data:', err),
-      });
+    this.loadFilteredBookings('', 0, 1000, 'arrivalDate', 'desc', false);
   }
 
-  /**
-   * Los indicadores llegan en una sola respuesta para no encadenar cinco
-   * peticiones ni mantener cinco estados de carga.
-   */
   loadStats(): void {
     this.loadingStatsSignal.set(true);
 
@@ -68,6 +61,40 @@ export class Dashboard {
       });
   }
 
+  loadFilteredBookings(
+    lastName: string,
+    page: number,
+    size: number,
+    sortBy: string,
+    sortDir: string,
+    onlyActive: boolean,
+  ): void {
+    this.loadingFilteredSignal.set(true);
+    this.http
+      .get<{ content: IDashboard[]; totalElements: number }>(`${this.apiUrl}/dashboard/filter`, {
+        params: {
+          lastName,
+          page: page.toString(),
+          size: size.toString(),
+          sortBy,
+          sortDir,
+          onlyActive: onlyActive.toString(),
+        },
+      })
+      .pipe(finalize(() => this.loadingFilteredSignal.set(false)))
+      .subscribe({
+        next: (data) => {
+          this.filteredBookingsSignal.set({
+            content: data.content,
+            totalElements: data.totalElements,
+          });
+        },
+        error: (error) => {
+          console.error('❌ Error fetching filtered dashboard:', error);
+          this.filteredBookingsSignal.set({ content: [], totalElements: 0 });
+        },
+      });
+  }
   getMonthlyArrivals(month: number, year: number): void {
     this.http
       .get<number>(`${this.apiUrl}/dashboard/monthlyArrivalsCount?month=${month}&year=${year}`)

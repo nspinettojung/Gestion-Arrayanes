@@ -8,6 +8,9 @@ import com.Gestion.Arrayanes.DashboardDTO.model.CalendarDayDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.ClientApartmentDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.DashboardDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.DashboardStatsDTO;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -244,7 +248,7 @@ class DashboardServiceTest {
                 .thenReturn(new PageImpl<>(List.of(booking)));
 
         Page<DashboardDTO> result = dashboardService.getDashboard(
-                null, null, null, null, 1, 5, "arrivalDate", "desc");
+                null, null, null, null, 1, 5, "arrivalDate", "desc", false);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("RS-2026-0001", result.getContent().get(0).getTransactionCode());
@@ -261,11 +265,32 @@ class DashboardServiceTest {
         when(bookingRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(booking)));
 
-        dashboardService.getDashboard(null, null, null, null, 0, 10, null, null);
+        dashboardService.getDashboard(null, null, null, null, 0, 10, null, null, false);
 
         ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
         verify(bookingRepository).findAll(any(Specification.class), captor.capture());
         Pageable pageable = captor.getValue();
         assertEquals(Sort.Direction.ASC, pageable.getSort().getOrderFor("arrivalDate").getDirection());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void filteredDashboardShouldFilterOutDepartedBookingsWhenOnlyActive() {
+        when(bookingRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(booking)));
+
+        dashboardService.getDashboard(null, null, null, null, 0, 10, null, null, true);
+
+        ArgumentCaptor<Specification<Booking>> captor = ArgumentCaptor.forClass(Specification.class);
+        verify(bookingRepository).findAll(captor.capture(), any(Pageable.class));
+
+        Root<Booking> root = mock(Root.class);
+        CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
+        Path<LocalDate> departurePath = mock(Path.class);
+        when(root.<LocalDate>get("departureDate")).thenReturn(departurePath);
+
+        captor.getValue().toPredicate(root, null, criteriaBuilder);
+
+        verify(criteriaBuilder).greaterThanOrEqualTo(departurePath, TODAY);
     }
 }

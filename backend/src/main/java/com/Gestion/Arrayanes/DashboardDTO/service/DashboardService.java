@@ -60,7 +60,7 @@ public class DashboardService {
 
     public Page<DashboardDTO> getDashboard(String lastName, LocalDate start, LocalDate end,
                                            UUID apartmentId, int page, int size,
-                                           String sortBy, String sortDir) {
+                                           String sortBy, String sortDir, boolean onlyActive) {
 
         Specification<Booking> spec = Specification.where((root, query, cb) -> cb.conjunction());
 
@@ -72,6 +72,9 @@ public class DashboardService {
         }
         if (apartmentId != null) {
             spec = spec.and(BookingSpecifications.apartmentEquals(apartmentId));
+        }
+        if (onlyActive) {
+            spec = spec.and(BookingSpecifications.departureOnOrAfter(LocalDate.now(clock)));
         }
 
 

@@ -5,7 +5,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { finalize } from 'rxjs';
 import { IDashboard } from '../../core/interface/dashboard/dashboard';
 import { BookingUpdateRequest } from '../../core/interface/booking/booking';
-import { daysBetween, parseLocalDate, toLocalIsoDate } from '../../core/utils/date';
+import { daysBetween } from '../../core/utils/date';
 import { calculateBookingPrice } from '../../core/utils/booking-price';
 import { Apartment } from '../../core/services/apartment/apartment';
 import { Booking } from '../../core/services/booking/booking';
@@ -49,7 +49,7 @@ export class Maindashboard implements OnInit {
   private confirmation = inject(ConfirmationService);
   private destroyRef = inject(DestroyRef);
 
-  bookingsLoading = this.dashboardService.loadingDashboard;
+  bookingsLoading = this.dashboardService.loadingFilteredSignal;
   loadingStats = this.dashboardService.loadingStats;
   saving = signal(false);
   deletingId = signal<string | null>(null);
@@ -62,47 +62,9 @@ export class Maindashboard implements OnInit {
   occupancy = this.dashboardService.occupancy;
   growth = this.dashboardService.growth;
   todayBookings = this.dashboardService.todayBookings;
-  bookings = this.dashboardService.dashboardSignal;
+  bookings = computed(() => this.dashboardService.filteredBookings());
 
-  /**
-   * El dashboard muestra solo reservas activas: las que todavía no hicieron
-   * check-out. Se compara en fecha local para evitar el corrimiento UTC.
-   */
-  private isActiveBooking(departureDate: string): boolean {
-    if (!departureDate) {
-      return false;
-    }
-
-    const departure = parseLocalDate(departureDate);
-    const today = parseLocalDate(toLocalIsoDate());
-
-    return departure >= today;
-  }
-
-  filteredBookings = computed(() => {
-    const term = this.searchTerm().trim().toLowerCase();
-    const bookings = this.bookings()
-      .filter((booking) => this.isActiveBooking(booking.departureDate))
-      .sort((a, b) => b.arrivalDate.localeCompare(a.arrivalDate));
-
-    if (!term) {
-      return bookings;
-    }
-
-    return bookings.filter((booking) =>
-      `${booking.clientName} ${booking.clientLastName} ${booking.transactionCode ?? ''}`
-        .toLowerCase()
-        .includes(term),
-    );
-  });
-
-  pagedBookings = computed(() => {
-    const startIndex = this.currentPage() * this.pageSize;
-
-    return this.filteredBookings().slice(startIndex, startIndex + this.pageSize);
-  });
-
-  total = computed(() => this.filteredBookings().length);
+  totalElements = computed(() => this.dashboardService.totalElements());
 
   growthLabel = computed(() => {
     const value = Math.round(this.growth() * 10) / 10;
@@ -136,19 +98,40 @@ export class Maindashboard implements OnInit {
 
   ngOnInit(): void {
     this.dashboardService.loadStats();
-    this.dashboardService.getDashboardData();
+    this.refreshBookings();
     this.apartmentService.getApartments();
     this.buildForm();
+  }
+
+  /** Recarga la página actual manteniendo búsqueda, orden y filtro de activas. */
+  private refreshBookings(): void {
+    this.dashboardService.loadFilteredBookings(
+      this.searchTerm(),
+      this.currentPage(),
+      this.pageSize,
+      'arrivalDate',
+      'desc',
+      true,
+    );
   }
 
   onSearch(term: string): void {
     this.searchTerm.set(term);
     this.currentPage.set(0);
     this.idSelected.set(new Set());
+    this.dashboardService.loadFilteredBookings(term, 0, this.pageSize, 'arrivalDate', 'desc', true);
   }
 
   onPageChange(page: number): void {
     this.currentPage.set(page);
+    this.dashboardService.loadFilteredBookings(
+      this.searchTerm(),
+      page,
+      this.pageSize,
+      'arrivalDate',
+      'desc',
+      true,
+    );
   }
 
   buildForm(): void {
@@ -212,7 +195,7 @@ export class Maindashboard implements OnInit {
       .subscribe({
         next: () => {
           this.notifications.success('Reserva eliminada correctamente.');
-          this.dashboardService.getDashboardData();
+          this.refreshBookings();
           this.dashboardService.loadStats();
         },
         error: () => {
@@ -290,7 +273,7 @@ export class Maindashboard implements OnInit {
           this.editPreview.set(null);
           this.editingTransactionCode.set(null);
           this.bookingForm.reset({ amountPeople: 1 });
-          this.dashboardService.getDashboardData();
+          this.refreshBookings();
           this.dashboardService.loadStats();
         },
         error: (error: unknown) => {
@@ -305,7 +288,7 @@ export class Maindashboard implements OnInit {
           this.editPreview.set(null);
           this.editingTransactionCode.set(null);
           this.bookingForm.reset({ amountPeople: 1, version: 0 });
-          this.dashboardService.getDashboardData();
+          this.refreshBookings();
           this.dashboardService.loadStats();
         },
       });
@@ -314,7 +297,7 @@ export class Maindashboard implements OnInit {
   idSelected = signal<Set<string>>(new Set());
 
   allSelected = computed(() => {
-    const page = this.pagedBookings();
+    const page = this.bookings();
 
     return page.length > 0 && page.every((booking) => this.idSelected().has(booking.id));
   });
@@ -323,7 +306,7 @@ export class Maindashboard implements OnInit {
     const input = event.target as HTMLInputElement;
 
     if (input.checked) {
-      const allIds = this.pagedBookings().map((booking) => booking.id);
+      const allIds = this.bookings().map((booking) => booking.id);
       this.idSelected.set(new Set(allIds));
     } else {
       this.idSelected.set(new Set());
@@ -370,7 +353,7 @@ export class Maindashboard implements OnInit {
         next: () => {
           this.notifications.success('Reservas eliminadas correctamente.');
           this.idSelected.set(new Set());
-          this.dashboardService.getDashboardData();
+          this.refreshBookings();
           this.dashboardService.loadStats();
         },
         error: () => {

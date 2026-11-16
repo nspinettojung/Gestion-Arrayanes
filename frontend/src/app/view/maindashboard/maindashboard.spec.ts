@@ -46,43 +46,69 @@ describe('Maindashboard', () => {
     expect(component).toBeTruthy();
   });
 
-  it('solo muestra reservas cuyo check-out todavía no pasó', () => {
+  it('refleja la página que devuelve el backend y su total', () => {
     const today = toLocalIsoDate();
 
-    dashboard.dashboardSignal.set([
-      buildBooking('pasada', addDays(today, -1)),
-      buildBooking('se-va-hoy', today),
-      buildBooking('futura', addDays(today, 5)),
-    ]);
+    dashboard.filteredBookingsSignal.set({
+      content: [
+        buildBooking('pasada', addDays(today, -1)),
+        buildBooking('se-va-hoy', today),
+        buildBooking('futura', addDays(today, 5)),
+      ],
+      totalElements: 3,
+    });
     fixture.detectChanges();
 
-    expect(component.filteredBookings().map((booking) => booking.id)).toEqual([
-      'futura',
+    expect(component.bookings().map((booking) => booking.id)).toEqual([
+      'pasada',
       'se-va-hoy',
+      'futura',
     ]);
-    expect(component.total()).toBe(2);
+    expect(dashboard.totalElements()).toBe(3);
   });
 
-  it('permite buscar reservas por código de transacción', () => {
-    const today = toLocalIsoDate();
+  it('la búsqueda pide la página 0 al backend solo con reservas activas', () => {
+    const filterSpy = vi
+      .spyOn(dashboard, 'loadFilteredBookings')
+      .mockImplementation(() => undefined);
 
-    dashboard.dashboardSignal.set([
-      buildBooking('futura', addDays(today, 5)),
-      buildBooking('otra', addDays(today, 6)),
-    ]);
-    component.searchTerm.set('RS-2026-futura');
-    fixture.detectChanges();
+    component.onSearch('RS-2026-futura');
 
-    expect(component.filteredBookings().map((booking) => booking.id)).toEqual(['futura']);
+    expect(component.searchTerm()).toBe('RS-2026-futura');
+    expect(component.currentPage()).toBe(0);
+    expect(filterSpy).toHaveBeenCalledWith(
+      'RS-2026-futura',
+      0,
+      component.pageSize,
+      'arrivalDate',
+      'desc',
+      true,
+    );
+  });
+
+  it('el cambio de página conserva el término de búsqueda', () => {
+    const filterSpy = vi
+      .spyOn(dashboard, 'loadFilteredBookings')
+      .mockImplementation(() => undefined);
+
+    component.searchTerm.set('Perez');
+    component.onPageChange(2);
+
+    expect(component.currentPage()).toBe(2);
+    expect(filterSpy).toHaveBeenCalledWith(
+      'Perez',
+      2,
+      component.pageSize,
+      'arrivalDate',
+      'desc',
+      true,
+    );
   });
 
   it('envía la versión de la reserva al editarla', () => {
     const bookingService = TestBed.inject(Booking);
     const booking = buildBooking('futura', addDays(toLocalIsoDate(), 5));
     const editSpy = vi.spyOn(bookingService, 'editBooking').mockReturnValue(of(booking));
-    vi.spyOn(dashboard, 'getDashboardData').mockImplementation(() => undefined);
-    vi.spyOn(dashboard, 'loadStats').mockImplementation(() => undefined);
-
     component.openEditBooking(booking);
     component.onEdit();
 
@@ -98,7 +124,9 @@ describe('Maindashboard', () => {
 
   it('cierra el modal y recarga si la reserva fue modificada por otro usuario', () => {
     const bookingService = TestBed.inject(Booking);
-    const refreshSpy = vi.spyOn(dashboard, 'getDashboardData').mockImplementation(() => undefined);
+    const refreshSpy = vi
+      .spyOn(dashboard, 'loadFilteredBookings')
+      .mockImplementation(() => undefined);
     const statsSpy = vi.spyOn(dashboard, 'loadStats').mockImplementation(() => undefined);
     vi.spyOn(bookingService, 'editBooking').mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 409 })),

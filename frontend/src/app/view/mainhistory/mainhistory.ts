@@ -41,11 +41,11 @@ export class Mainhistory implements OnInit {
     this.dashboardService.getDashboardData();
   }
 
-  bookings = computed(() => this.dashboardService.dashboardSignal());
+  bookings = computed(() => this.dashboardService.filteredBookings());
 
   filteredBookings = computed(() => {
     const term = this.searchTerm().trim().toLowerCase();
-    const bookings = [...this.bookings()].sort((a, b) =>
+    const bookings = Array.from(this.bookings()).sort((a, b) =>
       b.arrivalDate.localeCompare(a.arrivalDate),
     );
 

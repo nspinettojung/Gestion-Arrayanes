@@ -22,4 +22,8 @@ public class BookingSpecifications {
     public static Specification<Booking> apartmentEquals(UUID apartmentId) {
         return (root, query, cb) -> cb.equal(root.get("apartmentId").get("id"), apartmentId);
     }
+
+    public static Specification<Booking> departureOnOrAfter(LocalDate date) {
+        return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("departureDate"), date);
+    }
 }
