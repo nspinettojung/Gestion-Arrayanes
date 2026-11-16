@@ -65,6 +65,7 @@ class DashboardServiceTest {
 
         booking = new Booking();
         booking.setId(UUID.randomUUID());
+        booking.setTransactionCode("RS-2026-0001");
         booking.setClientId(client);
         booking.setApartmentId(apartment);
         booking.setArrivalDate(LocalDate.of(2026, 11, 10));
@@ -239,6 +240,7 @@ class DashboardServiceTest {
         assertEquals(1, result.size());
         DashboardDTO dto = result.get(0);
         assertEquals(booking.getId(), dto.getId());
+        assertEquals("RS-2026-0001", dto.getTransactionCode());
         assertEquals("Ana", dto.getClientName());
         assertEquals("Arrayanes 1", dto.getApartmentName());
         assertEquals(booking.getTotalPrice(), dto.getTotalPrice());
@@ -253,6 +255,7 @@ class DashboardServiceTest {
                 null, null, null, null, 1, 5, "arrivalDate", "desc");
 
         assertEquals(1, result.getTotalElements());
+        assertEquals("RS-2026-0001", result.getContent().get(0).getTransactionCode());
         ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
         verify(bookingRepository).findAll(any(Specification.class), captor.capture());
         Pageable pageable = captor.getValue();

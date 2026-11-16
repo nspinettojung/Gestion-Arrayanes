@@ -222,7 +222,9 @@ export class Mainreservation implements OnInit {
       .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: (booking) => {
-          this.notifications.success(`Reserva guardada con éxito. Código: ${booking.id}`);
+          this.notifications.success(
+            `Reserva guardada con éxito. Código: ${booking.transactionCode ?? 'sin asignar'}`,
+          );
           this.resetForm();
           this.router.navigate(['/dashboard']);
         },

@@ -1,5 +1,6 @@
 export interface IBooking {
   id: string;
+  transactionCode: string | null;
   arrivalDate: string;
   nights: number;
   departureDate: string;

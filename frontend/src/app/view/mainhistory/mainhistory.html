@@ -10,7 +10,7 @@
       <gda-search-input
         [value]="searchTerm()"
         (valueChange)="onSearch($event)"
-        [placeholder]="'Buscar por apellido'"
+        [placeholder]="'Buscar por apellido o código'"
       ></gda-search-input>
     </div>
   </div>
@@ -62,6 +62,17 @@
         table-body
         (click)="alternateSelectRow(booking.id)"
       >
+        <td class="px-space-md py-4">
+          @if (booking.transactionCode) {
+            <span
+              class="inline-flex items-center rounded bg-surface-container-high px-2 py-0.5 font-mono text-xs text-on-surface-variant"
+            >
+              {{ booking.transactionCode }}
+            </span>
+          } @else {
+            <span class="text-on-surface-variant">—</span>
+          }
+        </td>
         <td class="px-space-md py-4">
           <div class="flex items-center space-x-3">
             <div

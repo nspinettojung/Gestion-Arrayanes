@@ -23,6 +23,7 @@ export class Mainhistory implements OnInit {
   private confirmation = inject(ConfirmationService);
 
   columnsName = signal<string[]>([
+    'Código',
     'Huésped',
     'Habitación',
     'Cantidad Personas',
@@ -53,7 +54,9 @@ export class Mainhistory implements OnInit {
     }
 
     return bookings.filter((booking) =>
-      `${booking.clientName} ${booking.clientLastName}`.toLowerCase().includes(term),
+      `${booking.clientName} ${booking.clientLastName} ${booking.transactionCode ?? ''}`
+        .toLowerCase()
+        .includes(term),
     );
   });
 

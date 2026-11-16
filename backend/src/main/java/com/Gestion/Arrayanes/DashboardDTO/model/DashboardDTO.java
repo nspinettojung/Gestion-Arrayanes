@@ -12,6 +12,7 @@ import java.util.UUID;
 public class DashboardDTO {
 
     private UUID id;
+    private String transactionCode;
     private UUID clientId;
     private String clientName;
     private String clientLastName;
@@ -23,9 +24,10 @@ public class DashboardDTO {
     private Long amountPeople;
     private BigDecimal totalPrice;
 
-    public DashboardDTO(UUID id,UUID clientId ,String clientName, String clientLastName,UUID apartmentId ,String apartmentName, LocalDate arrivalDate, LocalDate departureDate, Long nights, Long amountPeople, BigDecimal totalPrice ) {
+    public DashboardDTO(UUID id, String transactionCode, UUID clientId ,String clientName, String clientLastName,UUID apartmentId ,String apartmentName, LocalDate arrivalDate, LocalDate departureDate, Long nights, Long amountPeople, BigDecimal totalPrice ) {
 
         this.id = id;
+        this.transactionCode = transactionCode;
         this.clientId = clientId;
         this.clientName = clientName;
         this.clientLastName = clientLastName;

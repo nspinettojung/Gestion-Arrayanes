@@ -42,6 +42,7 @@ public class DashboardService {
         return bookings.stream()
                 .map(b -> new DashboardDTO(
                         b.getId(),
+                        b.getTransactionCode(),
                         b.getClientId().getId(),
                         b.getClientId().getClientName(),
                         b.getClientId().getClientLastName(),
@@ -83,6 +84,7 @@ public class DashboardService {
         return bookingRepository.findAll(spec, pageable)
                 .map(b -> new DashboardDTO(
                         b.getId(),
+                        b.getTransactionCode(),
                         b.getClientId().getId(),
                         b.getClientId().getClientName(),
                         b.getClientId().getClientLastName(),

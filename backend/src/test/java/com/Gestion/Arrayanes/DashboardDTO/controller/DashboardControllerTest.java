@@ -43,6 +43,7 @@ class DashboardControllerTest {
         mockMvc.perform(get("/api/dashboard"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].clientName").value("Ana"))
+                .andExpect(jsonPath("$[0].transactionCode").value("RS-2026-0001"))
                 .andExpect(jsonPath("$[0].apartmentName").value("Arrayanes 1"));
     }
 
@@ -187,6 +188,7 @@ class DashboardControllerTest {
     private DashboardDTO dashboardDto() {
         return new DashboardDTO(
                 UUID.fromString("44444444-4444-4444-4444-444444444444"),
+                "RS-2026-0001",
                 UUID.fromString("22222222-2222-2222-2222-222222222222"),
                 "Ana",
                 "Perez",

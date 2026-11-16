@@ -89,7 +89,9 @@ export class Maindashboard implements OnInit {
     }
 
     return bookings.filter((booking) =>
-      `${booking.clientName} ${booking.clientLastName}`.toLowerCase().includes(term),
+      `${booking.clientName} ${booking.clientLastName} ${booking.transactionCode ?? ''}`
+        .toLowerCase()
+        .includes(term),
     );
   });
 
@@ -115,6 +117,7 @@ export class Maindashboard implements OnInit {
   );
 
   columnsName = signal<string[]>([
+    'Código',
     'Huésped',
     'Habitación',
     'Cantidad Personas',
@@ -127,6 +130,7 @@ export class Maindashboard implements OnInit {
   pageSize = 5;
   currentPage = signal(0);
   searchTerm = signal('');
+  editingTransactionCode = signal<string | null>(null);
   showModal = false;
 
   ngOnInit(): void {
@@ -216,6 +220,7 @@ export class Maindashboard implements OnInit {
   }
 
   openEditBooking(booking: IDashboard): void {
+    this.editingTransactionCode.set(booking.transactionCode);
     this.bookingForm.patchValue({
       id: booking.id,
       clientId: booking.clientId,
@@ -238,6 +243,7 @@ export class Maindashboard implements OnInit {
 
     this.showModal = false;
     this.editPreview.set(null);
+    this.editingTransactionCode.set(null);
   }
 
   onEdit(): void {
@@ -278,6 +284,7 @@ export class Maindashboard implements OnInit {
           this.notifications.success('Reserva editada correctamente.');
           this.showModal = false;
           this.editPreview.set(null);
+          this.editingTransactionCode.set(null);
           this.bookingForm.reset({ amountPeople: 1 });
           this.dashboardService.getDashboardData();
           this.dashboardService.loadStats();

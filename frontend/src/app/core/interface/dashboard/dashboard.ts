@@ -1,5 +1,6 @@
 export interface IDashboard {
   id: string;
+  transactionCode: string | null;
   clientId: string;
   clientName: string;
   clientLastName: string;

@@ -8,6 +8,7 @@ import { Maindashboard } from './maindashboard';
 function buildBooking(id: string, departureDate: string): IDashboard {
   return {
     id,
+    transactionCode: `RS-2026-${id}`,
     clientId: `client-${id}`,
     clientName: 'Ana',
     clientLastName: `Pérez ${id}`,
@@ -56,5 +57,18 @@ describe('Maindashboard', () => {
       'se-va-hoy',
     ]);
     expect(component.total()).toBe(2);
+  });
+
+  it('permite buscar reservas por código de transacción', () => {
+    const today = toLocalIsoDate();
+
+    dashboard.dashboardSignal.set([
+      buildBooking('futura', addDays(today, 5)),
+      buildBooking('otra', addDays(today, 6)),
+    ]);
+    component.searchTerm.set('RS-2026-futura');
+    fixture.detectChanges();
+
+    expect(component.filteredBookings().map((booking) => booking.id)).toEqual(['futura']);
   });
 });
