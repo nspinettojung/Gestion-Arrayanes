@@ -333,15 +333,6 @@ class BookingServiceTest {
         assertEquals(response, bookingService.findBookingById(bookingId));
     }
 
-    @Test
-    void transactionCodeGeneratorShouldUseNextSequence() {
-        List<String> persistedCodes = List.of("RS-2026-0005");
-        when(bookingRepository.findAllTransactionCodes()).thenReturn(persistedCodes);
-        when(transactionCodeGenerator.generateNext(persistedCodes)).thenReturn("RS-2026-0006");
-
-        assertEquals("RS-2026-0006", bookingService.transactionCodeGenerator());
-    }
-
     private BookingWithClientIdRequestDTO saveRequest() {
         BookingWithClientIdRequestDTO request = new BookingWithClientIdRequestDTO();
         fillCommonFields(request);

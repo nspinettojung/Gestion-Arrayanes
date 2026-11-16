@@ -72,9 +72,4 @@ public class BookingController {
         return ResponseEntity.ok(today);
     }
 
-    @GetMapping("/generateTransactionCode")
-    public ResponseEntity<String> generateTransactionCode() {
-        return ResponseEntity.ok(iBookingService.transactionCodeGenerator());
-    }
-
 }

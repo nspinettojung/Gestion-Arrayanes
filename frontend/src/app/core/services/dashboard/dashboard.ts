@@ -73,43 +73,6 @@ export class Dashboard {
       });
   }
 
-  getTotal(entity: 'bookings' | 'apartments'): void {
-    this.http.get<{ total: number }>(`${this.apiUrl}/dashboard/total/${entity}`).subscribe({
-      next: (data) => {
-        if (entity === 'bookings') this.totalBookings.set(data.total);
-        if (entity === 'apartments') this.totalApartments.set(data.total);
-      },
-      error: (error) => console.error(`Error fetching total ${entity}:`, error),
-    });
-  }
-
-  getOccupancy(): void {
-    this.http.get<number>(`${this.apiUrl}/dashboard/occupancy`).subscribe({
-      next: (data) => {
-        this.occupancy.set(data);
-      },
-      error: (error) => console.error('Error fetching occupancy data:', error),
-    });
-  }
-
-  getBookingsGrowth(): void {
-    this.http.get<number>(`${this.apiUrl}/dashboard/bookingsgrowth`).subscribe({
-      next: (data) => {
-        this.growth.set(data);
-      },
-      error: (error) => console.error('Error fetching bookings growth data:', error),
-    });
-  }
-
-  getTodayBookings(): void {
-    this.http.get<number>(`${this.apiUrl}/dashboard/todaybookings`).subscribe({
-      next: (data) => {
-        this.todayBookings.set(data);
-      },
-      error: (error) => console.error("Error fetching today's bookings data:", error),
-    });
-  }
-
   getMonthlyArrivals(month: number, year: number): void {
     this.http
       .get<number>(`${this.apiUrl}/dashboard/monthlyArrivalsCount?month=${month}&year=${year}`)

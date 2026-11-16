@@ -7,11 +7,9 @@ import { Booking } from '../../core/services/booking/booking';
 import { Dashboard } from '../../core/services/dashboard/dashboard';
 
 const bookingMock = {
-  days: signal([]),
   bookinglist: signal([]),
   getBookings: () => undefined,
   getCurrentDate: () => of('2026-09-22'),
-  getCalendar: () => undefined,
 };
 
 const dashboardMock = {

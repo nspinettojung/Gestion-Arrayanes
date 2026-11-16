@@ -68,10 +68,6 @@ public class BookingService implements IBookingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Apartamento no encontrado."));
     }
 
-    private void saveBookingEntity(Booking booking) {
-        bookingRepository.save(booking);
-    }
-
     private void calculateAndSetTotalPrice(Booking booking, Apartment apartment) {
         BigDecimal totalPrice = BookingPrice.calculatePrice(
                 apartment.getPrice(),
@@ -100,11 +96,6 @@ public class BookingService implements IBookingService {
         }
     }
 
-    @Override
-    public String transactionCodeGenerator() {
-        return nextTransactionCode();
-    }
-
     private String nextTransactionCode() {
         return transactionCodeGenerator.generateNext(bookingRepository.findAllTransactionCodes());
     }
@@ -119,7 +110,7 @@ public class BookingService implements IBookingService {
         bookingValidation.validate(booking, bookingRequestDTO, apartment);
         calculateAndSetTotalPrice(booking, apartment);
         booking.setTransactionCode(nextTransactionCode());
-        saveBookingEntity(booking);
+        bookingRepository.save(booking);
 
         return bookingMapper.toResponseDTO(booking);
     }
@@ -185,7 +176,7 @@ public class BookingService implements IBookingService {
         if (booking.getTransactionCode() == null || booking.getTransactionCode().isBlank()) {
             booking.setTransactionCode(nextTransactionCode());
         }
-        saveBookingEntity(booking);
+        bookingRepository.save(booking);
 
         return bookingMapper.toResponseDTO(booking);
     }

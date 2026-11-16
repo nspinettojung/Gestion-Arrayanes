@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -19,9 +20,11 @@ import java.util.UUID;
 public class DashboardController {
 
     private final DashboardService dashboardService;
+    private final Clock clock;
 
-    public DashboardController(DashboardService dashboardService) {
+    public DashboardController(DashboardService dashboardService, Clock clock) {
         this.dashboardService = dashboardService;
+        this.clock = clock;
     }
 
     @GetMapping
@@ -56,7 +59,7 @@ public class DashboardController {
                                                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date){
 
         if (date == null) {
-            date = LocalDate.now();
+            date = LocalDate.now(clock);
         }
 
         double occupancy = dashboardService.getOccupation(date);

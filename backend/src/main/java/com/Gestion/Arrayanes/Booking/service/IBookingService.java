@@ -23,6 +23,4 @@ public interface IBookingService {
     BookingResponseDTO findBookingById(UUID id);
 
     BookingResponseDTO updateBooking(UUID id, BookingUpdateRequestDTO bookingRequestDTO);
-
-    String transactionCodeGenerator();
 }

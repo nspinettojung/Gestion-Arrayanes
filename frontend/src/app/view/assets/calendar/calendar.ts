@@ -40,10 +40,6 @@ export class Calendar implements OnInit {
   selectedDay: number | null = null;
   monthName = '';
 
-  monthlyArrivalsDate: IDashboard[] = [];
-  monthlyDeparturesDate: IDashboard[] = [];
-  selectedDayReservations: IDashboard[] = [];
-
   days: CalendarDay[] = [];
 
   readonly weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -163,7 +159,6 @@ export class Calendar implements OnInit {
     if (day.currentMonth && day.day) {
       this.selectedDay = day.day;
       this.daySelected.emit(day.date);
-      this.selectedDayReservations = day.reservations.map((r) => r.booking);
     }
   }
 }

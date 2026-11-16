@@ -40,10 +40,6 @@ public interface BookingRepository extends JpaRepository<Booking, UUID>, JpaSpec
     long countBookingsByDepartureDateBetween(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
 
-    default LocalDate findLastArrivalDateByClientId(UUID clientId) {
-        return null;
-    }
-
     @Query("SELECT b FROM Booking b " +
             "WHERE b.apartmentId.id = :apartmentId " +
             "AND (:bookingId IS NULL OR b.id <> :bookingId) " +

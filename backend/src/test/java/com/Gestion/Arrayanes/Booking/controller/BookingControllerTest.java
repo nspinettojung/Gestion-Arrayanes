@@ -230,15 +230,6 @@ class BookingControllerTest {
     }
 
     @Test
-    void generateTransactionCodeShouldReturnCode() throws Exception {
-        when(bookingService.transactionCodeGenerator()).thenReturn("RS-2026-0001");
-
-        mockMvc.perform(get("/api/bookings/generateTransactionCode"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("RS-2026-0001"));
-    }
-
-    @Test
     void corsShouldAllowAngularDevelopmentOrigin() throws Exception {
         when(bookingService.getListBooking()).thenReturn(List.of(response()));
 
