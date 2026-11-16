@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { IDashboard } from '../../core/interface/dashboard/dashboard';
-import { Dashboard } from '../../core/services/dashboard/dashboard';
 import { Mainhistory } from './mainhistory';
 
 function buildBooking(id: string, transactionCode: string | null): IDashboard {
@@ -25,41 +26,47 @@ function buildBooking(id: string, transactionCode: string | null): IDashboard {
 describe('Mainhistory', () => {
   let component: Mainhistory;
   let fixture: ComponentFixture<Mainhistory>;
-  let dashboard: Dashboard;
+  let httpMock: HttpTestingController;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Mainhistory],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Mainhistory);
     component = fixture.componentInstance;
-    dashboard = TestBed.inject(Dashboard);
-    await fixture.whenStable();
+    httpMock = TestBed.inject(HttpTestingController);
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('permite buscar reservas por código de transacción', () => {
-    dashboard.filteredBookingsSignal.set({
-      content: [buildBooking('uno', 'RS-2026-0001'), buildBooking('dos', 'RS-2026-0002')],
-      totalElements: 2,
-    });
+  it('permite buscar reservas por código de transacción', async () => {
+    fixture.detectChanges();
+    await flushFilter(
+      [buildBooking('uno', 'RS-2026-0001'), buildBooking('dos', 'RS-2026-0002')],
+      2,
+    );
+
     component.searchTerm.set('RS-2026-0002');
     fixture.detectChanges();
 
     expect(component.filteredBookings().map((booking) => booking.id)).toEqual(['dos']);
   });
 
-  it('incluye reservas sin código en el listado', () => {
-    dashboard.filteredBookingsSignal.set({
-      content: [buildBooking('sin-codigo', null)],
-      totalElements: 1,
-    });
+  it('incluye reservas sin código en el listado', async () => {
     fixture.detectChanges();
+    await flushFilter([buildBooking('sin-codigo', null)], 1);
 
     expect(component.filteredBookings().map((booking) => booking.id)).toEqual(['sin-codigo']);
   });
+
+  async function flushFilter(content: IDashboard[], totalElements: number): Promise<void> {
+    const request = httpMock.expectOne((req) => req.url.includes('/dashboard/filter'));
+    request.flush({ content, totalElements });
+    // httpResource resuelve el valor en una tarea asíncrona tras la respuesta.
+    await new Promise<void>((resolve) => setTimeout(resolve));
+  }
 });

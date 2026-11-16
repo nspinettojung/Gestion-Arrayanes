@@ -33,7 +33,7 @@ export class Mainhistory implements OnInit {
   pageSize = 5;
   currentPage = signal(0);
   searchTerm = signal('');
-  loading = this.dashboardService.loadingDashboard;
+  loading = this.dashboardService.loadingFilteredSignal;
   deletingId = signal<string | null>(null);
   deletingSelection = signal(false);
 

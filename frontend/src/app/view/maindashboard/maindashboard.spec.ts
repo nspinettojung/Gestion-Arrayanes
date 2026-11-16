@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 
 import { IDashboard } from '../../core/interface/dashboard/dashboard';
@@ -30,33 +31,34 @@ describe('Maindashboard', () => {
   let component: Maindashboard;
   let fixture: ComponentFixture<Maindashboard>;
   let dashboard: Dashboard;
+  let httpMock: HttpTestingController;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Maindashboard],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Maindashboard);
     component = fixture.componentInstance;
+    component.buildForm();
     dashboard = TestBed.inject(Dashboard);
-    await fixture.whenStable();
+    httpMock = TestBed.inject(HttpTestingController);
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('refleja la página que devuelve el backend y su total', () => {
+  it('refleja la página que devuelve el backend y su total', async () => {
     const today = toLocalIsoDate();
 
-    dashboard.filteredBookingsSignal.set({
-      content: [
-        buildBooking('pasada', addDays(today, -1)),
-        buildBooking('se-va-hoy', today),
-        buildBooking('futura', addDays(today, 5)),
-      ],
-      totalElements: 3,
-    });
+    fixture.detectChanges();
+    await flushFilter([
+      buildBooking('pasada', addDays(today, -1)),
+      buildBooking('se-va-hoy', today),
+      buildBooking('futura', addDays(today, 5)),
+    ]);
     fixture.detectChanges();
 
     expect(component.bookings().map((booking) => booking.id)).toEqual([
@@ -139,4 +141,11 @@ describe('Maindashboard', () => {
     expect(refreshSpy).toHaveBeenCalled();
     expect(statsSpy).toHaveBeenCalled();
   });
+
+  async function flushFilter(content: IDashboard[], totalElements = content.length): Promise<void> {
+    const request = httpMock.expectOne((req) => req.url.includes('/dashboard/filter'));
+    request.flush({ content, totalElements });
+    // httpResource resuelve el valor en una tarea asíncrona tras la respuesta.
+    await new Promise<void>((resolve) => setTimeout(resolve));
+  }
 });
