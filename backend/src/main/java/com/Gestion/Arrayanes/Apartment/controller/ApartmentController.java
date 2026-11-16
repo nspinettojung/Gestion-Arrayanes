@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/apartments")
+@RequestMapping("/api/v1/apartments")
 public class ApartmentController {
 
     private final IApartmentService iApartmentService;
@@ -23,30 +23,30 @@ public class ApartmentController {
         this.iApartmentService = iApartmentService;
     }
 
-    @PostMapping("/saveapartment")
+    @PostMapping
     public ResponseEntity<ApartmentResponseDTO> saveApartment(@Valid @RequestBody ApartmentRequestDTO requestApartment) {
         ApartmentResponseDTO apartment = iApartmentService.saveApartment(requestApartment);
-        URI location = URI.create("/api/apartments/apartment/" + apartment.getId());
+        URI location = URI.create("/api/v1/apartments/" + apartment.getId());
         return ResponseEntity.created(location).body(apartment);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteApartment(@PathVariable UUID id) {
         iApartmentService.deleteApartment(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/listapartment")
+    @GetMapping
     public ResponseEntity<List<ApartmentResponseDTO>> getApartmentList() {
         return ResponseEntity.ok(iApartmentService.getApartmentList());
     }
 
-    @GetMapping("/apartment/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ApartmentResponseDTO> getApartmentById(@PathVariable UUID id) {
         return ResponseEntity.ok(iApartmentService.findApartmentById(id));
     }
 
-    @PutMapping("/editapartment/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<ApartmentResponseDTO> updateApartment(@PathVariable UUID id,
                                                                 @Valid @RequestBody ApartmentRequestDTO apartmentRequestDTO) {
         return ResponseEntity.ok(iApartmentService.updateApartment(id, apartmentRequestDTO));
@@ -63,17 +63,17 @@ public class ApartmentController {
         return ResponseEntity.ok(iApartmentService.editPrice(id, newPrice));
     }
 
-    @GetMapping("/price/{id}")
+    @GetMapping("/{id}/price")
     public ResponseEntity<BigDecimal> getPriceById(@PathVariable UUID id) {
         return ResponseEntity.ok(iApartmentService.getPriceById(id));
     }
 
-    @GetMapping("/apartmentname/{id}")
+    @GetMapping("/{id}/name")
     public ResponseEntity<String> getApartmentNameById(@PathVariable UUID id) {
         return ResponseEntity.ok(iApartmentService.getApartmentName(id));
     }
 
-    @PatchMapping("/{id}/apartmentname")
+    @PatchMapping("/{id}/name")
     public ResponseEntity<ApartmentResponseDTO> updateApartmentName(@PathVariable UUID id, @RequestBody Map<String, String> body) {
         String newName = body.get("apartmentName");
         return ResponseEntity.ok(iApartmentService.editApartName(id, newName));

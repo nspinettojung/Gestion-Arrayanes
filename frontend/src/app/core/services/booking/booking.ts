@@ -23,7 +23,7 @@ export class Booking {
     this.loadingSignal.set(true);
 
     this.http
-      .get<IBooking[]>(`${this.apiUrl}/bookings/bookinglist`)
+      .get<IBooking[]>(`${this.apiUrl}/bookings`)
       .pipe(finalize(() => this.loadingSignal.set(false)))
       .subscribe({
         next: (data) => this.bookingData.set(data),
@@ -36,11 +36,11 @@ export class Booking {
   }
 
   createBookingWithClient(booking: BookingCreateRequest): Observable<IBooking> {
-    return this.http.post<IBooking>(`${this.apiUrl}/bookings/createWithClient`, booking);
+    return this.http.post<IBooking>(`${this.apiUrl}/bookings/with-client`, booking);
   }
 
   deleteBooking(bookingId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/bookings/delete/${bookingId}`);
+    return this.http.delete<void>(`${this.apiUrl}/bookings/${bookingId}`);
   }
 
   deleteBookingList(bookingsIds: string[]): Observable<void> {
@@ -48,6 +48,6 @@ export class Booking {
   }
 
   editBooking(bookingId: string, bookingData: BookingUpdateRequest): Observable<IBooking> {
-    return this.http.put<IBooking>(`${this.apiUrl}/bookings/editbooking/${bookingId}`, bookingData);
+    return this.http.put<IBooking>(`${this.apiUrl}/bookings/${bookingId}`, bookingData);
   }
 }

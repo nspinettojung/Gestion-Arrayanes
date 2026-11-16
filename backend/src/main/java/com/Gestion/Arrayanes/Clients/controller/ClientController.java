@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/clients")
+@RequestMapping("/api/v1/clients")
 public class ClientController {
 
     private final IClientService iClientService;
@@ -21,30 +21,30 @@ public class ClientController {
         this.iClientService = iClientService;
     }
 
-    @PostMapping("/createclient")
+    @PostMapping
     public ResponseEntity<ClientResponseDTO> createClient(@Valid @RequestBody ClientRequestDTO requestClient) {
         ClientResponseDTO client = iClientService.saveClient(requestClient);
-        URI location = URI.create("/api/clients/createclient/" + client.getId());
+        URI location = URI.create("/api/v1/clients/" + client.getId());
         return ResponseEntity.created(location).body(client);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteClient(@PathVariable UUID id) {
         iClientService.deleteClient(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/listclient")
+    @GetMapping
     public ResponseEntity<List<ClientResponseDTO>> getClientList() {
         return ResponseEntity.ok(iClientService.getClientList());
     }
 
-    @GetMapping("/client/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ClientResponseDTO> getClientById(@PathVariable UUID id) {
         return ResponseEntity.ok(iClientService.findClientById(id));
     }
 
-    @PutMapping("/editclient/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<ClientResponseDTO> updateClient(@PathVariable UUID id,
                                                           @Valid @RequestBody ClientRequestDTO clientRequest) {
         return ResponseEntity.ok(iClientService.updateClient(id, clientRequest));

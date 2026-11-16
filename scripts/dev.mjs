@@ -65,7 +65,7 @@ process.on('SIGINT', () => shutdown(0));
 process.on('SIGTERM', () => shutdown(0));
 process.on('SIGHUP', () => shutdown(0));
 
-console.log('API:     http://127.0.0.1:8080/api');
+console.log('API:     http://127.0.0.1:8080/api/v1');
 console.log('Frontend: http://localhost:4200');
 console.log('Ctrl+C corta ambos procesos.\n');
 

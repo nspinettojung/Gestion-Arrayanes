@@ -42,7 +42,7 @@ class DashboardControllerTest {
     void getDashboardShouldReturnBookings() throws Exception {
         when(dashboardService.getDashboard()).thenReturn(List.of(dashboardDto()));
 
-        mockMvc.perform(get("/api/dashboard"))
+        mockMvc.perform(get("/api/v1/dashboard"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].clientName").value("Ana"))
                 .andExpect(jsonPath("$[0].transactionCode").value("RS-2026-0001"))
@@ -56,7 +56,7 @@ class DashboardControllerTest {
                 any(), any(), any(), any(), anyInt(), anyInt(), anyString(), anyString(), anyBoolean()))
                 .thenReturn(new PageImpl<>(List.of(dashboardDto())));
 
-        mockMvc.perform(get("/api/dashboard/filter")
+        mockMvc.perform(get("/api/v1/dashboard/filter")
                         .param("lastName", "Perez")
                         .param("page", "0")
                         .param("size", "5")
@@ -71,7 +71,7 @@ class DashboardControllerTest {
                 any(), any(), any(), any(), anyInt(), anyInt(), anyString(), anyString(), anyBoolean()))
                 .thenReturn(new PageImpl<>(List.of(dashboardDto())));
 
-        mockMvc.perform(get("/api/dashboard/filter")
+        mockMvc.perform(get("/api/v1/dashboard/filter")
                         .param("onlyActive", "true"))
                 .andExpect(status().isOk());
 
@@ -83,7 +83,7 @@ class DashboardControllerTest {
         when(dashboardService.getStats())
                 .thenReturn(new DashboardStatsDTO(7, 4, 50.0, 12.5, 3));
 
-        mockMvc.perform(get("/api/dashboard/stats"))
+        mockMvc.perform(get("/api/v1/dashboard/stats"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalBookings").value(7))
                 .andExpect(jsonPath("$.totalApartments").value(4))
@@ -99,22 +99,22 @@ class DashboardControllerTest {
         when(dashboardService.getArrivalsCountByDate(TODAY)).thenReturn(2L);
         when(dashboardService.getDeparturesCountByDate(TODAY)).thenReturn(1L);
 
-        mockMvc.perform(get("/api/dashboard/monthlyArrivalsCount")
+        mockMvc.perform(get("/api/v1/dashboard/monthlyArrivalsCount")
                         .param("month", "11").param("year", "2026"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(4));
 
-        mockMvc.perform(get("/api/dashboard/monthlyDeparturesCount")
+        mockMvc.perform(get("/api/v1/dashboard/monthlyDeparturesCount")
                         .param("month", "11").param("year", "2026"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(6));
 
-        mockMvc.perform(get("/api/dashboard/arrivalsCountByDate")
+        mockMvc.perform(get("/api/v1/dashboard/arrivalsCountByDate")
                         .param("year", "2026").param("month", "11").param("day", "14"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(2));
 
-        mockMvc.perform(get("/api/dashboard/departuresCountByDate")
+        mockMvc.perform(get("/api/v1/dashboard/departuresCountByDate")
                         .param("year", "2026").param("month", "11").param("day", "14"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(1));
@@ -129,22 +129,22 @@ class DashboardControllerTest {
         when(dashboardService.getArrivalsByDate(TODAY)).thenReturn(List.of(clientApartmentDto()));
         when(dashboardService.getDeparturesByDate(TODAY)).thenReturn(List.of(clientApartmentDto()));
 
-        mockMvc.perform(get("/api/dashboard/monthlyArrivalsList")
+        mockMvc.perform(get("/api/v1/dashboard/monthlyArrivalsList")
                         .param("month", "11").param("year", "2026"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].clientName").value("Ana"));
 
-        mockMvc.perform(get("/api/dashboard/monthlyDeparturesList")
+        mockMvc.perform(get("/api/v1/dashboard/monthlyDeparturesList")
                         .param("month", "11").param("year", "2026"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].apartmentName").value("Arrayanes 1"));
 
-        mockMvc.perform(get("/api/dashboard/arrivalsByDate")
+        mockMvc.perform(get("/api/v1/dashboard/arrivalsByDate")
                         .param("year", "2026").param("month", "11").param("day", "14"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].clientLastName").value("Perez"));
 
-        mockMvc.perform(get("/api/dashboard/departuresByDate")
+        mockMvc.perform(get("/api/v1/dashboard/departuresByDate")
                         .param("year", "2026").param("month", "11").param("day", "14"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].clientName").value("Ana"));
@@ -155,7 +155,7 @@ class DashboardControllerTest {
         when(dashboardService.getCalendar(LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 30)))
                 .thenReturn(List.of(new CalendarDayDTO(LocalDate.of(2026, 11, 1), true)));
 
-        mockMvc.perform(get("/api/dashboard/calendar")
+        mockMvc.perform(get("/api/v1/dashboard/calendar")
                         .param("year", "2026").param("month", "11"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].date").value("2026-11-01"))
@@ -164,7 +164,7 @@ class DashboardControllerTest {
 
     @Test
     void arrivalsByDateShouldRejectImpossibleDate() throws Exception {
-        mockMvc.perform(get("/api/dashboard/arrivalsByDate")
+        mockMvc.perform(get("/api/v1/dashboard/arrivalsByDate")
                         .param("year", "2026").param("month", "13").param("day", "1"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400));

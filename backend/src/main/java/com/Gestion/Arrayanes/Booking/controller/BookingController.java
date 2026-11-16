@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/bookings")
+@RequestMapping("/api/v1/bookings")
 public class BookingController {
 
     private final IBookingService iBookingService;
@@ -28,22 +28,22 @@ public class BookingController {
         this.clock = clock;
     }
 
-    @PostMapping("/createWithClient")
+    @PostMapping("/with-client")
     public ResponseEntity<BookingResponseDTO> createBookingWithClient(
             @Valid @RequestBody BookingWithNewClientRequestDTO request) {
         BookingResponseDTO response = iBookingService.createBookingWithClient(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/createbooking")
+    @PostMapping
     public ResponseEntity<BookingResponseDTO> createBooking(
             @Valid @RequestBody BookingWithClientIdRequestDTO requestBooking) {
         BookingResponseDTO booking = iBookingService.saveBooking(requestBooking);
-        URI location = URI.create("/api/bookings/createbooking/" + booking.getId());
+        URI location = URI.create("/api/v1/bookings/" + booking.getId());
         return ResponseEntity.created(location).body(booking);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBooking(@PathVariable UUID id) {
         iBookingService.deleteBooking(id);
         return ResponseEntity.noContent().build();
@@ -55,12 +55,12 @@ public class BookingController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/bookinglist")
+    @GetMapping
     public ResponseEntity<List<BookingResponseDTO>> getBookingList() {
         return ResponseEntity.ok(iBookingService.getListBooking());
     }
 
-    @PutMapping("/editbooking/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<BookingResponseDTO> updateBooking(@PathVariable UUID id,
                                                             @Valid @RequestBody BookingUpdateRequestDTO bookingRequestDTO) {
         return ResponseEntity.ok(iBookingService.updateBooking(id, bookingRequestDTO));

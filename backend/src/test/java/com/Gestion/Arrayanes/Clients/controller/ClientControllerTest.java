@@ -45,17 +45,17 @@ class ClientControllerTest {
     void createClientShouldReturnCreatedWithLocation() throws Exception {
         when(clientService.saveClient(any(ClientRequestDTO.class))).thenReturn(response());
 
-        mockMvc.perform(post("/api/clients/createclient")
+        mockMvc.perform(post("/api/v1/clients")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(clientJson("Ana")))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", endsWith("/api/clients/createclient/" + CLIENT_ID)))
+                .andExpect(header().string("Location", endsWith("/api/v1/clients/" + CLIENT_ID)))
                 .andExpect(jsonPath("$.clientName").value("Ana"));
     }
 
     @Test
     void createClientShouldRejectBlankName() throws Exception {
-        mockMvc.perform(post("/api/clients/createclient")
+        mockMvc.perform(post("/api/v1/clients")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(clientJson(" ")))
                 .andExpect(status().isBadRequest())
@@ -64,7 +64,7 @@ class ClientControllerTest {
 
     @Test
     void createClientShouldRejectMalformedJson() throws Exception {
-        mockMvc.perform(post("/api/clients/createclient")
+        mockMvc.perform(post("/api/v1/clients")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{not-json}"))
                 .andExpect(status().isBadRequest())
@@ -73,7 +73,7 @@ class ClientControllerTest {
 
     @Test
     void createClientShouldRejectMalformedDni() throws Exception {
-        mockMvc.perform(post("/api/clients/createclient")
+        mockMvc.perform(post("/api/v1/clients")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(clientJson("Ana", "12", "555-1234")))
                 .andExpect(status().isBadRequest())
@@ -83,7 +83,7 @@ class ClientControllerTest {
 
     @Test
     void createClientShouldRejectMalformedPhone() throws Exception {
-        mockMvc.perform(post("/api/clients/createclient")
+        mockMvc.perform(post("/api/v1/clients")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(clientJson("Ana", "12345678", "abc")))
                 .andExpect(status().isBadRequest())
@@ -95,7 +95,7 @@ class ClientControllerTest {
     void createClientShouldAcceptDottedDniAndInternationalPhone() throws Exception {
         when(clientService.saveClient(any(ClientRequestDTO.class))).thenReturn(response());
 
-        mockMvc.perform(post("/api/clients/createclient")
+        mockMvc.perform(post("/api/v1/clients")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(clientJson("Ana", "12.345.678", "+54 9 11 5555-1234")))
                 .andExpect(status().isCreated());
@@ -105,7 +105,7 @@ class ClientControllerTest {
     void getClientListShouldReturnClients() throws Exception {
         when(clientService.getClientList()).thenReturn(List.of(response()));
 
-        mockMvc.perform(get("/api/clients/listclient"))
+        mockMvc.perform(get("/api/v1/clients"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(CLIENT_ID.toString()))
                 .andExpect(jsonPath("$[0].lastCheckIn").value("2026-10-05"));
@@ -115,7 +115,7 @@ class ClientControllerTest {
     void getClientListShouldReturnEmptyArrayWhenThereAreNoClients() throws Exception {
         when(clientService.getClientList()).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/clients/listclient"))
+        mockMvc.perform(get("/api/v1/clients"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());
@@ -125,7 +125,7 @@ class ClientControllerTest {
     void getClientByIdShouldReturnClient() throws Exception {
         when(clientService.findClientById(CLIENT_ID)).thenReturn(response());
 
-        mockMvc.perform(get("/api/clients/client/{id}", CLIENT_ID))
+        mockMvc.perform(get("/api/v1/clients/{id}", CLIENT_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.clientDni").value("12345678"));
     }
@@ -135,7 +135,7 @@ class ClientControllerTest {
         when(clientService.findClientById(CLIENT_ID))
                 .thenThrow(new ResourceNotFoundException("No se encontró el cliente"));
 
-        mockMvc.perform(get("/api/clients/client/{id}", CLIENT_ID))
+        mockMvc.perform(get("/api/v1/clients/{id}", CLIENT_ID))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
     }
@@ -144,7 +144,7 @@ class ClientControllerTest {
     void updateClientShouldReturnUpdatedClient() throws Exception {
         when(clientService.updateClient(eq(CLIENT_ID), any(ClientRequestDTO.class))).thenReturn(response());
 
-        mockMvc.perform(put("/api/clients/editclient/{id}", CLIENT_ID)
+        mockMvc.perform(put("/api/v1/clients/{id}", CLIENT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(clientJson("Ana")))
                 .andExpect(status().isOk())
@@ -153,7 +153,7 @@ class ClientControllerTest {
 
     @Test
     void deleteClientShouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/clients/delete/{id}", CLIENT_ID))
+        mockMvc.perform(delete("/api/v1/clients/{id}", CLIENT_ID))
                 .andExpect(status().isNoContent());
 
         verify(clientService).deleteClient(CLIENT_ID);

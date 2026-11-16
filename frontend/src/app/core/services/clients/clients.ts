@@ -20,7 +20,7 @@ export class Clients {
     this.loadingSignal.set(true);
 
     this.http
-      .get<IClients[]>(`${this.apiUrl}/clients/listclient`)
+      .get<IClients[]>(`${this.apiUrl}/clients`)
       .pipe(finalize(() => this.loadingSignal.set(false)))
       .subscribe({
         next: (data) => {
@@ -36,11 +36,11 @@ export class Clients {
     clientDni: string;
     clientPhone: string;
   }): Observable<IClients> {
-    return this.http.post<IClients>(`${this.apiUrl}/clients/createclient`, client);
+    return this.http.post<IClients>(`${this.apiUrl}/clients`, client);
   }
 
   deleteClient(clientId: string) {
-    return this.http.delete<void>(`${this.apiUrl}/clients/delete/${clientId}`).pipe(
+    return this.http.delete<void>(`${this.apiUrl}/clients/${clientId}`).pipe(
       tap(() => {
         this.clientsData.update((list) => list.filter((client) => client.id !== clientId));
       }),
@@ -48,14 +48,12 @@ export class Clients {
   }
 
   editClient(clientId: string, clientData: IClients): Observable<IClients> {
-    return this.http
-      .put<IClients>(`${this.apiUrl}/clients/editclient/${clientId}`, clientData)
-      .pipe(
-        tap((updatedClient) => {
-          this.clientsData.update((list) =>
-            list.map((client) => (client.id === clientId ? updatedClient : client)),
-          );
-        }),
-      );
+    return this.http.put<IClients>(`${this.apiUrl}/clients/${clientId}`, clientData).pipe(
+      tap((updatedClient) => {
+        this.clientsData.update((list) =>
+          list.map((client) => (client.id === clientId ? updatedClient : client)),
+        );
+      }),
+    );
   }
 }

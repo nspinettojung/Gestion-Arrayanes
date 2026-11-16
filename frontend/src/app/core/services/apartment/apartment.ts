@@ -18,7 +18,7 @@ export class Apartment {
     this.loadingSignal.set(true);
 
     this.http
-      .get<IApartment[]>(`${this.apiUrl}/apartments/listapartment`)
+      .get<IApartment[]>(`${this.apiUrl}/apartments`)
       .pipe(finalize(() => this.loadingSignal.set(false)))
       .subscribe({
         next: (data) => {
@@ -35,14 +35,14 @@ export class Apartment {
   }
 
   addApartment(apartment: IApartment): Observable<IApartment> {
-    return this.http.post<IApartment>(`${this.apiUrl}/apartments/saveapartment`, apartment);
+    return this.http.post<IApartment>(`${this.apiUrl}/apartments`, apartment);
   }
 
   deleteApartment(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/apartments/delete/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/apartments/${id}`);
   }
 
   editApartment(id: string, apartment: IApartment): Observable<IApartment> {
-    return this.http.put<IApartment>(`${this.apiUrl}/apartments/editapartment/${id}`, apartment);
+    return this.http.put<IApartment>(`${this.apiUrl}/apartments/${id}`, apartment);
   }
 }

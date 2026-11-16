@@ -57,11 +57,11 @@ class BookingControllerTest {
     void createBookingShouldReturnCreatedWithLocation() throws Exception {
         when(bookingService.saveBooking(any(BookingWithClientIdRequestDTO.class))).thenReturn(response());
 
-        mockMvc.perform(post("/api/bookings/createbooking")
+        mockMvc.perform(post("/api/v1/bookings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bookingJson()))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", endsWith("/api/bookings/createbooking/" + BOOKING_ID)))
+                .andExpect(header().string("Location", endsWith("/api/v1/bookings/" + BOOKING_ID)))
                 .andExpect(jsonPath("$.id").value(BOOKING_ID.toString()))
                 .andExpect(jsonPath("$.totalPrice").value(45000))
                 .andExpect(jsonPath("$.transactionCode").value("RS-2026-0007"));
@@ -69,7 +69,7 @@ class BookingControllerTest {
 
     @Test
     void createBookingShouldRejectInvalidBody() throws Exception {
-        mockMvc.perform(post("/api/bookings/createbooking")
+        mockMvc.perform(post("/api/v1/bookings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"nights\":3}"))
                 .andExpect(status().isBadRequest())
@@ -79,7 +79,7 @@ class BookingControllerTest {
 
     @Test
     void createBookingShouldRejectMissingClientId() throws Exception {
-        mockMvc.perform(post("/api/bookings/createbooking")
+        mockMvc.perform(post("/api/v1/bookings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -98,7 +98,7 @@ class BookingControllerTest {
     void createBookingWithClientShouldReturnCreated() throws Exception {
         when(bookingService.createBookingWithClient(any(BookingWithNewClientRequestDTO.class))).thenReturn(response());
 
-        mockMvc.perform(post("/api/bookings/createWithClient")
+        mockMvc.perform(post("/api/v1/bookings/with-client")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bookingWithClientJson()))
                 .andExpect(status().isCreated())
@@ -110,7 +110,7 @@ class BookingControllerTest {
         when(bookingService.saveBooking(any(BookingWithClientIdRequestDTO.class)))
                 .thenThrow(new GlobalCustomException("Las fechas se superponen con otra reserva existente."));
 
-        mockMvc.perform(post("/api/bookings/createbooking")
+        mockMvc.perform(post("/api/v1/bookings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bookingJson()))
                 .andExpect(status().isConflict())
@@ -120,7 +120,7 @@ class BookingControllerTest {
 
     @Test
     void deleteBookingShouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/bookings/delete/{id}", BOOKING_ID))
+        mockMvc.perform(delete("/api/v1/bookings/{id}", BOOKING_ID))
                 .andExpect(status().isNoContent());
 
         verify(bookingService).deleteBooking(BOOKING_ID);
@@ -128,7 +128,7 @@ class BookingControllerTest {
 
     @Test
     void deleteBookingListShouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/bookings")
+        mockMvc.perform(delete("/api/v1/bookings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("[\"" + BOOKING_ID + "\"]"))
                 .andExpect(status().isNoContent());
@@ -140,7 +140,7 @@ class BookingControllerTest {
     void getBookingListShouldReturnBookings() throws Exception {
         when(bookingService.getListBooking()).thenReturn(List.of(response()));
 
-        mockMvc.perform(get("/api/bookings/bookinglist"))
+        mockMvc.perform(get("/api/v1/bookings"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(BOOKING_ID.toString()))
                 .andExpect(jsonPath("$[0].clientId").value(CLIENT_ID.toString()))
@@ -152,7 +152,7 @@ class BookingControllerTest {
     void updateBookingShouldReturnUpdatedBooking() throws Exception {
         when(bookingService.updateBooking(eq(BOOKING_ID), any(BookingUpdateRequestDTO.class))).thenReturn(response());
 
-        mockMvc.perform(put("/api/bookings/editbooking/{id}", BOOKING_ID)
+        mockMvc.perform(put("/api/v1/bookings/{id}", BOOKING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bookingUpdateJson(3)))
                 .andExpect(status().isOk())
@@ -165,7 +165,7 @@ class BookingControllerTest {
         when(bookingService.updateBooking(eq(BOOKING_ID), any(BookingUpdateRequestDTO.class)))
                 .thenThrow(new OptimisticLockingFailureException("conflicto"));
 
-        mockMvc.perform(put("/api/bookings/editbooking/{id}", BOOKING_ID)
+        mockMvc.perform(put("/api/v1/bookings/{id}", BOOKING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bookingUpdateJson(1)))
                 .andExpect(status().isConflict())
@@ -175,7 +175,7 @@ class BookingControllerTest {
 
     @Test
     void updateBookingShouldRejectNegativeVersion() throws Exception {
-        mockMvc.perform(put("/api/bookings/editbooking/{id}", BOOKING_ID)
+        mockMvc.perform(put("/api/v1/bookings/{id}", BOOKING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bookingUpdateJson(-1)))
                 .andExpect(status().isBadRequest())
@@ -185,7 +185,7 @@ class BookingControllerTest {
 
     @Test
     void updateBookingShouldRejectMissingVersion() throws Exception {
-        mockMvc.perform(put("/api/bookings/editbooking/{id}", BOOKING_ID)
+        mockMvc.perform(put("/api/v1/bookings/{id}", BOOKING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -206,7 +206,7 @@ class BookingControllerTest {
         when(bookingService.updateBooking(eq(BOOKING_ID), any(BookingUpdateRequestDTO.class)))
                 .thenThrow(new ResourceNotFoundException("Reserva no encontrada."));
 
-        mockMvc.perform(put("/api/bookings/editbooking/{id}", BOOKING_ID)
+        mockMvc.perform(put("/api/v1/bookings/{id}", BOOKING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bookingUpdateJson(3)))
                 .andExpect(status().isNotFound())
@@ -219,13 +219,13 @@ class BookingControllerTest {
         doThrow(new ResourceNotFoundException("Reserva no encontrada."))
                 .when(bookingService).deleteBooking(BOOKING_ID);
 
-        mockMvc.perform(delete("/api/bookings/delete/{id}", BOOKING_ID))
+        mockMvc.perform(delete("/api/v1/bookings/{id}", BOOKING_ID))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void getCurrentDateShouldUseInjectedClock() throws Exception {
-        mockMvc.perform(get("/api/bookings/currentdate"))
+        mockMvc.perform(get("/api/v1/bookings/currentdate"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("\"2026-11-14\""));
     }
@@ -234,7 +234,7 @@ class BookingControllerTest {
     void corsShouldAllowAngularDevelopmentOrigin() throws Exception {
         when(bookingService.getListBooking()).thenReturn(List.of(response()));
 
-        mockMvc.perform(get("/api/bookings/bookinglist")
+        mockMvc.perform(get("/api/v1/bookings")
                         .header("Origin", "http://localhost:4200"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:4200"));
@@ -242,7 +242,7 @@ class BookingControllerTest {
 
     @Test
     void corsShouldRejectUnknownOrigin() throws Exception {
-        mockMvc.perform(get("/api/bookings/bookinglist")
+        mockMvc.perform(get("/api/v1/bookings")
                         .header("Origin", "http://evil.example"))
                 .andExpect(status().isForbidden());
     }

@@ -46,17 +46,17 @@ class ApartmentControllerTest {
     void saveApartmentShouldReturnCreatedWithLocation() throws Exception {
         when(apartmentService.saveApartment(any(ApartmentRequestDTO.class))).thenReturn(response());
 
-        mockMvc.perform(post("/api/apartments/saveapartment")
+        mockMvc.perform(post("/api/v1/apartments")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(apartmentJson()))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", endsWith("/api/apartments/apartment/" + APARTMENT_ID)))
+                .andExpect(header().string("Location", endsWith("/api/v1/apartments/" + APARTMENT_ID)))
                 .andExpect(jsonPath("$.apartmentName").value("Arrayanes 1"));
     }
 
     @Test
     void saveApartmentShouldRejectMissingRequiredFields() throws Exception {
-        mockMvc.perform(post("/api/apartments/saveapartment")
+        mockMvc.perform(post("/api/v1/apartments")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest())
@@ -68,7 +68,7 @@ class ApartmentControllerTest {
         when(apartmentService.saveApartment(any(ApartmentRequestDTO.class)))
                 .thenThrow(new GlobalCustomException("Ya existe un apartamento con ese nombre."));
 
-        mockMvc.perform(post("/api/apartments/saveapartment")
+        mockMvc.perform(post("/api/v1/apartments")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(apartmentJson()))
                 .andExpect(status().isConflict())
@@ -79,7 +79,7 @@ class ApartmentControllerTest {
     void getApartmentListShouldReturnApartments() throws Exception {
         when(apartmentService.getApartmentList()).thenReturn(List.of(response()));
 
-        mockMvc.perform(get("/api/apartments/listapartment"))
+        mockMvc.perform(get("/api/v1/apartments"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(APARTMENT_ID.toString()));
     }
@@ -88,7 +88,7 @@ class ApartmentControllerTest {
     void getApartmentListShouldReturnEmptyArrayWhenThereAreNoApartments() throws Exception {
         when(apartmentService.getApartmentList()).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/apartments/listapartment"))
+        mockMvc.perform(get("/api/v1/apartments"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());
@@ -99,7 +99,7 @@ class ApartmentControllerTest {
         when(apartmentService.findApartmentById(APARTMENT_ID))
                 .thenThrow(new ResourceNotFoundException("No se encontró el apartamento"));
 
-        mockMvc.perform(get("/api/apartments/apartment/{id}", APARTMENT_ID))
+        mockMvc.perform(get("/api/v1/apartments/{id}", APARTMENT_ID))
                 .andExpect(status().isNotFound());
     }
 
@@ -108,7 +108,7 @@ class ApartmentControllerTest {
         when(apartmentService.updateApartment(eq(APARTMENT_ID), any(ApartmentRequestDTO.class)))
                 .thenReturn(response());
 
-        mockMvc.perform(put("/api/apartments/editapartment/{id}", APARTMENT_ID)
+        mockMvc.perform(put("/api/v1/apartments/{id}", APARTMENT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(apartmentJson()))
                 .andExpect(status().isOk())
@@ -119,7 +119,7 @@ class ApartmentControllerTest {
     void updatePriceShouldReturnUpdatedApartment() throws Exception {
         when(apartmentService.editPrice(APARTMENT_ID, new BigDecimal("12000"))).thenReturn(response());
 
-        mockMvc.perform(patch("/api/apartments/{id}/price", APARTMENT_ID)
+        mockMvc.perform(patch("/api/v1/apartments/{id}/price", APARTMENT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"price\":12000}"))
                 .andExpect(status().isOk())
@@ -130,7 +130,7 @@ class ApartmentControllerTest {
     void updateNameShouldReturnUpdatedApartment() throws Exception {
         when(apartmentService.editApartName(APARTMENT_ID, "Nuevo")).thenReturn(response());
 
-        mockMvc.perform(patch("/api/apartments/{id}/apartmentname", APARTMENT_ID)
+        mockMvc.perform(patch("/api/v1/apartments/{id}/name", APARTMENT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"apartmentName\":\"Nuevo\"}"))
                 .andExpect(status().isOk());
@@ -142,22 +142,22 @@ class ApartmentControllerTest {
         when(apartmentService.getApartmentName(APARTMENT_ID)).thenReturn("Arrayanes 1");
         when(apartmentService.getApartmentMaxNumber(APARTMENT_ID)).thenReturn(4L);
 
-        mockMvc.perform(get("/api/apartments/price/{id}", APARTMENT_ID))
+        mockMvc.perform(get("/api/v1/apartments/{id}/price", APARTMENT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string("10000.00"));
 
-        mockMvc.perform(get("/api/apartments/apartmentname/{id}", APARTMENT_ID))
+        mockMvc.perform(get("/api/v1/apartments/{id}/name", APARTMENT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Arrayanes 1"));
 
-        mockMvc.perform(get("/api/apartments/{id}/maxnumber", APARTMENT_ID))
+        mockMvc.perform(get("/api/v1/apartments/{id}/maxnumber", APARTMENT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string("4"));
     }
 
     @Test
     void deleteApartmentShouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/apartments/delete/{id}", APARTMENT_ID))
+        mockMvc.perform(delete("/api/v1/apartments/{id}", APARTMENT_ID))
                 .andExpect(status().isNoContent());
 
         verify(apartmentService).deleteApartment(APARTMENT_ID);

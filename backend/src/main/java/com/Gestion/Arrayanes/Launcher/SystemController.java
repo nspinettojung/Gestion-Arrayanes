@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
-@RequestMapping("/api/system")
+@RequestMapping("/api/v1/system")
 public class SystemController {
 
     @PostMapping("/shutdown")
