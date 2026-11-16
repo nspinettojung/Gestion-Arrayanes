@@ -34,7 +34,9 @@ public class BookingMapper {
         dto.setNights(booking.getNights());
         dto.setDepartureDate(booking.getDepartureDate());
         dto.setClientId(booking.getClientId().getId());
+        dto.setClientName(booking.getClientId().getClientName());
         dto.setApartmentId(booking.getApartmentId().getId());
+        dto.setApartmentName(booking.getApartmentId().getApartmentName());
         dto.setAmountPeople(booking.getAmountPeople());
         dto.setTotalPrice(booking.getTotalPrice());
         dto.setTransactionCode(booking.getTransactionCode());

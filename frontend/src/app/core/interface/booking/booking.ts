@@ -5,7 +5,9 @@ export interface IBooking {
   nights: number;
   departureDate: string;
   clientId: string;
+  clientName: string;
   apartmentId: string;
+  apartmentName: string;
   amountPeople: number;
   totalPrice: number;
   version: number;

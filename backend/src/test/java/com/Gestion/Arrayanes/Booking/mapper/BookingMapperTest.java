@@ -55,7 +55,9 @@ class BookingMapperTest {
 
         assertEquals(booking.getId(), dto.getId());
         assertEquals(client.getId(), dto.getClientId());
+        assertEquals(client.getClientName(), dto.getClientName());
         assertEquals(apartment.getId(), dto.getApartmentId());
+        assertEquals(apartment.getApartmentName(), dto.getApartmentName());
         assertEquals(booking.getTotalPrice(), dto.getTotalPrice());
         assertEquals("RS-2026-0005", dto.getTransactionCode());
         assertEquals(4L, dto.getVersion());

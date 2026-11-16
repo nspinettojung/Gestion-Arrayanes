@@ -18,26 +18,15 @@ public class BookingResponseDTO {
     private Long nights;
     private LocalDate departureDate;
     private UUID clientId;
+    private String clientName;
     private UUID apartmentId;
+    private String apartmentName;
     private Long amountPeople;
     private BigDecimal totalPrice;
     private String transactionCode;
     private long version;
 
-
-
     public BookingResponseDTO() {
-    }
-
-    public BookingResponseDTO(UUID id, LocalDate arrivalDate, Long nights, LocalDate departureDate, UUID clientId, UUID apartmentId, Long amountPeople, BigDecimal totalPrice) {
-        this.id = id;
-        this.arrivalDate = arrivalDate;
-        this.nights = nights;
-        this.departureDate = departureDate;
-        this.clientId = clientId;
-        this.apartmentId = apartmentId;
-        this.amountPeople = amountPeople;
-        this.totalPrice = totalPrice;
     }
 
 }

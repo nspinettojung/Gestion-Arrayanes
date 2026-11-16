@@ -247,16 +247,17 @@ class BookingControllerTest {
     }
 
     private BookingResponseDTO response() {
-        BookingResponseDTO response = new BookingResponseDTO(
-                BOOKING_ID,
-                LocalDate.of(2026, 12, 1),
-                3L,
-                LocalDate.of(2026, 12, 4),
-                CLIENT_ID,
-                APARTMENT_ID,
-                2L,
-                new BigDecimal("45000.00")
-        );
+        BookingResponseDTO response = new BookingResponseDTO();
+        response.setId(BOOKING_ID);
+        response.setArrivalDate(LocalDate.of(2026, 12, 1));
+        response.setNights(3L);
+        response.setDepartureDate(LocalDate.of(2026, 12, 4));
+        response.setClientId(CLIENT_ID);
+        response.setClientName("Ana");
+        response.setApartmentId(APARTMENT_ID);
+        response.setApartmentName("Arrayanes 1");
+        response.setAmountPeople(2L);
+        response.setTotalPrice(new BigDecimal("45000.00"));
         response.setTransactionCode("RS-2026-0007");
         response.setVersion(3L);
         return response;
