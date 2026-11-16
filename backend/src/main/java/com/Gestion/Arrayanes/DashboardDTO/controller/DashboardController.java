@@ -3,16 +3,15 @@ package com.Gestion.Arrayanes.DashboardDTO.controller;
 import com.Gestion.Arrayanes.DashboardDTO.model.CalendarDayDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.ClientApartmentDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.DashboardDTO;
+import com.Gestion.Arrayanes.DashboardDTO.model.DashboardStatsDTO;
 import com.Gestion.Arrayanes.DashboardDTO.service.DashboardService;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -20,11 +19,9 @@ import java.util.UUID;
 public class DashboardController {
 
     private final DashboardService dashboardService;
-    private final Clock clock;
 
-    public DashboardController(DashboardService dashboardService, Clock clock) {
+    public DashboardController(DashboardService dashboardService) {
         this.dashboardService = dashboardService;
-        this.clock = clock;
     }
 
     @GetMapping
@@ -48,34 +45,9 @@ public class DashboardController {
         );
     }
 
-    @GetMapping("/total/{entity}")
-    public ResponseEntity<Map<String, Long>> getTotal(@PathVariable String entity){
-        long total = dashboardService.getTotal(entity);
-        return ResponseEntity.ok(Map.of( "total", total));
-    }
-
-    @GetMapping("/occupancy")
-    public ResponseEntity<Double> getOccupancy(@RequestParam(required = false)
-                                               @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date){
-
-        if (date == null) {
-            date = LocalDate.now(clock);
-        }
-
-        double occupancy = dashboardService.getOccupation(date);
-        return ResponseEntity.ok(occupancy);
-    }
-
-    @GetMapping("/bookingsgrowth")
-    public ResponseEntity<Double> getBookingsGrowth(){
-        double growth = dashboardService.getBookingsGrowth();
-        return ResponseEntity.ok(growth);
-    }
-
-    @GetMapping("/todaybookings")
-    public ResponseEntity<Long> getTodayBookings(){
-        long total = dashboardService.getTodayBookings();
-        return ResponseEntity.ok(total);
+    @GetMapping("/stats")
+    public ResponseEntity<DashboardStatsDTO> getStats() {
+        return ResponseEntity.ok(dashboardService.getStats());
     }
 
     @GetMapping("/monthlyArrivalsCount")

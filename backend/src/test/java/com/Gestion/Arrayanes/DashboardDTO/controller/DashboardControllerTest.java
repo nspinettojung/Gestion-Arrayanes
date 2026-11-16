@@ -3,13 +3,11 @@ package com.Gestion.Arrayanes.DashboardDTO.controller;
 import com.Gestion.Arrayanes.DashboardDTO.model.CalendarDayDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.ClientApartmentDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.DashboardDTO;
+import com.Gestion.Arrayanes.DashboardDTO.model.DashboardStatsDTO;
 import com.Gestion.Arrayanes.DashboardDTO.service.DashboardService;
-import com.Gestion.Arrayanes.GlobalHandlerException.GlobalCustomException;
-import com.Gestion.Arrayanes.support.FixedClockTestConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,7 +26,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(DashboardController.class)
-@Import(FixedClockTestConfiguration.class)
 class DashboardControllerTest {
 
     private static final LocalDate TODAY = LocalDate.of(2026, 11, 14);
@@ -67,65 +64,25 @@ class DashboardControllerTest {
     }
 
     @Test
-    void getTotalShouldReturnTotalMap() throws Exception {
-        when(dashboardService.getTotal("bookings")).thenReturn(5L);
+    void getStatsShouldReturnAggregatedValues() throws Exception {
+        when(dashboardService.getStats())
+                .thenReturn(new DashboardStatsDTO(7, 4, 50.0, 12.5, 3));
 
-        mockMvc.perform(get("/api/dashboard/total/{entity}", "bookings"))
+        mockMvc.perform(get("/api/dashboard/stats"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.total").value(5));
-    }
-
-    @Test
-    void getTotalShouldMapUnsupportedEntityTo409() throws Exception {
-        when(dashboardService.getTotal("clients"))
-                .thenThrow(new GlobalCustomException("Entidad no soportada: clients"));
-
-        mockMvc.perform(get("/api/dashboard/total/{entity}", "clients"))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.status").value(409));
-    }
-
-    @Test
-    void getOccupancyShouldReturnPercentage() throws Exception {
-        when(dashboardService.getOccupation(TODAY)).thenReturn(75.0);
-
-        mockMvc.perform(get("/api/dashboard/occupancy").param("date", "2026-11-14"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").value(75.0));
-    }
-
-    @Test
-    void getOccupancyShouldUseInjectedClockWhenDateIsMissing() throws Exception {
-        when(dashboardService.getOccupation(TODAY)).thenReturn(75.0);
-
-        mockMvc.perform(get("/api/dashboard/occupancy"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").value(75.0));
-    }
-
-    @Test
-    void getOccupancyShouldRejectInvalidDate() throws Exception {
-        mockMvc.perform(get("/api/dashboard/occupancy").param("date", "not-a-date"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400));
+                .andExpect(jsonPath("$.totalBookings").value(7))
+                .andExpect(jsonPath("$.totalApartments").value(4))
+                .andExpect(jsonPath("$.occupancy").value(50.0))
+                .andExpect(jsonPath("$.growth").value(12.5))
+                .andExpect(jsonPath("$.todayBookings").value(3));
     }
 
     @Test
     void scalarEndpointsShouldDelegateToService() throws Exception {
-        when(dashboardService.getBookingsGrowth()).thenReturn(12.5);
-        when(dashboardService.getTodayBookings()).thenReturn(3L);
         when(dashboardService.getArrivalsCountInMonth(LocalDate.of(2026, 11, 1))).thenReturn(4L);
         when(dashboardService.getDeparturesCountInMonth(LocalDate.of(2026, 11, 1))).thenReturn(6L);
         when(dashboardService.getArrivalsCountByDate(TODAY)).thenReturn(2L);
         when(dashboardService.getDeparturesCountByDate(TODAY)).thenReturn(1L);
-
-        mockMvc.perform(get("/api/dashboard/bookingsgrowth"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").value(12.5));
-
-        mockMvc.perform(get("/api/dashboard/todaybookings"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").value(3));
 
         mockMvc.perform(get("/api/dashboard/monthlyArrivalsCount")
                         .param("month", "11").param("year", "2026"))

@@ -6,7 +6,7 @@ import com.Gestion.Arrayanes.Booking.repository.BookingRepository;
 import com.Gestion.Arrayanes.DashboardDTO.model.CalendarDayDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.ClientApartmentDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.DashboardDTO;
-import com.Gestion.Arrayanes.GlobalHandlerException.GlobalCustomException;
+import com.Gestion.Arrayanes.DashboardDTO.model.DashboardStatsDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -101,41 +101,37 @@ public class DashboardService {
     }
 
 
-    public long getTotal(String entity){
-        return switch (entity.toLowerCase()){
-            case "bookings" -> bookingRepository.count();
-            case "apartments" -> apartmentRepository.count();
-            default -> throw new GlobalCustomException("Entidad no soportada: " + entity);
-        };
+    public DashboardStatsDTO getStats() {
+        LocalDate today = LocalDate.now(clock);
+        long totalBookings = bookingRepository.count();
+        long totalApartments = apartmentRepository.count();
+        long occupied = bookingRepository.countOccupiedBookingsOnDate(today);
+        long todayArrivals = bookingRepository.countBookingsByArrivalDate(today);
+        long yesterdayArrivals = bookingRepository.countBookingsByArrivalDate(today.minusDays(1));
+
+        return new DashboardStatsDTO(
+                totalBookings,
+                totalApartments,
+                calculateOccupation(totalApartments, occupied),
+                calculateGrowth(todayArrivals, yesterdayArrivals),
+                todayArrivals
+        );
     }
 
-
-    public double getOccupation(LocalDate date){
-        long totalApartments = apartmentRepository.count();
-        long occupied = bookingRepository.countOccupiedBookingsOnDate(date);
-
-        if (totalApartments == 0) return 0.0;
+    private double calculateOccupation(long totalApartments, long occupied) {
+        if (totalApartments == 0) {
+            return 0.0;
+        }
 
         return (double) occupied / totalApartments * 100;
     }
 
-    public double getBookingsGrowth(){
-        LocalDate today = LocalDate.now(clock);
-        LocalDate yesterday = today.minusDays(1);
-
-        long todayCount = bookingRepository.countBookingsByArrivalDate(today);
-        long yesterdayCount = bookingRepository.countBookingsByArrivalDate(yesterday);
-
-        if(yesterdayCount == 0) {
+    private double calculateGrowth(long todayCount, long yesterdayCount) {
+        if (yesterdayCount == 0) {
             return todayCount > 0 ? 100.0 : 0.0;
         }
 
         return ((double) (todayCount - yesterdayCount) / yesterdayCount) * 100;
-    }
-
-    public long getTodayBookings(){
-        LocalDate today = LocalDate.now(clock);
-        return bookingRepository.countBookingsByArrivalDate(today);
     }
 
     public long getArrivalsCountInMonth(LocalDate date) {

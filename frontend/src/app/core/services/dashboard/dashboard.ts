@@ -2,8 +2,9 @@ import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { IDashboard } from '../../interface/dashboard/dashboard';
+import { DashboardStats } from '../../interface/dashboard/dashboard-stats';
 import { ClientApartmentDTO } from '../../interface/clients/client-apartment-dto';
-import { Observable, finalize, forkJoin } from 'rxjs';
+import { Observable, finalize } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -46,28 +47,22 @@ export class Dashboard {
   }
 
   /**
-   * Agrupa los indicadores del dashboard en una sola carga coordinada.
-   * La API no expone un endpoint agregado, así que se combinan en paralelo
-   * con `forkJoin`: un único estado de loading y una sola notificación de error.
+   * Los indicadores llegan en una sola respuesta para no encadenar cinco
+   * peticiones ni mantener cinco estados de carga.
    */
   loadStats(): void {
     this.loadingStatsSignal.set(true);
 
-    forkJoin({
-      bookings: this.http.get<{ total: number }>(`${this.apiUrl}/dashboard/total/bookings`),
-      apartments: this.http.get<{ total: number }>(`${this.apiUrl}/dashboard/total/apartments`),
-      occupancy: this.http.get<number>(`${this.apiUrl}/dashboard/occupancy`),
-      growth: this.http.get<number>(`${this.apiUrl}/dashboard/bookingsgrowth`),
-      today: this.http.get<number>(`${this.apiUrl}/dashboard/todaybookings`),
-    })
+    this.http
+      .get<DashboardStats>(`${this.apiUrl}/dashboard/stats`)
       .pipe(finalize(() => this.loadingStatsSignal.set(false)))
       .subscribe({
         next: (stats) => {
-          this.totalBookings.set(stats.bookings.total);
-          this.totalApartments.set(stats.apartments.total);
+          this.totalBookings.set(stats.totalBookings);
+          this.totalApartments.set(stats.totalApartments);
           this.occupancy.set(stats.occupancy);
           this.growth.set(stats.growth);
-          this.todayBookings.set(stats.today);
+          this.todayBookings.set(stats.todayBookings);
         },
         error: (error) => console.error('❌ Error fetching dashboard stats:', error),
       });

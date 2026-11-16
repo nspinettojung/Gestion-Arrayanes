@@ -7,7 +7,7 @@ import com.Gestion.Arrayanes.Clients.model.Client;
 import com.Gestion.Arrayanes.DashboardDTO.model.CalendarDayDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.ClientApartmentDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.DashboardDTO;
-import com.Gestion.Arrayanes.GlobalHandlerException.GlobalCustomException;
+import com.Gestion.Arrayanes.DashboardDTO.model.DashboardStatsDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +30,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -77,73 +76,64 @@ class DashboardServiceTest {
     }
 
     @Test
-    void getTotalShouldReturnCountsForSupportedEntities() {
+    void getStatsShouldAggregateDashboardCounters() {
         when(bookingRepository.count()).thenReturn(7L);
-        when(apartmentRepository.count()).thenReturn(3L);
-
-        assertEquals(7L, dashboardService.getTotal("bookings"));
-        assertEquals(7L, dashboardService.getTotal("BOOKINGS"));
-        assertEquals(3L, dashboardService.getTotal("apartments"));
-    }
-
-    @Test
-    void getTotalShouldRejectUnsupportedEntities() {
-        assertThrows(GlobalCustomException.class, () -> dashboardService.getTotal("clients"));
-    }
-
-    @Test
-    void getOccupationShouldCountBookingsInProgress() {
         when(apartmentRepository.count()).thenReturn(4L);
         when(bookingRepository.countOccupiedBookingsOnDate(TODAY)).thenReturn(2L);
-
-        assertEquals(50.0, dashboardService.getOccupation(TODAY));
-    }
-
-    @Test
-    void getOccupationShouldReturnZeroWithoutApartments() {
-        when(apartmentRepository.count()).thenReturn(0L);
-        when(bookingRepository.countOccupiedBookingsOnDate(TODAY)).thenReturn(0L);
-
-        assertEquals(0.0, dashboardService.getOccupation(TODAY));
-    }
-
-    @Test
-    void getBookingsGrowthShouldReturnZeroWhenThereWereNoBookings() {
-        when(bookingRepository.countBookingsByArrivalDate(TODAY)).thenReturn(0L);
-        when(bookingRepository.countBookingsByArrivalDate(TODAY.minusDays(1))).thenReturn(0L);
-
-        assertEquals(0.0, dashboardService.getBookingsGrowth());
-    }
-
-    @Test
-    void getBookingsGrowthShouldReturnOneHundredWhenYesterdayWasZero() {
-        when(bookingRepository.countBookingsByArrivalDate(TODAY)).thenReturn(2L);
-        when(bookingRepository.countBookingsByArrivalDate(TODAY.minusDays(1))).thenReturn(0L);
-
-        assertEquals(100.0, dashboardService.getBookingsGrowth());
-    }
-
-    @Test
-    void getBookingsGrowthShouldCalculatePositiveGrowth() {
         when(bookingRepository.countBookingsByArrivalDate(TODAY)).thenReturn(3L);
         when(bookingRepository.countBookingsByArrivalDate(TODAY.minusDays(1))).thenReturn(2L);
 
-        assertEquals(50.0, dashboardService.getBookingsGrowth());
+        DashboardStatsDTO stats = dashboardService.getStats();
+
+        assertEquals(7L, stats.totalBookings());
+        assertEquals(4L, stats.totalApartments());
+        assertEquals(50.0, stats.occupancy());
+        assertEquals(50.0, stats.growth());
+        assertEquals(3L, stats.todayBookings());
     }
 
     @Test
-    void getBookingsGrowthShouldCalculateNegativeGrowth() {
+    void getStatsShouldReturnZeroWithoutData() {
+        when(bookingRepository.count()).thenReturn(0L);
+        when(apartmentRepository.count()).thenReturn(0L);
+        when(bookingRepository.countOccupiedBookingsOnDate(TODAY)).thenReturn(0L);
+        when(bookingRepository.countBookingsByArrivalDate(TODAY)).thenReturn(0L);
+        when(bookingRepository.countBookingsByArrivalDate(TODAY.minusDays(1))).thenReturn(0L);
+
+        DashboardStatsDTO stats = dashboardService.getStats();
+
+        assertEquals(0L, stats.totalBookings());
+        assertEquals(0L, stats.totalApartments());
+        assertEquals(0.0, stats.occupancy());
+        assertEquals(0.0, stats.growth());
+        assertEquals(0L, stats.todayBookings());
+    }
+
+    @Test
+    void getStatsShouldReturnOneHundredGrowthWhenYesterdayWasZero() {
+        when(bookingRepository.count()).thenReturn(1L);
+        when(apartmentRepository.count()).thenReturn(2L);
+        when(bookingRepository.countOccupiedBookingsOnDate(TODAY)).thenReturn(1L);
+        when(bookingRepository.countBookingsByArrivalDate(TODAY)).thenReturn(2L);
+        when(bookingRepository.countBookingsByArrivalDate(TODAY.minusDays(1))).thenReturn(0L);
+
+        DashboardStatsDTO stats = dashboardService.getStats();
+
+        assertEquals(50.0, stats.occupancy());
+        assertEquals(100.0, stats.growth());
+    }
+
+    @Test
+    void getStatsShouldCalculateNegativeGrowth() {
+        when(bookingRepository.count()).thenReturn(2L);
+        when(apartmentRepository.count()).thenReturn(2L);
+        when(bookingRepository.countOccupiedBookingsOnDate(TODAY)).thenReturn(1L);
         when(bookingRepository.countBookingsByArrivalDate(TODAY)).thenReturn(1L);
         when(bookingRepository.countBookingsByArrivalDate(TODAY.minusDays(1))).thenReturn(2L);
 
-        assertEquals(-50.0, dashboardService.getBookingsGrowth());
-    }
+        DashboardStatsDTO stats = dashboardService.getStats();
 
-    @Test
-    void getTodayBookingsShouldCountArrivalsToday() {
-        when(bookingRepository.countBookingsByArrivalDate(TODAY)).thenReturn(4L);
-
-        assertEquals(4L, dashboardService.getTodayBookings());
+        assertEquals(-50.0, stats.growth());
     }
 
     @Test
