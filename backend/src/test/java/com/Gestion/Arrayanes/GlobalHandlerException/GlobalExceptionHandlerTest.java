@@ -2,24 +2,29 @@ package com.Gestion.Arrayanes.GlobalHandlerException;
 
 import com.Gestion.Arrayanes.Booking.model.Booking;
 import com.Gestion.Arrayanes.Clients.dto.ClientRequestDTO;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Path;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.MethodParameter;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.HttpStatus;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class GlobalExceptionHandlerTest {
 
@@ -27,41 +32,67 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void customExceptionShouldUseItsOwnStatus() {
-        ResponseEntity<ErrorResponseDTO> notFound =
+        ProblemDetail notFound =
                 handler.handlerCustomException(new ResourceNotFoundException("No existe"));
 
-        assertEquals(HttpStatus.NOT_FOUND, notFound.getStatusCode());
-        assertBody(notFound, 404, "Not Found", "No existe");
+        assertProblem(notFound, 404, "Not Found", "No existe");
 
-        ResponseEntity<ErrorResponseDTO> badRequest =
+        ProblemDetail badRequest =
                 handler.handlerCustomException(new BadRequestException("Dato inválido"));
 
-        assertEquals(HttpStatus.BAD_REQUEST, badRequest.getStatusCode());
-        assertBody(badRequest, 400, "Bad Request", "Dato inválido");
+        assertProblem(badRequest, 400, "Bad Request", "Dato inválido");
     }
 
     @Test
     void customExceptionShouldDefaultToConflict() {
-        ResponseEntity<ErrorResponseDTO> response =
+        ProblemDetail problem =
                 handler.handlerCustomException(new GlobalCustomException("Se superpone"));
 
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertBody(response, 409, "Conflict", "Se superpone");
+        assertEquals(HttpStatus.CONFLICT, HttpStatus.valueOf(problem.getStatus()));
+        assertProblem(problem, 409, "Conflict", "Se superpone");
     }
 
     @Test
-    void validationExceptionShouldReturnBadRequestWithFieldErrors() throws Exception {
+    void validationExceptionShouldReturnFieldErrorsAsList() throws Exception {
         BeanPropertyBindingResult binding = new BeanPropertyBindingResult(new ClientRequestDTO(), "request");
         binding.rejectValue("clientName", "NotBlank", "no puede estar vacío");
 
         Method method = GlobalExceptionHandlerTest.class.getDeclaredMethod("dummy", String.class);
-        MethodParameter parameter = new MethodParameter(method, 0);
-        MethodArgumentNotValidException ex = new MethodArgumentNotValidException(parameter, binding);
+        MethodArgumentNotValidException ex = new MethodArgumentNotValidException(
+                new org.springframework.core.MethodParameter(method, 0), binding);
 
-        ResponseEntity<ErrorResponseDTO> response = handler.handleValidationException(ex);
+        ProblemDetail problem = handler.handleValidationException(ex);
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertBody(response, 400, "Bad Request", "clientName: no puede estar vacío");
+        assertProblem(problem, 400, "Bad Request", "La solicitud contiene datos inválidos.");
+
+        @SuppressWarnings("unchecked")
+        var errors = (java.util.List<GlobalExceptionHandler.FieldViolation>) problem.getProperties().get("errors");
+
+        assertNotNull(errors);
+        assertEquals(1, errors.size());
+        assertEquals("clientName", errors.get(0).field());
+        assertEquals("no puede estar vacío", errors.get(0).message());
+    }
+
+    @Test
+    void constraintViolationShouldReturnFieldErrorsAsList() {
+        ConstraintViolation<?> violation = mock(ConstraintViolation.class);
+        Path propertyPath = mock(Path.class);
+        when(propertyPath.toString()).thenReturn("client.dni");
+        when(violation.getPropertyPath()).thenReturn(propertyPath);
+        when(violation.getMessage()).thenReturn("no puede estar vacío");
+
+        ProblemDetail problem = handler.handleConstraintViolation(
+                new jakarta.validation.ConstraintViolationException(java.util.Set.of(violation)));
+
+        assertProblem(problem, 400, "Bad Request", "La solicitud contiene datos inválidos.");
+
+        @SuppressWarnings("unchecked")
+        var errors = (java.util.List<GlobalExceptionHandler.FieldViolation>) problem.getProperties().get("errors");
+
+        assertNotNull(errors);
+        assertEquals("client.dni", errors.get(0).field());
+        assertEquals("no puede estar vacío", errors.get(0).message());
     }
 
     @Test
@@ -69,29 +100,26 @@ class GlobalExceptionHandlerTest {
         MissingServletRequestParameterException ex =
                 new MissingServletRequestParameterException("date", "LocalDate");
 
-        ResponseEntity<ErrorResponseDTO> response = handler.handleMissingParameter(ex);
+        ProblemDetail problem = handler.handleMissingParameter(ex);
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(response.getBody().message().contains("date"));
+        assertProblem(problem, 400, "Bad Request", "Falta el parámetro requerido: date");
     }
 
     @Test
     void optimisticLockShouldReturnConflict() {
-        ResponseEntity<ErrorResponseDTO> response = handler.handleOptimisticLock(
+        ProblemDetail problem = handler.handleOptimisticLock(
                 new ObjectOptimisticLockingFailureException(Booking.class, UUID.randomUUID()));
 
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertBody(response, 409, "Conflict",
+        assertProblem(problem, 409, "Conflict",
                 "La reserva fue modificada por otro usuario. Recargá los datos y volvé a intentar.");
     }
 
     @Test
     void dataIntegrityViolationShouldReturnConflict() {
-        ResponseEntity<ErrorResponseDTO> response =
+        ProblemDetail problem =
                 handler.handleDataIntegrity(new DataIntegrityViolationException("duplicado"));
 
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertBody(response, 409, "Conflict", "La operación entra en conflicto con datos existentes.");
+        assertProblem(problem, 409, "Conflict", "La operación entra en conflicto con datos existentes.");
     }
 
     @Test
@@ -99,33 +127,36 @@ class GlobalExceptionHandlerTest {
         NoResourceFoundException ex =
                 new NoResourceFoundException(HttpMethod.GET, "api/no-existe", "/api/no-existe");
 
-        ResponseEntity<ErrorResponseDTO> response = handler.handleNoResourceFound(ex);
+        ProblemDetail problem = handler.handleNoResourceFound(ex);
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertBody(response, 404, "Not Found", "El recurso solicitado no existe.");
+        assertProblem(problem, 404, "Not Found", "El recurso solicitado no existe.");
     }
 
     @Test
     void unexpectedExceptionShouldReturnInternalServerError() {
-        ResponseEntity<ErrorResponseDTO> response =
+        ProblemDetail problem =
                 handler.handleUnexpected(new IllegalStateException("boom"));
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertBody(response, 500, "Internal Server Error",
+        assertProblem(problem, 500, "Internal Server Error",
                 "Ocurrió un error inesperado. Intente nuevamente.");
     }
 
-    private void assertBody(ResponseEntity<ErrorResponseDTO> response,
-                            int status,
-                            String error,
-                            String message) {
-        ErrorResponseDTO body = response.getBody();
+    @Test
+    void problemShouldIncludeTypeRequestIdAndTimestamp() {
+        ProblemDetail problem = handler.handlerCustomException(new ResourceNotFoundException("No existe"));
 
-        assertNotNull(body);
-        assertNotNull(body.timestamp());
-        assertEquals(status, body.status());
-        assertEquals(error, body.error());
-        assertEquals(message, body.message());
+        assertEquals(URI.create("about:blank"), problem.getType());
+        assertNotNull(problem.getProperties().get("requestId"));
+        assertNotNull(problem.getProperties().get("timestamp"));
+        assertNull(problem.getProperties().get("errors"));
+    }
+
+    private void assertProblem(ProblemDetail problem, int status, String title, String detail) {
+        assertNotNull(problem);
+        assertEquals(status, problem.getStatus());
+        assertEquals(title, problem.getTitle());
+        assertEquals(detail, problem.getDetail());
+        assertTrue(problem.getDetail() != null && !problem.getDetail().isBlank());
     }
 
     @SuppressWarnings("unused")

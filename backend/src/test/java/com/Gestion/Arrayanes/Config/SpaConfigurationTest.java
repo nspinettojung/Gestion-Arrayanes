@@ -24,9 +24,9 @@ class SpaConfigurationTest {
     void apiRouteShouldReturnJsonNotFoundInsteadOfSpaFallback() throws Exception {
         mockMvc.perform(get("/api/loquesea"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentTypeCompatibleWith("application/json"))
+                .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
                 .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.message").value("El recurso solicitado no existe."));
+                .andExpect(jsonPath("$.detail").value("El recurso solicitado no existe."));
     }
 
     @Test

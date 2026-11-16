@@ -5,9 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,103 +14,120 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.net.URI;
 import java.time.DateTimeException;
 import java.time.LocalDateTime;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final URI PROBLEM_TYPE = URI.create("about:blank");
+
+    /**
+     * Error de validación de un campo. Se serializa como
+     * {@code {"field": "...", "message": "..."}} y viaja en la propiedad
+     * {@code errors} del ProblemDetail (extensión RFC 9457).
+     */
+    public record FieldViolation(String field, String message) {
+    }
+
     @ExceptionHandler(GlobalCustomException.class)
-    public ResponseEntity<ErrorResponseDTO> handlerCustomException(GlobalCustomException ex) {
-        HttpStatus status = ex.getStatus();
-        return buildResponse(status, ex.getMessage());
+    public ProblemDetail handlerCustomException(GlobalCustomException ex) {
+        return buildProblem(ex.getStatus(), ex.getMessage(), null);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDTO> handleValidationException(MethodArgumentNotValidException ex) {
-        String message = ex.getBindingResult().getFieldErrors().stream()
-                .map(this::formatFieldError)
-                .collect(Collectors.joining("; "));
+    public ProblemDetail handleValidationException(MethodArgumentNotValidException ex) {
+        List<FieldViolation> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(fieldError -> new FieldViolation(fieldError.getField(), fieldError.getDefaultMessage()))
+                .toList();
 
-        if (message.isBlank()) {
-            message = "La solicitud contiene datos inválidos.";
-        }
-
-        return buildResponse(HttpStatus.BAD_REQUEST, message);
+        return buildProblem(HttpStatus.BAD_REQUEST, "La solicitud contiene datos inválidos.", errors);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ErrorResponseDTO> handleConstraintViolation(ConstraintViolationException ex) {
-        String message = ex.getConstraintViolations().stream()
-                .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
-                .collect(Collectors.joining("; "));
+    public ProblemDetail handleConstraintViolation(ConstraintViolationException ex) {
+        List<FieldViolation> errors = ex.getConstraintViolations().stream()
+                .map(violation -> new FieldViolation(
+                        violation.getPropertyPath().toString(), violation.getMessage()))
+                .toList();
 
-        return buildResponse(HttpStatus.BAD_REQUEST, message);
+        return buildProblem(HttpStatus.BAD_REQUEST, "La solicitud contiene datos inválidos.", errors);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponseDTO> handleNotReadable(HttpMessageNotReadableException ex) {
+    public ProblemDetail handleNotReadable(HttpMessageNotReadableException ex) {
         log.warn("No se pudo leer el cuerpo de la solicitud: {}", ex.getMessage());
-        return buildResponse(HttpStatus.BAD_REQUEST, "El cuerpo de la solicitud es inválido o está mal formado.");
+        return buildProblem(HttpStatus.BAD_REQUEST,
+                "El cuerpo de la solicitud es inválido o está mal formado.", null);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ResponseEntity<ErrorResponseDTO> handleMissingParameter(MissingServletRequestParameterException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, "Falta el parámetro requerido: " + ex.getParameterName());
+    public ProblemDetail handleMissingParameter(MissingServletRequestParameterException ex) {
+        return buildProblem(HttpStatus.BAD_REQUEST,
+                "Falta el parámetro requerido: " + ex.getParameterName(), null);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponseDTO> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST,
-                "El parámetro '" + ex.getName() + "' tiene un formato inválido.");
+    public ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return buildProblem(HttpStatus.BAD_REQUEST,
+                "El parámetro '" + ex.getName() + "' tiene un formato inválido.", null);
     }
 
     @ExceptionHandler(DateTimeException.class)
-    public ResponseEntity<ErrorResponseDTO> handleDateTimeException(DateTimeException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST,
-                "La fecha o los componentes de fecha indicados no son válidos.");
+    public ProblemDetail handleDateTimeException(DateTimeException ex) {
+        return buildProblem(HttpStatus.BAD_REQUEST,
+                "La fecha o los componentes de fecha indicados no son válidos.", null);
     }
 
     @ExceptionHandler(OptimisticLockingFailureException.class)
-    public ResponseEntity<ErrorResponseDTO> handleOptimisticLock(OptimisticLockingFailureException ex) {
-        log.warn("Conflicto de concurrencia: {}", ex.getMessage());
-        return buildResponse(HttpStatus.CONFLICT,
-                "La reserva fue modificada por otro usuario. Recargá los datos y volvé a intentar.");
+    public ProblemDetail handleOptimisticLock(OptimisticLockingFailureException ex) {
+        ProblemDetail problem = buildProblem(HttpStatus.CONFLICT,
+                "La reserva fue modificada por otro usuario. Recargá los datos y volvé a intentar.", null);
+        log.warn("[{}] Conflicto de concurrencia: {}", requestIdOf(problem), ex.getMessage());
+        return problem;
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponseDTO> handleDataIntegrity(DataIntegrityViolationException ex) {
-        log.warn("Violación de integridad de datos: {}", ex.getMostSpecificCause().getMessage());
-        return buildResponse(HttpStatus.CONFLICT,
-                "La operación entra en conflicto con datos existentes.");
+    public ProblemDetail handleDataIntegrity(DataIntegrityViolationException ex) {
+        ProblemDetail problem = buildProblem(HttpStatus.CONFLICT,
+                "La operación entra en conflicto con datos existentes.", null);
+        log.warn("[{}] Violación de integridad de datos: {}",
+                requestIdOf(problem), ex.getMostSpecificCause().getMessage());
+        return problem;
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> handleNoResourceFound(NoResourceFoundException ex) {
-        return buildResponse(HttpStatus.NOT_FOUND, "El recurso solicitado no existe.");
+    public ProblemDetail handleNoResourceFound(NoResourceFoundException ex) {
+        return buildProblem(HttpStatus.NOT_FOUND, "El recurso solicitado no existe.", null);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDTO> handleUnexpected(Exception ex) {
-        log.error("Error no controlado", ex);
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Ocurrió un error inesperado. Intente nuevamente.");
+    public ProblemDetail handleUnexpected(Exception ex) {
+        ProblemDetail problem = buildProblem(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Ocurrió un error inesperado. Intente nuevamente.", null);
+        log.error("[{}] Error no controlado", requestIdOf(problem), ex);
+        return problem;
     }
 
-    private String formatFieldError(FieldError fieldError) {
-        return fieldError.getField() + ": " + fieldError.getDefaultMessage();
+    private String requestIdOf(ProblemDetail problem) {
+        return String.valueOf(problem.getProperties().get("requestId"));
     }
 
-    private ResponseEntity<ErrorResponseDTO> buildResponse(HttpStatus status, String message) {
-        ErrorResponseDTO error = new ErrorResponseDTO(
-                LocalDateTime.now(),
-                status.value(),
-                status.getReasonPhrase(),
-                message
-        );
+    private ProblemDetail buildProblem(HttpStatus status, String detail, List<FieldViolation> errors) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
+        problem.setTitle(status.getReasonPhrase());
+        problem.setType(PROBLEM_TYPE);
+        problem.setProperty("requestId", UUID.randomUUID().toString());
+        problem.setProperty("timestamp", LocalDateTime.now());
 
-        return ResponseEntity.status(status).body(error);
+        if (errors != null && !errors.isEmpty()) {
+            problem.setProperty("errors", errors);
+        }
+
+        return problem;
     }
 }

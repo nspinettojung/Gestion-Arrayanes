@@ -17,6 +17,7 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -77,7 +78,7 @@ class ClientControllerTest {
                         .content(clientJson("Ana", "12", "555-1234")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.message").value(containsString("DNI o pasaporte")));
+                .andExpect(jsonPath("$.errors[*].message", hasItem(containsString("DNI o pasaporte"))));
     }
 
     @Test
@@ -87,7 +88,7 @@ class ClientControllerTest {
                         .content(clientJson("Ana", "12345678", "abc")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.message").value(containsString("teléfono")));
+                .andExpect(jsonPath("$.errors[*].message", hasItem(containsString("teléfono"))));
     }
 
     @Test

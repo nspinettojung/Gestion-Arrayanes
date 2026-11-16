@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -73,7 +74,7 @@ class BookingControllerTest {
                         .content("{\"nights\":3}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.message", containsString("arrivalDate")));
+                .andExpect(jsonPath("$.errors[*].field", hasItem("arrivalDate")));
     }
 
     @Test
@@ -90,7 +91,7 @@ class BookingControllerTest {
                                 """.formatted(APARTMENT_ID)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.message", containsString("clientId")));
+                .andExpect(jsonPath("$.errors[*].field", hasItem("clientId")));
     }
 
     @Test
@@ -114,7 +115,7 @@ class BookingControllerTest {
                         .content(bookingJson()))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
-                .andExpect(jsonPath("$.message", containsString("superponen")));
+                .andExpect(jsonPath("$.detail", containsString("superponen")));
     }
 
     @Test
@@ -169,7 +170,7 @@ class BookingControllerTest {
                         .content(bookingUpdateJson(1)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
-                .andExpect(jsonPath("$.message", containsString("modificada por otro usuario")));
+                .andExpect(jsonPath("$.detail", containsString("modificada por otro usuario")));
     }
 
     @Test
@@ -179,7 +180,7 @@ class BookingControllerTest {
                         .content(bookingUpdateJson(-1)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.message", containsString("version")));
+                .andExpect(jsonPath("$.errors[*].field", hasItem("version")));
     }
 
     @Test
@@ -197,7 +198,7 @@ class BookingControllerTest {
                                 """.formatted(CLIENT_ID, APARTMENT_ID)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.message", containsString("version")));
+                .andExpect(jsonPath("$.errors[*].field", hasItem("version")));
     }
 
     @Test
@@ -210,7 +211,7 @@ class BookingControllerTest {
                         .content(bookingUpdateJson(3)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.error").value("Not Found"));
+                .andExpect(jsonPath("$.title").value("Not Found"));
     }
 
     @Test

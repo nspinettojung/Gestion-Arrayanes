@@ -1,5 +1,36 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
+function formatFieldError(error: unknown): string | null {
+  if (!error || typeof error !== 'object') {
+    return null;
+  }
+
+  const record = error as Record<string, unknown>;
+  const field = record['field'];
+  const message = record['message'];
+
+  if (typeof field !== 'string' || typeof message !== 'string' || !message.trim()) {
+    return null;
+  }
+
+  return `${field}: ${message.trim()}`;
+}
+
+function extractFieldErrors(record: Record<string, unknown>): string | null {
+  const errors = record['errors'];
+
+  if (!Array.isArray(errors)) {
+    return null;
+  }
+
+  const joined = errors
+    .map(formatFieldError)
+    .filter((value): value is string => value !== null)
+    .join('; ');
+
+  return joined || null;
+}
+
 function extractBackendMessage(body: unknown): string | null {
   if (typeof body === 'string' && body.trim() && !body.trim().startsWith('<')) {
     return body.trim();
@@ -7,12 +38,18 @@ function extractBackendMessage(body: unknown): string | null {
 
   if (body && typeof body === 'object') {
     const record = body as Record<string, unknown>;
-    for (const key of ['message', 'error', 'detail']) {
-      const value = record[key];
-      if (typeof value === 'string' && value.trim()) {
-        return value.trim();
-      }
+    const detail =
+      ['detail', 'message', 'error']
+        .map((key) => record[key])
+        .find((value): value is string => typeof value === 'string' && value.trim().length > 0)
+        ?.trim() ?? null;
+    const fieldErrors = extractFieldErrors(record);
+
+    if (detail && fieldErrors) {
+      return `${detail} (${fieldErrors})`;
     }
+
+    return detail ?? fieldErrors;
   }
 
   return null;
