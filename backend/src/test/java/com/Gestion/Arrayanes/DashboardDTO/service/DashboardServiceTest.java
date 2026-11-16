@@ -8,6 +8,7 @@ import com.Gestion.Arrayanes.DashboardDTO.model.CalendarDayDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.ClientApartmentDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.DashboardDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.DashboardStatsDTO;
+import com.Gestion.Arrayanes.GlobalHandlerException.BadRequestException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
@@ -33,6 +34,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -271,6 +273,47 @@ class DashboardServiceTest {
         verify(bookingRepository).findAll(any(Specification.class), captor.capture());
         Pageable pageable = captor.getValue();
         assertEquals(Sort.Direction.ASC, pageable.getSort().getOrderFor("arrivalDate").getDirection());
+    }
+
+    @Test
+    void filteredDashboardShouldRejectNegativePage() {
+        assertThrows(BadRequestException.class,
+                () -> dashboardService.getDashboard(null, null, null, null, -1, 10, "arrivalDate", "asc", false));
+    }
+
+    @Test
+    void filteredDashboardShouldRejectSizeBelowOne() {
+        assertThrows(BadRequestException.class,
+                () -> dashboardService.getDashboard(null, null, null, null, 0, 0, "arrivalDate", "asc", false));
+    }
+
+    @Test
+    void filteredDashboardShouldRejectSizeAboveMaximum() {
+        assertThrows(BadRequestException.class,
+                () -> dashboardService.getDashboard(null, null, null, null, 0, 1001, "arrivalDate", "asc", false));
+    }
+
+    @Test
+    void filteredDashboardShouldAcceptMaximumSize() {
+        when(bookingRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(booking)));
+
+        Page<DashboardDTO> result = dashboardService.getDashboard(
+                null, null, null, null, 0, 1000, "arrivalDate", "asc", false);
+
+        assertEquals(1, result.getTotalElements());
+    }
+
+    @Test
+    void filteredDashboardShouldRejectUnknownSortField() {
+        assertThrows(BadRequestException.class,
+                () -> dashboardService.getDashboard(null, null, null, null, 0, 10, "secretField", "asc", false));
+    }
+
+    @Test
+    void filteredDashboardShouldRejectInvalidSortDirection() {
+        assertThrows(BadRequestException.class,
+                () -> dashboardService.getDashboard(null, null, null, null, 0, 10, "arrivalDate", "sideways", false));
     }
 
     @Test

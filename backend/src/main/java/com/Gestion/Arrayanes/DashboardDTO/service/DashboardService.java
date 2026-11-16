@@ -7,6 +7,7 @@ import com.Gestion.Arrayanes.DashboardDTO.model.CalendarDayDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.ClientApartmentDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.DashboardDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.DashboardStatsDTO;
+import com.Gestion.Arrayanes.GlobalHandlerException.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,11 +20,16 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 @Transactional(readOnly = true)
 public class DashboardService {
+
+    private static final int MAX_PAGE_SIZE = 1000;
+    private static final Set<String> ALLOWED_SORT_FIELDS =
+            Set.of("id", "arrivalDate", "departureDate", "nights", "amountPeople", "totalPrice", "transactionCode");
 
     private final BookingRepository bookingRepository;
     private final ApartmentRepository apartmentRepository;
@@ -61,6 +67,8 @@ public class DashboardService {
     public Page<DashboardDTO> getDashboard(String lastName, LocalDate start, LocalDate end,
                                            UUID apartmentId, int page, int size,
                                            String sortBy, String sortDir, boolean onlyActive) {
+
+        validatePagination(page, size, sortBy, sortDir);
 
         Specification<Booking> spec = Specification.where((root, query, cb) -> cb.conjunction());
 
@@ -145,6 +153,33 @@ public class DashboardService {
     public long getDeparturesCountInMonth(LocalDate date) {
         LocalDate[] range = getMonthRange(date);
         return bookingRepository.countBookingsByDepartureDateBetween(range[0], range[1]);
+    }
+
+    /**
+     * Valida los parámetros de paginación y ordenamiento antes de construir el
+     * Pageable. Sin whitelist, un {@code sortBy} inexistente rompe en Hibernate
+     * y un {@code page}/{@code size} absurdo termina en 400/500.
+     */
+    private void validatePagination(int page, int size, String sortBy, String sortDir) {
+        if (page < 0) {
+            throw new BadRequestException("La página no puede ser negativa.");
+        }
+
+        if (size < 1) {
+            throw new BadRequestException("El tamaño de página debe ser mayor a cero.");
+        }
+
+        if (size > MAX_PAGE_SIZE) {
+            throw new BadRequestException("El tamaño de página no puede superar " + MAX_PAGE_SIZE + ".");
+        }
+
+        if (sortBy != null && !sortBy.isEmpty() && !ALLOWED_SORT_FIELDS.contains(sortBy)) {
+            throw new BadRequestException("El campo de ordenamiento '" + sortBy + "' no es válido.");
+        }
+
+        if (sortDir != null && !sortDir.equalsIgnoreCase("asc") && !sortDir.equalsIgnoreCase("desc")) {
+            throw new BadRequestException("El orden debe ser 'asc' o 'desc'.");
+        }
     }
 
     private LocalDate[] getMonthRange(LocalDate date) {
