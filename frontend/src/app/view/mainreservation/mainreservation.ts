@@ -28,6 +28,7 @@ import { calculateBookingPrice, EXTRA_PERSON_PRICE } from '../../core/utils/book
 import { BookingCreateRequest } from '../../core/interface/booking/booking';
 import { IApartment } from '../../core/interface/apartment/apartment';
 import { ArsCurrencyPipe } from '../assets/pipes/ars-currency-pipe';
+import { dniOrPassportValidator, phoneValidator } from '../../core/validators/contact';
 
 @Component({
   selector: 'app-mainreservation',
@@ -102,8 +103,8 @@ export class Mainreservation implements OnInit {
     this.form = this.fb.group({
       clientName: ['', Validators.required],
       clientLastName: ['', Validators.required],
-      clientDni: [''],
-      clientPhone: [''],
+      clientDni: ['', [Validators.required, dniOrPassportValidator]],
+      clientPhone: ['', [Validators.required, phoneValidator]],
       amountPeople: [1, [Validators.required, Validators.min(1)]],
       apartmentId: [null, Validators.required],
       arrivalDate: [this.today(), Validators.required],
@@ -208,10 +209,10 @@ export class Mainreservation implements OnInit {
       amountPeople: Number(amountPeople),
       apartmentId,
       client: {
-        clientName,
-        clientLastName,
-        clientDni,
-        clientPhone,
+        clientName: String(clientName).trim(),
+        clientLastName: String(clientLastName).trim(),
+        clientDni: String(clientDni).trim(),
+        clientPhone: String(clientPhone).trim(),
       },
     };
 

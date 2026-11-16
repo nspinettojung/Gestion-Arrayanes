@@ -64,9 +64,14 @@
                 id="reservation-client-dni"
                 class="w-full px-3 py-2"
                 type="text"
-                placeholder="12345678X"
+                placeholder="12345678 o AB123456"
                 formControlName="clientDni"
               />
+              @if (form.get('clientDni')?.touched && form.get('clientDni')?.invalid) {
+                <p class="mt-1 text-xs text-error">
+                  El DNI o pasaporte debe tener entre 6 y 15 caracteres alfanuméricos.
+                </p>
+              }
             </div>
             <div>
               <label for="reservation-client-phone">Teléfono</label>
@@ -74,9 +79,14 @@
                 id="reservation-client-phone"
                 class="w-full px-3 py-2"
                 type="tel"
-                placeholder="+54 ..."
+                placeholder="+54 9 11 5555-1234"
                 formControlName="clientPhone"
               />
+              @if (form.get('clientPhone')?.touched && form.get('clientPhone')?.invalid) {
+                <p class="mt-1 text-xs text-error">
+                  El teléfono debe tener entre 6 y 20 caracteres y al menos 6 dígitos.
+                </p>
+              }
             </div>
             <div>
               <label for="reservation-apartment">Tipo de Habitación</label>

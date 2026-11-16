@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -67,6 +68,36 @@ class ClientControllerTest {
                         .content("{not-json}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    void createClientShouldRejectMalformedDni() throws Exception {
+        mockMvc.perform(post("/api/clients/createclient")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(clientJson("Ana", "12", "555-1234")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value(containsString("DNI o pasaporte")));
+    }
+
+    @Test
+    void createClientShouldRejectMalformedPhone() throws Exception {
+        mockMvc.perform(post("/api/clients/createclient")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(clientJson("Ana", "12345678", "abc")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value(containsString("teléfono")));
+    }
+
+    @Test
+    void createClientShouldAcceptDottedDniAndInternationalPhone() throws Exception {
+        when(clientService.saveClient(any(ClientRequestDTO.class))).thenReturn(response());
+
+        mockMvc.perform(post("/api/clients/createclient")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(clientJson("Ana", "12.345.678", "+54 9 11 5555-1234")))
+                .andExpect(status().isCreated());
     }
 
     @Test
@@ -133,13 +164,17 @@ class ClientControllerTest {
     }
 
     private String clientJson(String name) {
+        return clientJson(name, "12345678", "555-1234");
+    }
+
+    private String clientJson(String name, String dni, String phone) {
         return """
                 {
                   "clientName": "%s",
                   "clientLastName": "Perez",
-                  "clientDni": "12345678",
-                  "clientPhone": "555-1234"
+                  "clientDni": "%s",
+                  "clientPhone": "%s"
                 }
-                """.formatted(name);
+                """.formatted(name, dni, phone);
     }
 }

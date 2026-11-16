@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
 
@@ -9,6 +9,7 @@ import { Apartment } from '../../core/services/apartment/apartment';
 import { Booking } from '../../core/services/booking/booking';
 import { NotificationService } from '../../core/services/notification/notification';
 import { IBooking } from '../../core/interface/booking/booking';
+import { dniOrPassportValidator, phoneValidator } from '../../core/validators/contact';
 
 const apartmentMock = {
   apartmentsData: signal([]),
@@ -63,10 +64,10 @@ describe('Mainreservation', () => {
     fixture = TestBed.createComponent(Mainreservation);
     component = fixture.componentInstance;
     component.form = new FormGroup({
-      clientName: new FormControl(''),
-      clientLastName: new FormControl(''),
-      clientDni: new FormControl(''),
-      clientPhone: new FormControl(''),
+      clientName: new FormControl('', Validators.required),
+      clientLastName: new FormControl('', Validators.required),
+      clientDni: new FormControl('', [Validators.required, dniOrPassportValidator]),
+      clientPhone: new FormControl('', [Validators.required, phoneValidator]),
       amountPeople: new FormControl(1),
       apartmentId: new FormControl(null),
       arrivalDate: new FormControl('2026-09-22'),
@@ -95,6 +96,56 @@ describe('Mainreservation', () => {
 
     expect(notificationMock.success).toHaveBeenCalledWith(
       'Reserva guardada con éxito. Código: RS-2026-0007',
+    );
+  });
+
+  it('no envía la reserva si el DNI o el teléfono tienen un formato inválido', () => {
+    const createSpy = vi.spyOn(bookingMock, 'createBookingWithClient');
+
+    component.form.setValue({
+      clientName: 'Ana',
+      clientLastName: 'Pérez',
+      clientDni: '12',
+      clientPhone: 'abc',
+      amountPeople: 1,
+      apartmentId: 'apartment-1',
+      arrivalDate: '2026-09-22',
+      departureDate: '2026-09-23',
+    });
+
+    component.submit();
+
+    expect(createSpy).not.toHaveBeenCalled();
+    expect(notificationMock.error).toHaveBeenCalledWith(
+      'Revisá los campos obligatorios de la reserva.',
+    );
+  });
+
+  it('envía el DNI y el teléfono sin espacios sobrantes', () => {
+    const createSpy = vi.spyOn(bookingMock, 'createBookingWithClient');
+
+    component.form.setValue({
+      clientName: ' Ana ',
+      clientLastName: ' Pérez ',
+      clientDni: ' 12345678 ',
+      clientPhone: ' +54 9 11 5555-1234 ',
+      amountPeople: 1,
+      apartmentId: 'apartment-1',
+      arrivalDate: '2026-09-22',
+      departureDate: '2026-09-23',
+    });
+
+    component.submit();
+
+    expect(createSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        client: {
+          clientName: 'Ana',
+          clientLastName: 'Pérez',
+          clientDni: '12345678',
+          clientPhone: '+54 9 11 5555-1234',
+        },
+      }),
     );
   });
 });

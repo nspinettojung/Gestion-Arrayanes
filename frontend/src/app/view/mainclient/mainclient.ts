@@ -2,7 +2,7 @@ import { Component, computed, inject, signal, OnInit } from '@angular/core';
 import { Clients } from '../../core/services/clients/clients';
 import { CommonModule } from '@angular/common';
 import { Modal } from '../assets/modal/modal';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { InitialsPipe } from '../assets/pipes/initials-pipe';
 import { Table } from '../assets/table/table';
 import { IClients } from '../../core/interface/clients/clients';
@@ -11,6 +11,7 @@ import { ConfirmationService } from '../../core/services/confirmation/confirmati
 import { finalize } from 'rxjs';
 import { SearchInput } from '../assets/search-input/search-input';
 import { LocalDatePipe } from '../assets/pipes/local-date-pipe';
+import { dniOrPassportValidator, phoneValidator } from '../../core/validators/contact';
 
 @Component({
   selector: 'gda-mainclient',
@@ -72,10 +73,10 @@ export class Mainclient implements OnInit {
   buildForm(): void {
     this.clientForm = new FormGroup({
       id: new FormControl(''),
-      clientName: new FormControl(''),
-      clientLastName: new FormControl(''),
-      clientDni: new FormControl(''),
-      clientPhone: new FormControl(''),
+      clientName: new FormControl('', [Validators.required, Validators.maxLength(80)]),
+      clientLastName: new FormControl('', [Validators.required, Validators.maxLength(80)]),
+      clientDni: new FormControl('', [Validators.required, dniOrPassportValidator]),
+      clientPhone: new FormControl('', [Validators.required, phoneValidator]),
       lastCheckIn: new FormControl(''),
     });
   }
@@ -130,6 +131,10 @@ export class Mainclient implements OnInit {
     }
 
     const client = this.clientForm.getRawValue();
+    client.clientName = client.clientName.trim();
+    client.clientLastName = client.clientLastName.trim();
+    client.clientDni = client.clientDni.trim();
+    client.clientPhone = client.clientPhone.trim();
     this.saving.set(true);
 
     this.clientService
@@ -157,13 +162,6 @@ export class Mainclient implements OnInit {
   }
 
   resetForm(): void {
-    this.clientForm = new FormGroup({
-      id: new FormControl(''),
-      clientName: new FormControl(''),
-      clientLastName: new FormControl(''),
-      clientDni: new FormControl(''),
-      clientPhone: new FormControl(''),
-      lastCheckIn: new FormControl(''),
-    });
+    this.buildForm();
   }
 }

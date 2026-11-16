@@ -124,6 +124,9 @@
           placeholder="Nombre"
           formControlName="clientName"
         />
+        @if (clientForm.get('clientName')?.touched && clientForm.get('clientName')?.invalid) {
+          <p class="mt-1 text-xs text-error">Ingresá el nombre del cliente.</p>
+        }
       </div>
 
       <div>
@@ -134,24 +137,39 @@
           placeholder="Apellido"
           formControlName="clientLastName"
         />
+        @if (
+          clientForm.get('clientLastName')?.touched && clientForm.get('clientLastName')?.invalid
+        ) {
+          <p class="mt-1 text-xs text-error">Ingresá el apellido del cliente.</p>
+        }
       </div>
       <div>
         <label>DNI/Pasaporte</label>
         <input
           class="w-full px-3 py-2"
           type="text"
-          placeholder="DNI/Pasaporte"
+          placeholder="12345678 o AB123456"
           formControlName="clientDni"
         />
+        @if (clientForm.get('clientDni')?.touched && clientForm.get('clientDni')?.invalid) {
+          <p class="mt-1 text-xs text-error">
+            El DNI o pasaporte debe tener entre 6 y 15 caracteres alfanuméricos.
+          </p>
+        }
       </div>
       <div>
         <label>Teléfono</label>
         <input
           class="w-full px-3 py-2"
           type="tel"
-          placeholder="Teléfono"
+          placeholder="+54 9 11 5555-1234"
           formControlName="clientPhone"
         />
+        @if (clientForm.get('clientPhone')?.touched && clientForm.get('clientPhone')?.invalid) {
+          <p class="mt-1 text-xs text-error">
+            El teléfono debe tener entre 6 y 20 caracteres y al menos 6 dígitos.
+          </p>
+        }
       </div>
     </div>
   </gda-modal>
