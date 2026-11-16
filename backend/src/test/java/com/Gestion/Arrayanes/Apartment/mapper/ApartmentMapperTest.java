@@ -26,6 +26,15 @@ class ApartmentMapperTest {
     }
 
     @Test
+    void toEntityShouldTrimName() {
+        ApartmentRequestDTO dto = new ApartmentRequestDTO("  Arrayanes 1  ", 4L, new BigDecimal("10000"));
+
+        Apartment apartment = mapper.toEntity(dto);
+
+        assertEquals("Arrayanes 1", apartment.getApartmentName());
+    }
+
+    @Test
     void toResponseDTOShouldMapAllFields() {
         Apartment apartment = new Apartment(UUID.randomUUID(), "Arrayanes 1", 4L, new BigDecimal("10000"));
 

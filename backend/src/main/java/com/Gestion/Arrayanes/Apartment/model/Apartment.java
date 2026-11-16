@@ -11,7 +11,7 @@ import java.util.UUID;
 @Getter
 @Entity
 @Table(name = "apartment", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"apartment_name", "apartment_max_number"})
+        @UniqueConstraint(name = "uk_apartment_name", columnNames = {"apartment_name"})
 })
 public class Apartment {
 

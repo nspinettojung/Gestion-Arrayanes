@@ -12,7 +12,7 @@ public class ApartmentMapper {
 
         Apartment apartment = new Apartment();
 
-        apartment.setApartmentName(dto.getApartmentName());
+        apartment.setApartmentName(normalizeName(dto.getApartmentName()));
         apartment.setApartmentMaxNumber(dto.getApartmentMaxNumber());
         apartment.setPrice(dto.getPrice());
 
@@ -35,8 +35,12 @@ public class ApartmentMapper {
             Apartment apartment,
             ApartmentRequestDTO dto) {
 
-        apartment.setApartmentName(dto.getApartmentName());
+        apartment.setApartmentName(normalizeName(dto.getApartmentName()));
         apartment.setApartmentMaxNumber(dto.getApartmentMaxNumber());
         apartment.setPrice(dto.getPrice());
+    }
+
+    private String normalizeName(String name) {
+        return name == null ? null : name.trim();
     }
 }

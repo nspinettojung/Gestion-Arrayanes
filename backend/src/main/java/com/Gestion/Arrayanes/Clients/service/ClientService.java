@@ -5,12 +5,14 @@ import com.Gestion.Arrayanes.Clients.dto.ClientResponseDTO;
 import com.Gestion.Arrayanes.Clients.mapper.ClientMapper;
 import com.Gestion.Arrayanes.Clients.model.Client;
 import com.Gestion.Arrayanes.Clients.repository.ClientRepository;
+import com.Gestion.Arrayanes.Clients.util.ClientNormalization;
 import com.Gestion.Arrayanes.GlobalHandlerException.GlobalCustomException;
 import com.Gestion.Arrayanes.GlobalHandlerException.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -32,7 +34,9 @@ public class ClientService implements IClientService {
     @Override
     @Transactional
     public ClientResponseDTO saveClient(ClientRequestDTO clientRequestDTO) {
-        if (clientRepository.existsByClientDni(clientRequestDTO.getClientDni())) {
+        String dni = ClientNormalization.normalizeDni(clientRequestDTO.getClientDni());
+
+        if (clientRepository.existsByClientDni(dni)) {
             throw new GlobalCustomException("El cliente ya existe.");
         }
 
@@ -68,9 +72,11 @@ public class ClientService implements IClientService {
     public ClientResponseDTO updateClient(UUID id, ClientRequestDTO clientRequestDTO) {
         Client client = getClientById(id);
 
-        boolean dniChanged = !client.getClientDni().equals(clientRequestDTO.getClientDni());
+        String dni = ClientNormalization.normalizeDni(clientRequestDTO.getClientDni());
+        boolean dniChanged = !Objects.equals(
+                ClientNormalization.normalizeDni(client.getClientDni()), dni);
 
-        if (dniChanged && clientRepository.existsByClientDni(clientRequestDTO.getClientDni())) {
+        if (dniChanged && clientRepository.existsByClientDni(dni)) {
             throw new GlobalCustomException("Ya existe un cliente con ese DNI.");
         }
 

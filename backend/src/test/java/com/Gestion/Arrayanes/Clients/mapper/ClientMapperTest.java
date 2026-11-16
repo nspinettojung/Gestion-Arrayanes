@@ -45,6 +45,15 @@ class ClientMapperTest {
     }
 
     @Test
+    void toEntityShouldNormalizeDni() {
+        ClientRequestDTO dto = new ClientRequestDTO("Ana", "Perez", " ab-123 ", "555");
+
+        Client client = mapper.toEntity(dto);
+
+        assertEquals("AB-123", client.getClientDni());
+    }
+
+    @Test
     void toResponseDTOShouldMapAllFields() {
         Client client = new Client(UUID.randomUUID(), "Ana", "Perez", "12345678", "555");
 

@@ -13,7 +13,11 @@ import java.util.UUID;
 @Setter
 @Getter
 @Entity
-@Table(name = "booking")
+@Table(name = "booking", indexes = {
+        @Index(name = "idx_booking_arrival_date", columnList = "arrival_date"),
+        @Index(name = "idx_booking_departure_date", columnList = "departure_date"),
+        @Index(name = "idx_booking_apartment_departure", columnList = "apartment_id, departure_date")
+})
 public class Booking {
 
     @Id

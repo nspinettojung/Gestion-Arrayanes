@@ -13,6 +13,7 @@ import com.Gestion.Arrayanes.Clients.dto.ClientRequestDTO;
 import com.Gestion.Arrayanes.Clients.mapper.ClientMapper;
 import com.Gestion.Arrayanes.Clients.model.Client;
 import com.Gestion.Arrayanes.Clients.repository.ClientRepository;
+import com.Gestion.Arrayanes.Clients.util.ClientNormalization;
 import com.Gestion.Arrayanes.GlobalHandlerException.BadRequestException;
 import com.Gestion.Arrayanes.GlobalHandlerException.ResourceNotFoundException;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -198,7 +199,8 @@ public class BookingService implements IBookingService {
             throw new BadRequestException("Debe indicar los datos del cliente.");
         }
 
-        Client client = clientRepository.findByClientDni(clientDto.getClientDni())
+        Client client = clientRepository.findByClientDni(
+                        ClientNormalization.normalizeDni(clientDto.getClientDni()))
                 .orElseGet(() -> clientRepository.save(clientMapper.toEntity(clientDto)));
 
         Apartment apartment = getApartmentById(request.getApartmentId());

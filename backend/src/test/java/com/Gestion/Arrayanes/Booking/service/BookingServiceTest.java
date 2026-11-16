@@ -283,6 +283,22 @@ class BookingServiceTest {
     }
 
     @Test
+    void createBookingWithClientShouldNormalizeDniWhenLookingUpClient() {
+        BookingWithNewClientRequestDTO request = createWithClientRequest();
+        request.getClient().setClientDni(" ab-123 ");
+        when(clientRepository.findByClientDni("AB-123")).thenReturn(Optional.of(client));
+        when(apartmentRepository.findById(apartmentId)).thenReturn(Optional.of(apartment));
+        when(bookingMapper.toEntity(request, client, apartment)).thenReturn(booking);
+        when(bookingMapper.toResponseDTO(booking)).thenReturn(response);
+        when(transactionCodeGenerator.generateNext(any())).thenReturn("RS-2026-0008");
+
+        bookingService.createBookingWithClient(request);
+
+        verify(clientRepository).findByClientDni("AB-123");
+        verify(clientRepository, never()).save(any(Client.class));
+    }
+
+    @Test
     void createBookingWithClientShouldRejectMissingClientData() {
         BookingWithNewClientRequestDTO request = createWithClientRequest();
         request.setClient(null);

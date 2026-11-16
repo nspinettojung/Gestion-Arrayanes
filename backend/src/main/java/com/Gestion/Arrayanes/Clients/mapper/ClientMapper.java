@@ -5,6 +5,7 @@ import com.Gestion.Arrayanes.Booking.repository.BookingRepository;
 import com.Gestion.Arrayanes.Clients.dto.ClientRequestDTO;
 import com.Gestion.Arrayanes.Clients.dto.ClientResponseDTO;
 import com.Gestion.Arrayanes.Clients.model.Client;
+import com.Gestion.Arrayanes.Clients.util.ClientNormalization;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -24,7 +25,7 @@ public class ClientMapper {
 
         client.setClientName(clientDto.getClientName());
         client.setClientLastName(clientDto.getClientLastName());
-        client.setClientDni(clientDto.getClientDni());
+        client.setClientDni(ClientNormalization.normalizeDni(clientDto.getClientDni()));
         client.setClientPhone(clientDto.getClientPhone());
 
         return client;
@@ -54,7 +55,7 @@ public class ClientMapper {
 
         client.setClientName(clientDto.getClientName());
         client.setClientLastName(clientDto.getClientLastName());
-        client.setClientDni(clientDto.getClientDni());
+        client.setClientDni(ClientNormalization.normalizeDni(clientDto.getClientDni()));
         client.setClientPhone(clientDto.getClientPhone());
     }
 }

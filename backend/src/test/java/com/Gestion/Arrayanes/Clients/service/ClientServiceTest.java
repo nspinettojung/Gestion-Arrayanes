@@ -63,6 +63,19 @@ class ClientServiceTest {
     }
 
     @Test
+    void saveClientShouldLookUpNormalizedDni() {
+        ClientRequestDTO lowercase = new ClientRequestDTO("Ana", "Perez", " ab-123 ", "555-1234");
+        when(clientRepository.existsByClientDni("AB-123")).thenReturn(false);
+        when(clientMapper.toEntity(lowercase)).thenReturn(client);
+        when(clientRepository.save(client)).thenReturn(client);
+        when(clientMapper.toResponseDTO(client)).thenReturn(response);
+
+        clientService.saveClient(lowercase);
+
+        verify(clientRepository).existsByClientDni("AB-123");
+    }
+
+    @Test
     void saveClientShouldRejectDuplicatedDni() {
         when(clientRepository.existsByClientDni("12345678")).thenReturn(true);
 
@@ -128,6 +141,20 @@ class ClientServiceTest {
         assertEquals(response, result);
         verify(clientMapper).updateEntity(client, request);
         verify(clientRepository, never()).existsByClientDni(any());
+    }
+
+    @Test
+    void updateClientShouldIgnoreCaseAndSpacesWhenDniDoesNotChange() {
+        client.setClientDni("AB-123");
+        ClientRequestDTO sameDni = new ClientRequestDTO("Ana", "Perez", " ab-123 ", "555-1234");
+        when(clientRepository.findById(clientId)).thenReturn(Optional.of(client));
+        when(clientRepository.save(client)).thenReturn(client);
+        when(clientMapper.toResponseDTO(client)).thenReturn(response);
+
+        clientService.updateClient(clientId, sameDni);
+
+        verify(clientRepository, never()).existsByClientDni(any());
+        verify(clientMapper).updateEntity(client, sameDni);
     }
 
     @Test
