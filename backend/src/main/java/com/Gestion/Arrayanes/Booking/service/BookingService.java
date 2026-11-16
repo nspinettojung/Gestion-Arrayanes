@@ -2,8 +2,10 @@ package com.Gestion.Arrayanes.Booking.service;
 
 import com.Gestion.Arrayanes.Apartment.model.Apartment;
 import com.Gestion.Arrayanes.Apartment.repository.ApartmentRepository;
-import com.Gestion.Arrayanes.Booking.dto.BookingRequestDTO;
 import com.Gestion.Arrayanes.Booking.dto.BookingResponseDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingUpdateRequestDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingWithClientIdRequestDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingWithNewClientRequestDTO;
 import com.Gestion.Arrayanes.Booking.mapper.BookingMapper;
 import com.Gestion.Arrayanes.Booking.model.Booking;
 import com.Gestion.Arrayanes.Booking.repository.BookingRepository;
@@ -83,7 +85,7 @@ public class BookingService implements IBookingService {
      * La validación de {@code @Version} de JPA sigue protegiendo la carrera
      * entre esta comprobación y el commit de la transacción.
      */
-    private void validateVersion(Booking booking, BookingRequestDTO bookingRequestDTO) {
+    private void validateVersion(Booking booking, BookingUpdateRequestDTO bookingRequestDTO) {
         Long requestedVersion = bookingRequestDTO.getVersion();
 
         if (requestedVersion == null) {
@@ -108,7 +110,7 @@ public class BookingService implements IBookingService {
 
     @Override
     @Transactional
-    public BookingResponseDTO saveBooking(BookingRequestDTO bookingRequestDTO) {
+    public BookingResponseDTO saveBooking(BookingWithClientIdRequestDTO bookingRequestDTO) {
         Client client = getClientById(bookingRequestDTO.getClientId());
         Apartment apartment = getApartmentById(bookingRequestDTO.getApartmentId());
         Booking booking = bookingMapper.toEntity(bookingRequestDTO, client, apartment);
@@ -170,7 +172,7 @@ public class BookingService implements IBookingService {
 
     @Override
     @Transactional
-    public BookingResponseDTO updateBooking(UUID id, BookingRequestDTO bookingRequestDTO) {
+    public BookingResponseDTO updateBooking(UUID id, BookingUpdateRequestDTO bookingRequestDTO) {
         Booking booking = getBookingById(id);
         validateVersion(booking, bookingRequestDTO);
         Client client = getClientById(bookingRequestDTO.getClientId());
@@ -189,7 +191,7 @@ public class BookingService implements IBookingService {
 
     @Override
     @Transactional
-    public BookingResponseDTO createBookingWithClient(BookingRequestDTO request) {
+    public BookingResponseDTO createBookingWithClient(BookingWithNewClientRequestDTO request) {
         ClientRequestDTO clientDto = request.getClient();
 
         if (clientDto == null) {

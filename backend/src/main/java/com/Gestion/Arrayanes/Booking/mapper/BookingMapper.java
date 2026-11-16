@@ -1,7 +1,7 @@
 package com.Gestion.Arrayanes.Booking.mapper;
 
 import com.Gestion.Arrayanes.Apartment.model.Apartment;
-import com.Gestion.Arrayanes.Booking.dto.BookingRequestDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingBaseRequestDTO;
 import com.Gestion.Arrayanes.Booking.dto.BookingResponseDTO;
 import com.Gestion.Arrayanes.Booking.model.Booking;
 import com.Gestion.Arrayanes.Clients.model.Client;
@@ -10,7 +10,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class BookingMapper {
 
-    public  Booking toEntity(BookingRequestDTO bookingDto, Client client, Apartment apartment){
+    /**
+     * Copia solo los datos que envía el cliente. El precio total lo calcula el
+     * servicio a partir del precio del apartamento y la estadía.
+     */
+    public Booking toEntity(BookingBaseRequestDTO bookingDto, Client client, Apartment apartment) {
 
         Booking booking = new Booking();
 
@@ -20,11 +24,10 @@ public class BookingMapper {
         booking.setClientId(client);
         booking.setApartmentId(apartment);
         booking.setAmountPeople(bookingDto.getAmountPeople());
-        booking.setTotalPrice(bookingDto.getTotalPrice());
         return booking;
     }
 
-    public  BookingResponseDTO toResponseDTO(Booking booking){
+    public BookingResponseDTO toResponseDTO(Booking booking) {
         BookingResponseDTO dto = new BookingResponseDTO();
         dto.setId(booking.getId());
         dto.setArrivalDate(booking.getArrivalDate());
@@ -39,13 +42,16 @@ public class BookingMapper {
         return dto;
     }
 
-    public  void bookingUpdate(Booking booking, BookingRequestDTO bookingDto, Client client, Apartment apartment){
+    /**
+     * Aplica los cambios de la reserva. El precio total lo recalcula el
+     * servicio con los datos vigentes del apartamento.
+     */
+    public void bookingUpdate(Booking booking, BookingBaseRequestDTO bookingDto, Client client, Apartment apartment) {
         booking.setArrivalDate(bookingDto.getArrivalDate());
         booking.setNights(bookingDto.getNights());
         booking.setDepartureDate(bookingDto.getDepartureDate());
         booking.setClientId(client);
         booking.setApartmentId(apartment);
         booking.setAmountPeople(bookingDto.getAmountPeople());
-        booking.setTotalPrice(bookingDto.getTotalPrice());
     }
 }

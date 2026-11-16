@@ -1,7 +1,9 @@
 package com.Gestion.Arrayanes.Booking.controller;
 
-import com.Gestion.Arrayanes.Booking.dto.BookingRequestDTO;
 import com.Gestion.Arrayanes.Booking.dto.BookingResponseDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingUpdateRequestDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingWithClientIdRequestDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingWithNewClientRequestDTO;
 import com.Gestion.Arrayanes.Booking.service.IBookingService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -27,13 +29,15 @@ public class BookingController {
     }
 
     @PostMapping("/createWithClient")
-    public ResponseEntity<BookingResponseDTO> createBookingWithClient(@Valid @RequestBody BookingRequestDTO request) {
+    public ResponseEntity<BookingResponseDTO> createBookingWithClient(
+            @Valid @RequestBody BookingWithNewClientRequestDTO request) {
         BookingResponseDTO response = iBookingService.createBookingWithClient(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/createbooking")
-    public ResponseEntity<BookingResponseDTO> createBooking(@Valid @RequestBody BookingRequestDTO requestBooking) {
+    public ResponseEntity<BookingResponseDTO> createBooking(
+            @Valid @RequestBody BookingWithClientIdRequestDTO requestBooking) {
         BookingResponseDTO booking = iBookingService.saveBooking(requestBooking);
         URI location = URI.create("/api/bookings/createbooking/" + booking.getId());
         return ResponseEntity.created(location).body(booking);
@@ -58,7 +62,7 @@ public class BookingController {
 
     @PutMapping("/editbooking/{id}")
     public ResponseEntity<BookingResponseDTO> updateBooking(@PathVariable UUID id,
-                                                            @Valid @RequestBody BookingRequestDTO bookingRequestDTO) {
+                                                            @Valid @RequestBody BookingUpdateRequestDTO bookingRequestDTO) {
         return ResponseEntity.ok(iBookingService.updateBooking(id, bookingRequestDTO));
     }
 

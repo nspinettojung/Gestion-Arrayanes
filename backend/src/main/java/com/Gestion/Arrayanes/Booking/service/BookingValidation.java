@@ -1,7 +1,7 @@
 package com.Gestion.Arrayanes.Booking.service;
 
 import com.Gestion.Arrayanes.Apartment.model.Apartment;
-import com.Gestion.Arrayanes.Booking.dto.BookingRequestDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingBaseRequestDTO;
 import com.Gestion.Arrayanes.Booking.model.Booking;
 import com.Gestion.Arrayanes.Booking.repository.BookingRepository;
 import com.Gestion.Arrayanes.GlobalHandlerException.BadRequestException;
@@ -24,7 +24,7 @@ public class BookingValidation {
         this.clock = clock;
     }
 
-    public void validate(Booking booking, BookingRequestDTO dto, Apartment apartment) {
+    public void validate(Booking booking, BookingBaseRequestDTO dto, Apartment apartment) {
         validateArrivalDate(booking);
 
         determineDepartureDate(booking, dto);
@@ -48,7 +48,7 @@ public class BookingValidation {
         }
     }
 
-    private void determineDepartureDate(Booking booking, BookingRequestDTO dto) {
+    private void determineDepartureDate(Booking booking, BookingBaseRequestDTO dto) {
         if (dto.getDepartureDate() != null) {
             booking.setDepartureDate(dto.getDepartureDate());
             long nights = ChronoUnit.DAYS.between(booking.getArrivalDate(), dto.getDepartureDate());

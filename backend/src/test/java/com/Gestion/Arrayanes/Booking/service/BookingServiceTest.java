@@ -2,8 +2,11 @@ package com.Gestion.Arrayanes.Booking.service;
 
 import com.Gestion.Arrayanes.Apartment.model.Apartment;
 import com.Gestion.Arrayanes.Apartment.repository.ApartmentRepository;
-import com.Gestion.Arrayanes.Booking.dto.BookingRequestDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingBaseRequestDTO;
 import com.Gestion.Arrayanes.Booking.dto.BookingResponseDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingUpdateRequestDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingWithClientIdRequestDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingWithNewClientRequestDTO;
 import com.Gestion.Arrayanes.Booking.mapper.BookingMapper;
 import com.Gestion.Arrayanes.Booking.model.Booking;
 import com.Gestion.Arrayanes.Booking.repository.BookingRepository;
@@ -92,7 +95,7 @@ class BookingServiceTest {
 
     @Test
     void saveBookingShouldRecalculatePriceAndPersist() {
-        BookingRequestDTO request = request();
+        BookingWithClientIdRequestDTO request = saveRequest();
 
         when(clientRepository.findById(clientId)).thenReturn(Optional.of(client));
         when(apartmentRepository.findById(apartmentId)).thenReturn(Optional.of(apartment));
@@ -112,7 +115,7 @@ class BookingServiceTest {
 
     @Test
     void saveBookingShouldFailWhenClientDoesNotExist() {
-        BookingRequestDTO request = request();
+        BookingWithClientIdRequestDTO request = saveRequest();
         when(clientRepository.findById(clientId)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> bookingService.saveBooking(request));
@@ -122,7 +125,7 @@ class BookingServiceTest {
 
     @Test
     void saveBookingShouldFailWhenApartmentDoesNotExist() {
-        BookingRequestDTO request = request();
+        BookingWithClientIdRequestDTO request = saveRequest();
         when(clientRepository.findById(clientId)).thenReturn(Optional.of(client));
         when(apartmentRepository.findById(apartmentId)).thenReturn(Optional.empty());
 
@@ -133,7 +136,7 @@ class BookingServiceTest {
 
     @Test
     void updateBookingShouldRecalculatePriceAndPersist() {
-        BookingRequestDTO request = request();
+        BookingUpdateRequestDTO request = updateRequest();
         booking.setTransactionCode("RS-2026-0005");
 
         when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
@@ -153,7 +156,7 @@ class BookingServiceTest {
 
     @Test
     void updateBookingShouldAssignCodeWhenLegacyBookingHasNone() {
-        BookingRequestDTO request = request();
+        BookingUpdateRequestDTO request = updateRequest();
 
         when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
         when(clientRepository.findById(clientId)).thenReturn(Optional.of(client));
@@ -171,12 +174,12 @@ class BookingServiceTest {
         when(bookingRepository.findById(bookingId)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,
-                () -> bookingService.updateBooking(bookingId, request()));
+                () -> bookingService.updateBooking(bookingId, updateRequest()));
     }
 
     @Test
     void updateBookingShouldRejectStaleVersion() {
-        BookingRequestDTO request = request();
+        BookingUpdateRequestDTO request = updateRequest();
         request.setVersion(1L);
 
         when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
@@ -189,7 +192,7 @@ class BookingServiceTest {
 
     @Test
     void updateBookingShouldRequireVersion() {
-        BookingRequestDTO request = request();
+        BookingUpdateRequestDTO request = updateRequest();
         request.setVersion(null);
 
         when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
@@ -244,7 +247,7 @@ class BookingServiceTest {
 
     @Test
     void createBookingWithClientShouldReuseExistingClient() {
-        BookingRequestDTO request = requestWithClient();
+        BookingWithNewClientRequestDTO request = createWithClientRequest();
         when(clientRepository.findByClientDni("12345678")).thenReturn(Optional.of(client));
         when(apartmentRepository.findById(apartmentId)).thenReturn(Optional.of(apartment));
         when(bookingMapper.toEntity(request, client, apartment)).thenReturn(booking);
@@ -262,7 +265,7 @@ class BookingServiceTest {
 
     @Test
     void createBookingWithClientShouldCreateNewClientWhenDniDoesNotExist() {
-        BookingRequestDTO request = requestWithClient();
+        BookingWithNewClientRequestDTO request = createWithClientRequest();
         when(clientRepository.findByClientDni("12345678")).thenReturn(Optional.empty());
         when(clientMapper.toEntity(request.getClient())).thenReturn(client);
         when(clientRepository.save(client)).thenReturn(client);
@@ -281,7 +284,7 @@ class BookingServiceTest {
 
     @Test
     void createBookingWithClientShouldRejectMissingClientData() {
-        BookingRequestDTO request = request();
+        BookingWithNewClientRequestDTO request = createWithClientRequest();
         request.setClient(null);
 
         assertThrows(BadRequestException.class,
@@ -290,7 +293,7 @@ class BookingServiceTest {
 
     @Test
     void createBookingWithClientShouldFailWhenApartmentDoesNotExist() {
-        BookingRequestDTO request = requestWithClient();
+        BookingWithNewClientRequestDTO request = createWithClientRequest();
         when(clientRepository.findByClientDni("12345678")).thenReturn(Optional.of(client));
         when(apartmentRepository.findById(apartmentId)).thenReturn(Optional.empty());
 
@@ -323,21 +326,32 @@ class BookingServiceTest {
         assertEquals("RS-2026-0006", bookingService.transactionCodeGenerator());
     }
 
-    private BookingRequestDTO request() {
-        BookingRequestDTO request = new BookingRequestDTO();
-        request.setArrivalDate(LocalDate.of(2026, 12, 1));
-        request.setNights(3L);
+    private BookingWithClientIdRequestDTO saveRequest() {
+        BookingWithClientIdRequestDTO request = new BookingWithClientIdRequestDTO();
+        fillCommonFields(request);
         request.setClientId(clientId);
-        request.setApartmentId(apartmentId);
-        request.setAmountPeople(2L);
+        return request;
+    }
+
+    private BookingUpdateRequestDTO updateRequest() {
+        BookingUpdateRequestDTO request = new BookingUpdateRequestDTO();
+        fillCommonFields(request);
+        request.setClientId(clientId);
         request.setVersion(0L);
         return request;
     }
 
-    private BookingRequestDTO requestWithClient() {
-        BookingRequestDTO request = request();
-        ClientRequestDTO clientDto = new ClientRequestDTO("Ana", "Perez", "12345678", "555-1234");
-        request.setClient(clientDto);
+    private BookingWithNewClientRequestDTO createWithClientRequest() {
+        BookingWithNewClientRequestDTO request = new BookingWithNewClientRequestDTO();
+        fillCommonFields(request);
+        request.setClient(new ClientRequestDTO("Ana", "Perez", "12345678", "555-1234"));
         return request;
+    }
+
+    private void fillCommonFields(BookingBaseRequestDTO request) {
+        request.setArrivalDate(LocalDate.of(2026, 12, 1));
+        request.setNights(3L);
+        request.setApartmentId(apartmentId);
+        request.setAmountPeople(2L);
     }
 }

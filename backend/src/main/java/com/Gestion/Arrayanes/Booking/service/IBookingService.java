@@ -1,16 +1,18 @@
 package com.Gestion.Arrayanes.Booking.service;
 
-import com.Gestion.Arrayanes.Booking.dto.BookingRequestDTO;
 import com.Gestion.Arrayanes.Booking.dto.BookingResponseDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingUpdateRequestDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingWithClientIdRequestDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingWithNewClientRequestDTO;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface IBookingService {
 
-    BookingResponseDTO saveBooking(BookingRequestDTO bookingRequestDTO);
+    BookingResponseDTO saveBooking(BookingWithClientIdRequestDTO bookingRequestDTO);
 
-    BookingResponseDTO createBookingWithClient(BookingRequestDTO bookingRequestDTO);
+    BookingResponseDTO createBookingWithClient(BookingWithNewClientRequestDTO bookingRequestDTO);
 
     void deleteBooking(UUID id);
 
@@ -20,7 +22,7 @@ public interface IBookingService {
 
     BookingResponseDTO findBookingById(UUID id);
 
-    BookingResponseDTO updateBooking(UUID id, BookingRequestDTO bookingRequestDTO);
+    BookingResponseDTO updateBooking(UUID id, BookingUpdateRequestDTO bookingRequestDTO);
 
     String transactionCodeGenerator();
 }

@@ -1,7 +1,9 @@
 package com.Gestion.Arrayanes.Booking.controller;
 
-import com.Gestion.Arrayanes.Booking.dto.BookingRequestDTO;
 import com.Gestion.Arrayanes.Booking.dto.BookingResponseDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingUpdateRequestDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingWithClientIdRequestDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingWithNewClientRequestDTO;
 import com.Gestion.Arrayanes.Booking.service.IBookingService;
 import com.Gestion.Arrayanes.GlobalHandlerException.GlobalCustomException;
 import com.Gestion.Arrayanes.GlobalHandlerException.ResourceNotFoundException;
@@ -52,7 +54,7 @@ class BookingControllerTest {
 
     @Test
     void createBookingShouldReturnCreatedWithLocation() throws Exception {
-        when(bookingService.saveBooking(any(BookingRequestDTO.class))).thenReturn(response());
+        when(bookingService.saveBooking(any(BookingWithClientIdRequestDTO.class))).thenReturn(response());
 
         mockMvc.perform(post("/api/bookings/createbooking")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -75,8 +77,25 @@ class BookingControllerTest {
     }
 
     @Test
+    void createBookingShouldRejectMissingClientId() throws Exception {
+        mockMvc.perform(post("/api/bookings/createbooking")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "arrivalDate": "2026-12-01",
+                                  "nights": 3,
+                                  "apartmentId": "%s",
+                                  "amountPeople": 2
+                                }
+                                """.formatted(APARTMENT_ID)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message", containsString("clientId")));
+    }
+
+    @Test
     void createBookingWithClientShouldReturnCreated() throws Exception {
-        when(bookingService.createBookingWithClient(any(BookingRequestDTO.class))).thenReturn(response());
+        when(bookingService.createBookingWithClient(any(BookingWithNewClientRequestDTO.class))).thenReturn(response());
 
         mockMvc.perform(post("/api/bookings/createWithClient")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -87,7 +106,7 @@ class BookingControllerTest {
 
     @Test
     void createBookingShouldMapConflictTo409() throws Exception {
-        when(bookingService.saveBooking(any(BookingRequestDTO.class)))
+        when(bookingService.saveBooking(any(BookingWithClientIdRequestDTO.class)))
                 .thenThrow(new GlobalCustomException("Las fechas se superponen con otra reserva existente."));
 
         mockMvc.perform(post("/api/bookings/createbooking")
@@ -130,7 +149,7 @@ class BookingControllerTest {
 
     @Test
     void updateBookingShouldReturnUpdatedBooking() throws Exception {
-        when(bookingService.updateBooking(eq(BOOKING_ID), any(BookingRequestDTO.class))).thenReturn(response());
+        when(bookingService.updateBooking(eq(BOOKING_ID), any(BookingUpdateRequestDTO.class))).thenReturn(response());
 
         mockMvc.perform(put("/api/bookings/editbooking/{id}", BOOKING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -142,7 +161,7 @@ class BookingControllerTest {
 
     @Test
     void updateBookingShouldReturnConflictWhenVersionIsStale() throws Exception {
-        when(bookingService.updateBooking(eq(BOOKING_ID), any(BookingRequestDTO.class)))
+        when(bookingService.updateBooking(eq(BOOKING_ID), any(BookingUpdateRequestDTO.class)))
                 .thenThrow(new OptimisticLockingFailureException("conflicto"));
 
         mockMvc.perform(put("/api/bookings/editbooking/{id}", BOOKING_ID)
@@ -164,8 +183,26 @@ class BookingControllerTest {
     }
 
     @Test
+    void updateBookingShouldRejectMissingVersion() throws Exception {
+        mockMvc.perform(put("/api/bookings/editbooking/{id}", BOOKING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "arrivalDate": "2026-12-01",
+                                  "nights": 3,
+                                  "clientId": "%s",
+                                  "apartmentId": "%s",
+                                  "amountPeople": 2
+                                }
+                                """.formatted(CLIENT_ID, APARTMENT_ID)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message", containsString("version")));
+    }
+
+    @Test
     void updateBookingShouldReturnNotFoundWhenBookingDoesNotExist() throws Exception {
-        when(bookingService.updateBooking(eq(BOOKING_ID), any(BookingRequestDTO.class)))
+        when(bookingService.updateBooking(eq(BOOKING_ID), any(BookingUpdateRequestDTO.class)))
                 .thenThrow(new ResourceNotFoundException("Reserva no encontrada."));
 
         mockMvc.perform(put("/api/bookings/editbooking/{id}", BOOKING_ID)

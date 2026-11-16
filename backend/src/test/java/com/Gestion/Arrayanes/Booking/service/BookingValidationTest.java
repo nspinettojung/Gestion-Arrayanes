@@ -1,7 +1,7 @@
 package com.Gestion.Arrayanes.Booking.service;
 
 import com.Gestion.Arrayanes.Apartment.model.Apartment;
-import com.Gestion.Arrayanes.Booking.dto.BookingRequestDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingWithClientIdRequestDTO;
 import com.Gestion.Arrayanes.Booking.model.Booking;
 import com.Gestion.Arrayanes.Booking.repository.BookingRepository;
 import com.Gestion.Arrayanes.GlobalHandlerException.BadRequestException;
@@ -181,8 +181,8 @@ class BookingValidationTest {
         return booking;
     }
 
-    private BookingRequestDTO dto(LocalDate departureDate, Long nights) {
-        BookingRequestDTO dto = new BookingRequestDTO();
+    private BookingWithClientIdRequestDTO dto(LocalDate departureDate, Long nights) {
+        BookingWithClientIdRequestDTO dto = new BookingWithClientIdRequestDTO();
         dto.setDepartureDate(departureDate);
         dto.setNights(nights);
         return dto;

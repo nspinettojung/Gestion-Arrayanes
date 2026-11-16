@@ -1,8 +1,9 @@
 package com.Gestion.Arrayanes.Booking.mapper;
 
 import com.Gestion.Arrayanes.Apartment.model.Apartment;
-import com.Gestion.Arrayanes.Booking.dto.BookingRequestDTO;
 import com.Gestion.Arrayanes.Booking.dto.BookingResponseDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingUpdateRequestDTO;
+import com.Gestion.Arrayanes.Booking.dto.BookingWithClientIdRequestDTO;
 import com.Gestion.Arrayanes.Booking.model.Booking;
 import com.Gestion.Arrayanes.Clients.model.Client;
 import org.junit.jupiter.api.Test;
@@ -12,24 +13,23 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class BookingMapperTest {
 
     private final BookingMapper mapper = new BookingMapper();
 
     @Test
-    void toEntityShouldMapAllFields() {
+    void toEntityShouldMapClientDataButNotPrice() {
         Client client = new Client(UUID.randomUUID(), "Ana", "Perez", "12345678", "555");
         Apartment apartment = new Apartment(UUID.randomUUID(), "Arrayanes 1", 4L, new BigDecimal("10000"));
-        BookingRequestDTO dto = new BookingRequestDTO(
-                LocalDate.of(2026, 12, 1),
-                3L,
-                LocalDate.of(2026, 12, 4),
-                client.getId(),
-                apartment.getId(),
-                2L,
-                new BigDecimal("45000")
-        );
+        BookingWithClientIdRequestDTO dto = new BookingWithClientIdRequestDTO();
+        dto.setArrivalDate(LocalDate.of(2026, 12, 1));
+        dto.setNights(3L);
+        dto.setDepartureDate(LocalDate.of(2026, 12, 4));
+        dto.setClientId(client.getId());
+        dto.setApartmentId(apartment.getId());
+        dto.setAmountPeople(2L);
 
         Booking booking = mapper.toEntity(dto, client, apartment);
 
@@ -39,7 +39,7 @@ class BookingMapperTest {
         assertEquals(client, booking.getClientId());
         assertEquals(apartment, booking.getApartmentId());
         assertEquals(dto.getAmountPeople(), booking.getAmountPeople());
-        assertEquals(dto.getTotalPrice(), booking.getTotalPrice());
+        assertNull(booking.getTotalPrice());
     }
 
     @Test
@@ -62,19 +62,18 @@ class BookingMapperTest {
     }
 
     @Test
-    void bookingUpdateShouldOverwriteFields() {
+    void bookingUpdateShouldOverwriteFieldsAndKeepServerPrice() {
         Client client = new Client(UUID.randomUUID(), "Ana", "Perez", "12345678", "555");
         Apartment apartment = new Apartment(UUID.randomUUID(), "Arrayanes 1", 4L, new BigDecimal("10000"));
         Booking booking = new Booking();
-        BookingRequestDTO dto = new BookingRequestDTO(
-                LocalDate.of(2026, 12, 10),
-                2L,
-                LocalDate.of(2026, 12, 12),
-                client.getId(),
-                apartment.getId(),
-                3L,
-                new BigDecimal("33000")
-        );
+        booking.setTotalPrice(new BigDecimal("45000"));
+        BookingUpdateRequestDTO dto = new BookingUpdateRequestDTO();
+        dto.setArrivalDate(LocalDate.of(2026, 12, 10));
+        dto.setNights(2L);
+        dto.setDepartureDate(LocalDate.of(2026, 12, 12));
+        dto.setClientId(client.getId());
+        dto.setApartmentId(apartment.getId());
+        dto.setAmountPeople(3L);
 
         mapper.bookingUpdate(booking, dto, client, apartment);
 
@@ -84,5 +83,6 @@ class BookingMapperTest {
         assertEquals(client, booking.getClientId());
         assertEquals(apartment, booking.getApartmentId());
         assertEquals(dto.getAmountPeople(), booking.getAmountPeople());
+        assertEquals(new BigDecimal("45000"), booking.getTotalPrice());
     }
 }
