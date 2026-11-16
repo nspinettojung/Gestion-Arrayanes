@@ -1,0 +1,72 @@
+<div class="pt-2 space-y-4">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+      <h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">Calendario</h2>
+      <p class="text-on-surface-variant font-body-md">
+        Días del mes con al menos una reserva en curso.
+      </p>
+    </div>
+    <div class="flex bg-surface-container border border-outline-variant rounded-lg p-1">
+      <button
+        type="button"
+        aria-label="Mes anterior"
+        class="p-2 hover:bg-surface-container-high rounded transition-all"
+        (click)="previousMonth()"
+      >
+        ◀
+      </button>
+
+      <button type="button" class="px-4 py-1 text-body-sm font-bold" (click)="goToToday()">
+        Hoy
+      </button>
+
+      <button
+        type="button"
+        aria-label="Mes siguiente"
+        class="p-2 hover:bg-surface-container-high rounded transition-all"
+        (click)="nextMonth()"
+      >
+        ▶
+      </button>
+    </div>
+  </div>
+
+  <div class="border border-outline-variant rounded-xl overflow-hidden bg-surface shadow-sm">
+    <div class="calendar-grid metal-header border-b border-outline-variant">
+      @for (day of weekDays; track day) {
+        <div class="week-day">{{ day }}</div>
+      }
+    </div>
+
+    <div class="calendar-grid">
+      @for (cell of cells(); track cell.date) {
+        <div
+          class="calendar-day transition-colors"
+          [class.other-month]="!cell.currentMonth"
+          [class.today]="cell.isToday"
+        >
+          <span
+            class="text-label-md font-bold"
+            [class.text-primary]="cell.hasBooking"
+            [class.text-on-surface-variant]="!cell.hasBooking"
+            >{{ cell.day }}</span
+          >
+          @if (cell.hasBooking) {
+            <span class="mt-1 flex items-center gap-1 text-[10px] font-bold text-secondary">
+              <span class="h-2 w-2 rounded-full bg-secondary"></span>
+              Ocupado
+            </span>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <p class="text-xs text-on-surface-variant" aria-live="polite">
+    @if (loading()) {
+      Cargando calendario…
+    } @else {
+      Los días marcados tienen al menos una reserva activa.
+    }
+  </p>
+</div>

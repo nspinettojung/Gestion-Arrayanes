@@ -32,5 +32,10 @@ export const routes: Routes = [
     loadComponent: () => import('./view/mainhistory/mainhistory').then((m) => m.Mainhistory),
     data: { title: 'Historial' },
   },
+  {
+    path: 'calendar',
+    loadComponent: () => import('./view/maincalendar/maincalendar').then((m) => m.Maincalendar),
+    data: { title: 'Calendario', icon: 'event' },
+  },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 ];

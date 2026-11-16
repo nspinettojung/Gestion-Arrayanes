@@ -1,0 +1,22 @@
+.week-day {
+  padding: 0.5rem;
+  text-align: center;
+  font-weight: bold;
+  background: #f1f4f6;
+}
+
+.calendar-day {
+  min-height: 6.5rem;
+  padding: 0.5rem;
+  border-right: 1px solid #eef2f4;
+  border-bottom: 1px solid #eef2f4;
+}
+
+.other-month {
+  opacity: 0.35;
+}
+
+.today {
+  outline: 2px solid #2196f3;
+  outline-offset: -2px;
+}

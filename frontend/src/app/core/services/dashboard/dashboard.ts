@@ -3,6 +3,7 @@ import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { IDashboard } from '../../interface/dashboard/dashboard';
 import { DashboardStats } from '../../interface/dashboard/dashboard-stats';
+import { CalendarDay } from '../../interface/dashboard/calendar-day';
 import { ClientApartmentDTO } from '../../interface/clients/client-apartment-dto';
 import { Observable, finalize } from 'rxjs';
 
@@ -23,6 +24,9 @@ export class Dashboard {
   monthlyDepartures = signal<number>(0);
   arrivalsCount = signal<number>(0);
   departuresCount = signal<number>(0);
+  calendarDays = signal<CalendarDay[]>([]);
+  private loadingCalendarSignal = signal(false);
+  loadingCalendar = this.loadingCalendarSignal.asReadonly();
   monthlyArrivalsList = signal<IDashboard[]>([]);
   monthlyDeparturesList = signal<IDashboard[]>([]);
   arrivalsByDate = signal<ClientApartmentDTO[]>([]);
@@ -95,6 +99,22 @@ export class Dashboard {
         },
       });
   }
+  getCalendar(month: number, year: number): void {
+    this.loadingCalendarSignal.set(true);
+    this.http
+      .get<CalendarDay[]>(`${this.apiUrl}/dashboard/calendar`, {
+        params: { month: month.toString(), year: year.toString() },
+      })
+      .pipe(finalize(() => this.loadingCalendarSignal.set(false)))
+      .subscribe({
+        next: (days) => this.calendarDays.set(days),
+        error: (error) => {
+          console.error('❌ Error fetching calendar:', error);
+          this.calendarDays.set([]);
+        },
+      });
+  }
+
   getMonthlyArrivals(month: number, year: number): void {
     this.http
       .get<number>(`${this.apiUrl}/dashboard/monthlyArrivalsCount?month=${month}&year=${year}`)
