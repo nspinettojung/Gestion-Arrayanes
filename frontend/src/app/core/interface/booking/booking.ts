@@ -8,6 +8,7 @@ export interface IBooking {
   apartmentId: string;
   amountPeople: number;
   totalPrice: number;
+  version: number;
 }
 
 export interface BookingUpdateRequest {
@@ -17,6 +18,7 @@ export interface BookingUpdateRequest {
   clientId: string;
   apartmentId: string;
   amountPeople: number;
+  version: number;
 }
 
 export interface BookingCreateRequest {

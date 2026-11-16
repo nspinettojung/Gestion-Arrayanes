@@ -35,6 +35,7 @@ public class BookingMapper {
         dto.setAmountPeople(booking.getAmountPeople());
         dto.setTotalPrice(booking.getTotalPrice());
         dto.setTransactionCode(booking.getTransactionCode());
+        dto.setVersion(booking.getVersion());
         return dto;
     }
 

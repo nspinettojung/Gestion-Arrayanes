@@ -22,6 +22,7 @@ public class BookingResponseDTO {
     private Long amountPeople;
     private BigDecimal totalPrice;
     private String transactionCode;
+    private long version;
 
 
 

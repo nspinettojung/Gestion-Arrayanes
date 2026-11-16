@@ -44,7 +44,8 @@ class DashboardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].clientName").value("Ana"))
                 .andExpect(jsonPath("$[0].transactionCode").value("RS-2026-0001"))
-                .andExpect(jsonPath("$[0].apartmentName").value("Arrayanes 1"));
+                .andExpect(jsonPath("$[0].apartmentName").value("Arrayanes 1"))
+                .andExpect(jsonPath("$[0].version").value(4));
     }
 
     @Test
@@ -198,7 +199,8 @@ class DashboardControllerTest {
                 LocalDate.of(2026, 11, 12),
                 2L,
                 2L,
-                new BigDecimal("30000.00")
+                new BigDecimal("30000.00"),
+                4L
         );
     }
 

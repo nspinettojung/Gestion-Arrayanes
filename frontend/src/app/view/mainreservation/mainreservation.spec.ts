@@ -26,6 +26,7 @@ const savedBooking: IBooking = {
   apartmentId: 'apartment-1',
   amountPeople: 1,
   totalPrice: 10_000,
+  version: 0,
 };
 
 const bookingMock = {

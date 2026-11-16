@@ -11,4 +11,5 @@ export interface IDashboard {
   nights: number; // cantidad de noches
   amountPeople: number; // cantidad de personas
   totalPrice: number; // precio total de la reserva
+  version: number; // versión para control de concurrencia optimista
 }

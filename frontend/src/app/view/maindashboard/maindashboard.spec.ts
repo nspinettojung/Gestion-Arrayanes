@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
+import { of, throwError } from 'rxjs';
 
 import { IDashboard } from '../../core/interface/dashboard/dashboard';
+import { Booking } from '../../core/services/booking/booking';
 import { Dashboard } from '../../core/services/dashboard/dashboard';
 import { addDays, toLocalIsoDate } from '../../core/utils/date';
 import { Maindashboard } from './maindashboard';
@@ -19,6 +22,7 @@ function buildBooking(id: string, departureDate: string): IDashboard {
     nights: 2,
     amountPeople: 2,
     totalPrice: 100_000,
+    version: 3,
   };
 }
 
@@ -70,5 +74,41 @@ describe('Maindashboard', () => {
     fixture.detectChanges();
 
     expect(component.filteredBookings().map((booking) => booking.id)).toEqual(['futura']);
+  });
+
+  it('envía la versión de la reserva al editarla', () => {
+    const bookingService = TestBed.inject(Booking);
+    const booking = buildBooking('futura', addDays(toLocalIsoDate(), 5));
+    const editSpy = vi.spyOn(bookingService, 'editBooking').mockReturnValue(of(booking));
+    vi.spyOn(dashboard, 'getDashboardData').mockImplementation(() => undefined);
+    vi.spyOn(dashboard, 'loadStats').mockImplementation(() => undefined);
+
+    component.openEditBooking(booking);
+    component.onEdit();
+
+    expect(editSpy).toHaveBeenCalledWith(
+      booking.id,
+      expect.objectContaining({
+        clientId: booking.clientId,
+        apartmentId: booking.apartmentId,
+        version: 3,
+      }),
+    );
+  });
+
+  it('cierra el modal y recarga si la reserva fue modificada por otro usuario', () => {
+    const bookingService = TestBed.inject(Booking);
+    const refreshSpy = vi.spyOn(dashboard, 'getDashboardData').mockImplementation(() => undefined);
+    const statsSpy = vi.spyOn(dashboard, 'loadStats').mockImplementation(() => undefined);
+    vi.spyOn(bookingService, 'editBooking').mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 409 })),
+    );
+
+    component.openEditBooking(buildBooking('futura', addDays(toLocalIsoDate(), 5)));
+    component.onEdit();
+
+    expect(component.showModal).toBe(false);
+    expect(refreshSpy).toHaveBeenCalled();
+    expect(statsSpy).toHaveBeenCalled();
   });
 });

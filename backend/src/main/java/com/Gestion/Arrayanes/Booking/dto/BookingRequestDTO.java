@@ -4,6 +4,7 @@ import com.Gestion.Arrayanes.Clients.dto.ClientRequestDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,6 +29,12 @@ public class BookingRequestDTO {
     private Long amountPeople;
     private BigDecimal totalPrice;
 
+    /**
+     * Versión de la reserva que el cliente leyó. Obligatoria al editar para
+     * detectar cambios concurrentes (respuesta 409).
+     */
+    @PositiveOrZero(message = "La versión de la reserva no puede ser negativa.")
+    private Long version;
 
     @Valid
     private ClientRequestDTO client;

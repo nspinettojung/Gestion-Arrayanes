@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -123,7 +124,8 @@ class BookingControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(BOOKING_ID.toString()))
                 .andExpect(jsonPath("$[0].clientId").value(CLIENT_ID.toString()))
-                .andExpect(jsonPath("$[0].transactionCode").value("RS-2026-0007"));
+                .andExpect(jsonPath("$[0].transactionCode").value("RS-2026-0007"))
+                .andExpect(jsonPath("$[0].version").value(3));
     }
 
     @Test
@@ -132,9 +134,33 @@ class BookingControllerTest {
 
         mockMvc.perform(put("/api/bookings/editbooking/{id}", BOOKING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(bookingJson()))
+                        .content(bookingUpdateJson(3)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(BOOKING_ID.toString()));
+                .andExpect(jsonPath("$.id").value(BOOKING_ID.toString()))
+                .andExpect(jsonPath("$.version").value(3));
+    }
+
+    @Test
+    void updateBookingShouldReturnConflictWhenVersionIsStale() throws Exception {
+        when(bookingService.updateBooking(eq(BOOKING_ID), any(BookingRequestDTO.class)))
+                .thenThrow(new OptimisticLockingFailureException("conflicto"));
+
+        mockMvc.perform(put("/api/bookings/editbooking/{id}", BOOKING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bookingUpdateJson(1)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.message", containsString("modificada por otro usuario")));
+    }
+
+    @Test
+    void updateBookingShouldRejectNegativeVersion() throws Exception {
+        mockMvc.perform(put("/api/bookings/editbooking/{id}", BOOKING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bookingUpdateJson(-1)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message", containsString("version")));
     }
 
     @Test
@@ -144,7 +170,7 @@ class BookingControllerTest {
 
         mockMvc.perform(put("/api/bookings/editbooking/{id}", BOOKING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(bookingJson()))
+                        .content(bookingUpdateJson(3)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.error").value("Not Found"));
@@ -204,6 +230,7 @@ class BookingControllerTest {
                 new BigDecimal("45000.00")
         );
         response.setTransactionCode("RS-2026-0007");
+        response.setVersion(3L);
         return response;
     }
 
@@ -217,6 +244,19 @@ class BookingControllerTest {
                   "amountPeople": 2
                 }
                 """.formatted(CLIENT_ID, APARTMENT_ID);
+    }
+
+    private String bookingUpdateJson(long version) {
+        return """
+                {
+                  "arrivalDate": "2026-12-01",
+                  "nights": 3,
+                  "clientId": "%s",
+                  "apartmentId": "%s",
+                  "amountPeople": 2,
+                  "version": %d
+                }
+                """.formatted(CLIENT_ID, APARTMENT_ID, version);
     }
 
     private String bookingWithClientJson() {

@@ -49,6 +49,7 @@ class BookingMapperTest {
         Booking booking = new Booking(UUID.randomUUID(), LocalDate.of(2026, 12, 1), 3L,
                 LocalDate.of(2026, 12, 4), client, apartment, 2L, new BigDecimal("45000"));
         booking.setTransactionCode("RS-2026-0005");
+        booking.setVersion(4L);
 
         BookingResponseDTO dto = mapper.toResponseDTO(booking);
 
@@ -57,6 +58,7 @@ class BookingMapperTest {
         assertEquals(apartment.getId(), dto.getApartmentId());
         assertEquals(booking.getTotalPrice(), dto.getTotalPrice());
         assertEquals("RS-2026-0005", dto.getTransactionCode());
+        assertEquals(4L, dto.getVersion());
     }
 
     @Test

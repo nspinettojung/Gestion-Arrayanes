@@ -19,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -174,6 +175,32 @@ class BookingServiceTest {
     }
 
     @Test
+    void updateBookingShouldRejectStaleVersion() {
+        BookingRequestDTO request = request();
+        request.setVersion(1L);
+
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
+
+        assertThrows(OptimisticLockingFailureException.class,
+                () -> bookingService.updateBooking(bookingId, request));
+
+        verify(bookingRepository, never()).save(any(Booking.class));
+    }
+
+    @Test
+    void updateBookingShouldRequireVersion() {
+        BookingRequestDTO request = request();
+        request.setVersion(null);
+
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
+
+        assertThrows(BadRequestException.class,
+                () -> bookingService.updateBooking(bookingId, request));
+
+        verify(bookingRepository, never()).save(any(Booking.class));
+    }
+
+    @Test
     void deleteBookingShouldFailWhenBookingDoesNotExist() {
         when(bookingRepository.findById(bookingId)).thenReturn(Optional.empty());
 
@@ -303,6 +330,7 @@ class BookingServiceTest {
         request.setClientId(clientId);
         request.setApartmentId(apartmentId);
         request.setAmountPeople(2L);
+        request.setVersion(0L);
         return request;
     }
 

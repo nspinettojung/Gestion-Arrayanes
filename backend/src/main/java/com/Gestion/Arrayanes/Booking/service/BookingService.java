@@ -13,6 +13,7 @@ import com.Gestion.Arrayanes.Clients.model.Client;
 import com.Gestion.Arrayanes.Clients.repository.ClientRepository;
 import com.Gestion.Arrayanes.GlobalHandlerException.BadRequestException;
 import com.Gestion.Arrayanes.GlobalHandlerException.ResourceNotFoundException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,6 +76,25 @@ public class BookingService implements IBookingService {
                 booking.getNights()
         );
         booking.setTotalPrice(totalPrice);
+    }
+
+    /**
+     * Comprueba que el cliente haya leído la última versión de la reserva.
+     * La validación de {@code @Version} de JPA sigue protegiendo la carrera
+     * entre esta comprobación y el commit de la transacción.
+     */
+    private void validateVersion(Booking booking, BookingRequestDTO bookingRequestDTO) {
+        Long requestedVersion = bookingRequestDTO.getVersion();
+
+        if (requestedVersion == null) {
+            throw new BadRequestException("La versión de la reserva es obligatoria para editarla.");
+        }
+
+        if (booking.getVersion() != requestedVersion) {
+            throw new OptimisticLockingFailureException(
+                    "La reserva fue modificada por otro usuario (versión esperada: "
+                            + requestedVersion + ", versión actual: " + booking.getVersion() + ").");
+        }
     }
 
     @Override
@@ -152,6 +172,7 @@ public class BookingService implements IBookingService {
     @Transactional
     public BookingResponseDTO updateBooking(UUID id, BookingRequestDTO bookingRequestDTO) {
         Booking booking = getBookingById(id);
+        validateVersion(booking, bookingRequestDTO);
         Client client = getClientById(bookingRequestDTO.getClientId());
         Apartment apartment = getApartmentById(bookingRequestDTO.getApartmentId());
 

@@ -1,4 +1,5 @@
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -160,6 +161,7 @@ export class Maindashboard implements OnInit {
       amountPeople: new FormControl(1, [Validators.required, Validators.min(1)]),
       arrivalDate: new FormControl('', Validators.required),
       departureDate: new FormControl('', Validators.required),
+      version: new FormControl(0),
     });
 
     this.bookingForm.valueChanges
@@ -230,6 +232,7 @@ export class Maindashboard implements OnInit {
       amountPeople: booking.amountPeople,
       arrivalDate: booking.arrivalDate,
       departureDate: booking.departureDate,
+      version: booking.version,
     });
 
     this.updatePreview();
@@ -272,6 +275,7 @@ export class Maindashboard implements OnInit {
       clientId: bookingData.clientId,
       apartmentId: bookingData.apartmentId,
       amountPeople: Number(bookingData.amountPeople),
+      version: Number(bookingData.version),
     };
 
     this.saving.set(true);
@@ -289,8 +293,20 @@ export class Maindashboard implements OnInit {
           this.dashboardService.getDashboardData();
           this.dashboardService.loadStats();
         },
-        error: () => {
-          // Conservamos los datos cargados para que el usuario pueda reintentar.
+        error: (error: unknown) => {
+          if (!(error instanceof HttpErrorResponse) || error.status !== 409) {
+            // Conservamos los datos cargados para que el usuario pueda reintentar.
+            return;
+          }
+
+          // Otra persona modificó la reserva: cerramos el modal y recargamos
+          // para que la próxima edición use la versión vigente.
+          this.showModal = false;
+          this.editPreview.set(null);
+          this.editingTransactionCode.set(null);
+          this.bookingForm.reset({ amountPeople: 1, version: 0 });
+          this.dashboardService.getDashboardData();
+          this.dashboardService.loadStats();
         },
       });
   }

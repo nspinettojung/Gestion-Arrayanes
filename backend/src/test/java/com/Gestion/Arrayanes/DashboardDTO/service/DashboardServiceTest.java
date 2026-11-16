@@ -73,6 +73,7 @@ class DashboardServiceTest {
         booking.setNights(2L);
         booking.setAmountPeople(2L);
         booking.setTotalPrice(new BigDecimal("30000.00"));
+        booking.setVersion(4L);
     }
 
     @Test
@@ -244,6 +245,7 @@ class DashboardServiceTest {
         assertEquals("Ana", dto.getClientName());
         assertEquals("Arrayanes 1", dto.getApartmentName());
         assertEquals(booking.getTotalPrice(), dto.getTotalPrice());
+        assertEquals(4L, dto.getVersion());
     }
 
     @Test

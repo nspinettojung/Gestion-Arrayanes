@@ -23,8 +23,9 @@ public class DashboardDTO {
     private Long nights;
     private Long amountPeople;
     private BigDecimal totalPrice;
+    private long version;
 
-    public DashboardDTO(UUID id, String transactionCode, UUID clientId ,String clientName, String clientLastName,UUID apartmentId ,String apartmentName, LocalDate arrivalDate, LocalDate departureDate, Long nights, Long amountPeople, BigDecimal totalPrice ) {
+    public DashboardDTO(UUID id, String transactionCode, UUID clientId ,String clientName, String clientLastName,UUID apartmentId ,String apartmentName, LocalDate arrivalDate, LocalDate departureDate, Long nights, Long amountPeople, BigDecimal totalPrice, long version ) {
 
         this.id = id;
         this.transactionCode = transactionCode;
@@ -38,6 +39,7 @@ public class DashboardDTO {
         this.nights = nights;
         this.amountPeople = amountPeople;
         this.totalPrice = totalPrice;
+        this.version = version;
 
     }
 

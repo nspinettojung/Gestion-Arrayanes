@@ -52,7 +52,8 @@ public class DashboardService {
                         b.getDepartureDate(),
                         b.getNights(),
                         b.getAmountPeople(),
-                        b.getTotalPrice()
+                        b.getTotalPrice(),
+                        b.getVersion()
                 ))
                 .toList();
     }
@@ -94,7 +95,8 @@ public class DashboardService {
                         b.getDepartureDate(),
                         b.getNights(),
                         b.getAmountPeople(),
-                        b.getTotalPrice()
+                        b.getTotalPrice(),
+                        b.getVersion()
                 ));
     }
 
