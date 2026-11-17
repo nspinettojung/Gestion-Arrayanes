@@ -1,47 +1,58 @@
 # Progreso
 
-**Estado:** terminado
-**Actualizado:** 2026-11-15 10:20
-**Rama:** (sin repositorio git)
-**Sin commitear:** no aplica (sin git); cambios locales en `src/` y `pom.xml`
+**Estado:** en curso (Fase 2 de refactors de backend, monorepo)
+**Actualizado:** 2026-11-17
+**Rama:** master (monorepo raíz con frontend/ y backend/)
 
 ## Objetivo
-Refactorizar por fases la API Spring Boot `Arrayanes` (tests, bugs y mejoras) sin romper el contrato HTTP que consume el frontend Angular compilado en `static/`.
+Ejecutar la Fase 2 de refactors de backend (punto por punto, con aprobación del usuario), sobre el monorepo ya armado, sin romper el modo escritorio del jar (perfil `webdev`, puerto 8080).
 
 ## Dónde me quedé
-Terminé la refactorización completa y además compilé la API como ejecutable nativo de GraalVM: `target\Arrayanes.exe` (178 MB, autocontenido).
+Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 9):
+- Punto 3 `9727662`: `BookingResponseDTO` incluye `clientName`/`apartmentName`.
+- Punto 5 `a93a717`: `DashboardService.validatePagination` (page>=0, 1<=size<=1000, whitelist de campos, asc/desc) + 6 tests.
+- Punto 7 `4a87c7a`: `SpaConfigurationTest` verifica `/api/v1/loquesea`→404 JSON, `/reservas/123`→200 HTML, `/build-info.json`→200.
+- Punto 6 `12bf6d5`: errores RFC 9457 (`ProblemDetail`: type/title/status/detail + requestId, timestamp, errors[]); se eliminó `ErrorResponseDTO`; frontend lee `detail` y `errors[]`.
+- Punto 4 `8b205be`: rutas REST `/api/v1/...` en bookings/clients/apartments/dashboard/system, sin aliases viejos (el jar empaqueta frontend+backend juntos, no hay build anterior servido).
+- Punto 9 `67fb8a4`: asociaciones `Booking.client`/`Booking.apartment`; JPQL, Specifications, mapper y servicios migrados. Los DTO siguen exponiendo `clientId`/`apartmentId`.
 
-`.\mvnw.cmd clean verify`: 179 tests, 0 fallos, BUILD SUCCESS. El build nativo ejecutó la misma suite y terminó con `BUILD SUCCESS`.
-
-Verificado con el `.exe`: arranca en `127.0.0.1`, Flyway valida/aplica migraciones, sirve el frontend, responde `listapartment`/`listclient` con datos reales de una copia de `datos/mibasedatos` y no abre navegador con `--arrayanes.desktop.enabled=false`. `datos/` original intacto.
+Verificación base verde: backend 201 tests, frontend 54 tests, lint 0 errors (17 warnings), format y build OK.
 
 ## Siguiente paso
-Ninguno: trabajo cerrado. No se hace backfill de `transactionCode`; las reservas legacy reciben código al editarse.
+Punto 10: unificar la creación de reservas (`saveBooking` + `createBookingWithClient`) y sacar `saveBookingEntity`.
 
-## Pendiente
-- (sin pendientes)
+## Pendiente (Fase 2, del documento original)
+- 10 Unificar creación (`saveBooking` + `createBookingWithClient`) y sacar `saveBookingEntity`.
+- 11 `Stay` en `BookingValidation` (que no mute la entidad).
+- 12 `transactionCode` con concurrencia (tabla de secuencia por año o SELECT ... FOR UPDATE).
+- 14 Soft delete / estados (CANCELLED, ARCHIVED) y 409 específico al borrar departamento con reservas.
+- 19 N+1: `DashboardService.getDashboard` y `ClientMapper.toResponseDTO` (proyecciones/@EntityGraph/JOIN FETCH).
+- 20 `GET /api/v1/dashboard/summary` (unificar endpoints chicos).
+- 24 Puerto dev fijo 8080 (`server.port=0` hoy) o proxy de Angular.
+- 25 Perfil default prod/desktop para el .exe (hoy arranca con `dev`).
+- 26 Consola H2 apagada explícitamente en prod.
+- 27 Token local en `/api/v1/system/shutdown`.
+- 28 Backups H2 (`BACKUP TO` diario/al cerrar + restauración desde UI).
+- 29 Java 25 LTS.
+- OpenAPI + cliente TypeScript generado: pendiente; sí estaba en la lista original del usuario.
 
 ## Hecho
-- [x] Bugs críticos + suite de tests base.
+- [x] Bugs críticos + suite de tests base (sesión previa).
 - [x] `transactionCode` persistido + `@Version` con mapeo 409.
-- [x] Perfiles `dev`/`prod`/`test` + Flyway (V1 baseline, V2 columnas) + `validate`.
+- [x] Perfiles `dev`/`prod`/`test` + Flyway (V1 baseline, V2 columnas, V3 índices/únicos/price) + `validate`.
 - [x] CORS centralizado (`CorsWebConfiguration`) + bind loopback.
-- [x] Listas vacías: `getApartmentList`/`getClientList` devuelven 200 `[]`.
-- [x] Limpieza: paquete `Price` y archivos sueltos eliminados.
-- [x] Ejecutable nativo GraalVM `target\Arrayanes.exe`, verificado con base real.
+- [x] Listas vacías 200 `[]`; paquete `Price` eliminado.
+- [x] DTOs partidos (crear con cliente nuevo / con cliente existente / actualizar); `totalPrice` solo sale del servidor.
+- [x] DNI único + normalizado; unique de departamento por nombre; índices de dashboard; tabla `price` huérfana dropeada (V3).
+- [x] `/dashboard/filter` usado por el frontend con paginación server-side; `getStats` con Clock inyectado.
+- [x] `generateTransactionCode` eliminado; `findLastArrivalDateByClientId` era código muerto (ausente).
+- [x] Monorepo + tooling raíz (pnpm, lint, format, test, build, CI) — commits `8c75ee0`/`649ccd9`.
+- [x] Fase 2 frontend: stats `440ee4e`, paginación server-side `238d1f5`, vista `/calendar` `9ad6977`, httpResource `93d84ec`.
+- [x] Fase 2 backend (Contrato y API): puntos 3, 5, 7, 6, 4, 9 (ver arriba).
 
-## Notas
-- No es repo git: no hay commit/push.
-- El contrato HTTP mantiene rutas y campos JSON; cambios acordados: `transactionCode` aditivo y listas vacías pasan de 409 a 200 `[]`.
-- Flyway: `baseline-on-migrate=true`, `baseline-version=1`; V2 usa `IF NOT EXISTS`.
-- Perfil por defecto `dev` (consola H2 `/testdb`, `show-sql`); `prod` apaga ambos.
-- Bind loopback decidido por el usuario: la app se usa solo en esta PC.
-- Flyway advierte que H2 2.4.240 no es la versión verificada (2.3.232); funciona igual.
-- Se quitó `sqlite-jdbc` del `pom.xml`: no se usaba y complicaba la imagen nativa.
-- Build nativo: cargar MSVC y ejecutar
-  `cmd /c ""D:\ProgramData\Microsoft\VisualStudio\VC\Auxiliary\Build\vcvars64.bat" && .\mvnw.cmd -Pnative native:compile"`.
-  El `pom.xml` agrega `-H:DeadlockWatchdogInterval=60` porque en este equipo la codificación puede tardar >10 min.
-- El `.exe` es autocontenido (se puede copiar solo). Usa `./datos/mibasedatos` relativo al directorio de trabajo:
-  para conservar la base existente, ejecutarlo desde la raíz del proyecto (`.\target\Arrayanes.exe`), no desde `target`.
-- `DesktopLauncher` ahora evalúa `arrayanes.desktop.enabled` en runtime (antes `@ConditionalOnProperty` quedaba congelado por AOT).
-- Limitación nativa: la consola H2 (`/h2-console`) quedó incluida por AOT y `prod` no la apaga; solo escucha en loopback.
+## Contexto histórico
+- Ejecutable nativo GraalVM `target\Arrayanes.exe` verificado con base real antes del monorepo; build nativo necesita vcvars64 y `-H:DeadlockWatchdogInterval=60`.
+- El `.exe` usa `./datos/mibasedatos` relativo al directorio de trabajo.
+- `DesktopLauncher` evalúa `arrayanes.desktop.enabled` en runtime.
+- Perfil `dev` expone consola H2 `/testdb` y `show-sql`; `prod` los apaga (consola H2 quedó incluida por AOT, solo escucha en loopback).
+- Flyway: `baseline-on-migrate=true`, `baseline-version=1`; V2 usa `IF NOT EXISTS`. H2 2.4.240 avira pero funciona.
