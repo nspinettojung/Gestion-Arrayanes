@@ -88,7 +88,7 @@ export class Maincalendar implements OnInit {
   }
 
   private loadCalendar(): void {
-    this.dashboardService.getCalendar(this.viewMonth() + 1, this.viewYear());
+    this.dashboardService.loadSummary(this.viewMonth() + 1, this.viewYear());
   }
 
   previousMonth(): void {

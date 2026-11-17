@@ -1,11 +1,11 @@
-import { inject, Injectable, signal, computed, Signal, effect } from '@angular/core';
+import { computed, effect, inject, Injectable, signal, Signal } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { IDashboard } from '../../interface/dashboard/dashboard';
 import { DashboardStats } from '../../interface/dashboard/dashboard-stats';
 import { CalendarDay } from '../../interface/dashboard/calendar-day';
+import { DashboardSummary } from '../../interface/dashboard/dashboard-summary';
 import { ClientApartmentDTO } from '../../interface/clients/client-apartment-dto';
-import { Observable } from 'rxjs';
 
 interface BookingFilter {
   lastName: string;
@@ -16,6 +16,12 @@ interface BookingFilter {
   onlyActive: boolean;
 }
 
+interface SummaryParams {
+  month: number;
+  year: number;
+  day?: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -24,7 +30,7 @@ export class Dashboard {
   private http = inject(HttpClient);
 
   private bookingFilter = signal<BookingFilter | null>(null);
-  private calendarParams = signal<{ month: number; year: number } | null>(null);
+  private summaryParams = signal<SummaryParams | null>(null);
 
   private statsResource = httpResource<DashboardStats>(() => `${this.apiUrl}/dashboard/stats`);
   private filteredResource = httpResource<{ content: IDashboard[]; totalElements: number }>(() => {
@@ -46,18 +52,20 @@ export class Dashboard {
       },
     };
   });
-  private calendarResource = httpResource<CalendarDay[]>(() => {
-    const params = this.calendarParams();
+  /** Todas las cifras del mes/calendario/día llegan en una sola respuesta. */
+  private summaryResource = httpResource<DashboardSummary>(() => {
+    const params = this.summaryParams();
 
     if (!params) {
       return undefined;
     }
 
     return {
-      url: `${this.apiUrl}/dashboard/calendar`,
+      url: `${this.apiUrl}/dashboard/summary`,
       params: {
-        month: params.month.toString(),
         year: params.year.toString(),
+        month: params.month.toString(),
+        ...(params.day === undefined ? {} : { day: params.day.toString() }),
       },
     };
   });
@@ -69,14 +77,22 @@ export class Dashboard {
   growth = computed(() => this.statsResource.value()?.growth ?? 0);
   todayBookings = computed(() => this.statsResource.value()?.todayBookings ?? 0);
 
-  monthlyArrivals = signal<number>(0);
-  monthlyDepartures = signal<number>(0);
-  arrivalsCount = signal<number>(0);
-  departuresCount = signal<number>(0);
-  monthlyArrivalsList = signal<IDashboard[]>([]);
-  monthlyDeparturesList = signal<IDashboard[]>([]);
-  arrivalsByDate = signal<ClientApartmentDTO[]>([]);
-  departuresByDate = signal<ClientApartmentDTO[]>([]);
+  monthlyArrivals = computed(() => this.summaryResource.value()?.monthly.arrivalsCount ?? 0);
+  monthlyDepartures = computed(() => this.summaryResource.value()?.monthly.departuresCount ?? 0);
+  arrivalsCount = computed(() => this.summaryResource.value()?.day.arrivalsCount ?? 0);
+  departuresCount = computed(() => this.summaryResource.value()?.day.departuresCount ?? 0);
+  monthlyArrivalsList = computed<ClientApartmentDTO[]>(
+    () => this.summaryResource.value()?.monthly.arrivals ?? [],
+  );
+  monthlyDeparturesList = computed<ClientApartmentDTO[]>(
+    () => this.summaryResource.value()?.monthly.departures ?? [],
+  );
+  arrivalsByDate = computed<ClientApartmentDTO[]>(
+    () => this.summaryResource.value()?.day.arrivals ?? [],
+  );
+  departuresByDate = computed<ClientApartmentDTO[]>(
+    () => this.summaryResource.value()?.day.departures ?? [],
+  );
 
   loadingFilteredSignal = computed(() => this.filteredResource.isLoading());
   filteredBookings: Signal<IDashboard[]> = computed(
@@ -84,8 +100,10 @@ export class Dashboard {
   );
   totalElements: Signal<number> = computed(() => this.filteredResource.value()?.totalElements ?? 0);
 
-  calendarDays = computed(() => this.calendarResource.value() ?? []);
-  loadingCalendar = computed(() => this.calendarResource.isLoading());
+  calendarDays = computed<CalendarDay[]>(
+    () => this.summaryResource.value()?.monthly.calendar ?? [],
+  );
+  loadingCalendar = computed(() => this.summaryResource.isLoading());
 
   constructor() {
     effect(() => {
@@ -101,9 +119,9 @@ export class Dashboard {
       }
     });
     effect(() => {
-      const error = this.calendarResource.error();
+      const error = this.summaryResource.error();
       if (error) {
-        console.error('❌ Error fetching calendar:', error);
+        console.error('❌ Error fetching dashboard summary:', error);
       }
     });
   }
@@ -145,97 +163,25 @@ export class Dashboard {
     this.bookingFilter.set(next);
   }
 
-  /** Setea el mes visible del calendario; el recurso refetcha solo. */
-  getCalendar(month: number, year: number): void {
-    const current = this.calendarParams();
+  /** Carga mes (y opcionalmente día) con una única petición al backend. */
+  loadSummary(month: number, year: number, day?: number): void {
+    const current = this.summaryParams();
 
-    if (current !== null && current.month === month && current.year === year) {
-      this.calendarResource.reload();
+    if (
+      current !== null &&
+      current.month === month &&
+      current.year === year &&
+      current.day === day
+    ) {
+      this.summaryResource.reload();
       return;
     }
 
-    this.calendarParams.set({ month, year });
+    this.summaryParams.set({ month, year, day });
   }
 
-  getMonthlyArrivals(month: number, year: number): void {
-    this.http
-      .get<number>(`${this.apiUrl}/dashboard/monthlyArrivalsCount?month=${month}&year=${year}`)
-      .subscribe({
-        next: (data) => {
-          this.monthlyArrivals.set(data);
-        },
-        error: (error) => console.error('Error fetching monthly arrivals:', error),
-      });
-  }
-
-  getMonthlyDepartures(month: number, year: number): void {
-    this.http
-      .get<number>(`${this.apiUrl}/dashboard/monthlyDeparturesCount?month=${month}&year=${year}`)
-      .subscribe({
-        next: (data) => {
-          this.monthlyDepartures.set(data);
-        },
-        error: (error) => console.error('Error fetching monthly departures:', error),
-      });
-  }
-
-  getMonthlyArrivalsList(month: number, year: number): Observable<IDashboard[]> {
-    return this.http.get<IDashboard[]>(
-      `${this.apiUrl}/dashboard/monthlyArrivalsList?month=${month}&year=${year}`,
-    );
-  }
-
-  getMonthlyDeparturesList(month: number, year: number): Observable<IDashboard[]> {
-    return this.http.get<IDashboard[]>(
-      `${this.apiUrl}/dashboard/monthlyDeparturesList?month=${month}&year=${year}`,
-    );
-  }
-
-  getArrivalsByDate(year: number, month: number, day: number): void {
-    this.http
-      .get<
-        ClientApartmentDTO[]
-      >(`${this.apiUrl}/dashboard/arrivalsByDate?year=${year}&month=${month}&day=${day}`)
-      .subscribe({
-        next: (data) => {
-          this.arrivalsByDate.set(data);
-        },
-        error: (error) => console.error('Error fetching arrivals by date:', error),
-      });
-  }
-
-  getDeparturesByDate(year: number, month: number, day: number): void {
-    this.http
-      .get<
-        ClientApartmentDTO[]
-      >(`${this.apiUrl}/dashboard/departuresByDate?year=${year}&month=${month}&day=${day}`)
-      .subscribe({
-        next: (data) => {
-          this.departuresByDate.set(data);
-        },
-        error: (error) => console.error('Error fetching departures by date:', error),
-      });
-  }
-
-  getArrivalsCountByDate(year: number, month: number, day: number): void {
-    this.http
-      .get<number>(
-        `${this.apiUrl}/dashboard/arrivalsCountByDate?year=${year}&month=${month}&day=${day}`,
-      )
-      .subscribe({
-        next: (count) => this.arrivalsCount.set(count),
-        error: (err) => console.error('Error fetching arrivals count:', err),
-      });
-  }
-
-  getDeparturesCountByDate(year: number, month: number, day: number): void {
-    this.http
-      .get<number>(
-        `${this.apiUrl}/dashboard/departuresCountByDate?year=${year}&month=${month}&day=${day}`,
-      )
-      .subscribe({
-        next: (count) => this.departuresCount.set(count),
-        error: (err) => console.error('Error fetching departures count:', err),
-      });
+  /** Alias conservado para los componentes que piden el calendario del mes. */
+  getCalendar(month: number, year: number): void {
+    this.loadSummary(month, year);
   }
 }

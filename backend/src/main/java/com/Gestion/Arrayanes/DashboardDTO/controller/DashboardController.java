@@ -1,9 +1,8 @@
 package com.Gestion.Arrayanes.DashboardDTO.controller;
 
-import com.Gestion.Arrayanes.DashboardDTO.model.CalendarDayDTO;
-import com.Gestion.Arrayanes.DashboardDTO.model.ClientApartmentDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.DashboardDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.DashboardStatsDTO;
+import com.Gestion.Arrayanes.DashboardDTO.model.DashboardSummaryDTO;
 import com.Gestion.Arrayanes.DashboardDTO.service.DashboardService;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -11,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,88 +51,23 @@ public class DashboardController {
         return ResponseEntity.ok(dashboardService.getStats());
     }
 
-    @GetMapping("/monthlyArrivalsCount")
-    public ResponseEntity<Long> getMonthlyArrivalsCount(
-            @RequestParam int month,
-            @RequestParam int year) {
-        long arrivals = dashboardService.getArrivalsCountInMonth(LocalDate.of(year, month, 1));
-        return ResponseEntity.ok(arrivals);
-    }
-
-    @GetMapping("/monthlyDeparturesCount")
-    public ResponseEntity<Long> getMonthlyDeparturesCount(
-            @RequestParam int month,
-            @RequestParam int year) {
-        long departures = dashboardService.getDeparturesCountInMonth(LocalDate.of(year, month, 1));
-        return ResponseEntity.ok(departures);
-    }
-
-    @GetMapping("/monthlyArrivalsList")
-    public ResponseEntity<List<ClientApartmentDTO>> getMonthlyArrivalsList(
-            @RequestParam int month,
-            @RequestParam int year) {
-        List<ClientApartmentDTO> arrivals = dashboardService.getArrivalsListInMonth(LocalDate.of(year, month, 1));
-        return ResponseEntity.ok(arrivals);
-    }
-
-    @GetMapping("/monthlyDeparturesList")
-    public ResponseEntity<List<ClientApartmentDTO>> getMonthlyDeparturesList(
-            @RequestParam int month,
-            @RequestParam int year) {
-        List<ClientApartmentDTO> departures = dashboardService.getDeparturesListInMonth(LocalDate.of(year, month, 1));
-        return ResponseEntity.ok(departures);
-    }
-
-    @GetMapping("/arrivalsByDate")
-    public ResponseEntity<List<ClientApartmentDTO>> getArrivalsByDate(
+    /**
+     * Agregados del mes, calendario y movimientos del día en una sola llamada.
+     * El día es opcional: sin él se devuelve el resumen mensual únicamente.
+     */
+    @GetMapping("/summary")
+    public ResponseEntity<DashboardSummaryDTO> getSummary(
             @RequestParam int year,
             @RequestParam int month,
-            @RequestParam int day) {
-        LocalDate date = LocalDate.of(year, month, day);
-        List<ClientApartmentDTO> arrivals = dashboardService.getArrivalsByDate(date);
-        return ResponseEntity.ok(arrivals);
+            @RequestParam(required = false) Integer day) {
+
+        // Validar aquí también: con el servicio mockeado (tests de controller)
+        // nada más lanzaría DateTimeException y una fecha imposible daría 200.
+        YearMonth.of(year, month);
+        if (day != null) {
+            LocalDate.of(year, month, day);
+        }
+
+        return ResponseEntity.ok(dashboardService.getSummary(year, month, day));
     }
-
-    @GetMapping("/departuresByDate")
-    public ResponseEntity<List<ClientApartmentDTO>> getDeparturesByDate(
-            @RequestParam int year,
-            @RequestParam int month,
-            @RequestParam int day) {
-        LocalDate date = LocalDate.of(year, month, day);
-        List<ClientApartmentDTO> departures = dashboardService.getDeparturesByDate(date);
-        return ResponseEntity.ok(departures);
-    }
-
-    @GetMapping("/calendar")
-    public ResponseEntity<List<CalendarDayDTO>> getCalendar(
-            @RequestParam int year,
-            @RequestParam int month) {
-        LocalDate start = LocalDate.of(year, month, 1);
-        LocalDate end = start.plusMonths(1).minusDays(1);
-
-        List<CalendarDayDTO> calendar = dashboardService.getCalendar(start, end);
-        return ResponseEntity.ok(calendar);
-    }
-
-    @GetMapping("/arrivalsCountByDate")
-    public ResponseEntity<Long> getArrivalsCountByDate(
-            @RequestParam int year,
-            @RequestParam int month,
-            @RequestParam int day) {
-        LocalDate date = LocalDate.of(year, month, day);
-        long count = dashboardService.getArrivalsCountByDate(date);
-        return ResponseEntity.ok(count);
-    }
-
-    @GetMapping("/departuresCountByDate")
-    public ResponseEntity<Long> getDeparturesCountByDate(
-            @RequestParam int year,
-            @RequestParam int month,
-            @RequestParam int day) {
-        LocalDate date = LocalDate.of(year, month, day);
-        long count = dashboardService.getDeparturesCountByDate(date);
-        return ResponseEntity.ok(count);
-    }
-
-
 }

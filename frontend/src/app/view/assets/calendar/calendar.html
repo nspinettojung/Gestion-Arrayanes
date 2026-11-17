@@ -42,7 +42,7 @@
     <!-- Días -->
 
     <div class="calendar-grid h-[calc(100vh-280px)] min-h-125">
-      @for (day of days; track day.date) {
+      @for (day of days(); track day.date) {
         <div
           (click)="selectDay(day)"
           [class.bg-secondary-container/5]="selectedDay === day.day"

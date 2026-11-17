@@ -23,14 +23,7 @@ const dashboardMock = {
   arrivalsCount: signal(0),
   departuresCount: signal(0),
   loadDashboard: () => undefined,
-  getArrivalsByDate: () => undefined,
-  getDeparturesByDate: () => undefined,
-  getArrivalsCountByDate: () => undefined,
-  getDeparturesCountByDate: () => undefined,
-  getMonthlyArrivals: () => undefined,
-  getMonthlyDepartures: () => undefined,
-  getMonthlyArrivalsList: () => of([]),
-  getMonthlyDeparturesList: () => of([]),
+  loadSummary: () => undefined,
 };
 
 describe('Mainbooking', () => {

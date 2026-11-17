@@ -1,15 +1,7 @@
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectorRef,
-  Component,
-  computed,
-  EventEmitter,
-  inject,
-  OnInit,
-  Output,
-} from '@angular/core';
+import { Component, computed, EventEmitter, inject, OnInit, Output, signal } from '@angular/core';
 import { Dashboard } from '../../../core/services/dashboard/dashboard';
-import { IDashboard } from '../../../core/interface/dashboard/dashboard';
+import { ClientApartmentDTO } from '../../../core/interface/clients/client-apartment-dto';
 import { toLocalIsoDate } from '../../../core/utils/date';
 
 export interface CalendarDay {
@@ -18,7 +10,7 @@ export interface CalendarDay {
   date: Date;
   reservations: {
     type: 'arrival' | 'departure';
-    booking: IDashboard;
+    booking: ClientApartmentDTO;
   }[];
 }
 
@@ -30,7 +22,6 @@ export interface CalendarDay {
 })
 export class Calendar implements OnInit {
   private dashboardService = inject(Dashboard);
-  private cdr = inject(ChangeDetectorRef);
   arrivalsCount = computed(() => this.dashboardService.arrivalsCount());
   departuresCount = computed(() => this.dashboardService.departuresCount());
   currentDate = new Date();
@@ -40,7 +31,30 @@ export class Calendar implements OnInit {
   selectedDay: number | null = null;
   monthName = '';
 
-  days: CalendarDay[] = [];
+  private readonly baseDays = signal<CalendarDay[]>([]);
+
+  /** Los días se derivan del mes visible y de las listas del resumen mensual. */
+  readonly days = computed(() => {
+    const arrivals = this.dashboardService.monthlyArrivalsList();
+    const departures = this.dashboardService.monthlyDeparturesList();
+
+    return this.baseDays().map((day) => {
+      const reservations: CalendarDay['reservations'] = [];
+
+      arrivals.forEach((b) => {
+        if (day.currentMonth && formatDate(day.date) === b.arrivalDate) {
+          reservations.push({ type: 'arrival', booking: b });
+        }
+      });
+      departures.forEach((b) => {
+        if (day.currentMonth && formatDate(day.date) === b.departureDate) {
+          reservations.push({ type: 'departure', booking: b });
+        }
+      });
+
+      return { ...day, reservations };
+    });
+  });
 
   readonly weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
@@ -51,7 +65,7 @@ export class Calendar implements OnInit {
   }
 
   loadCalendar(): void {
-    this.days = [];
+    this.baseDays.set([]);
     this.currentMonth = this.currentDate.getMonth();
     this.currentYear = this.currentDate.getFullYear();
 
@@ -67,8 +81,10 @@ export class Calendar implements OnInit {
 
     const prevMonthLastDay = new Date(this.currentYear, this.currentMonth, 0).getDate();
 
+    const built: CalendarDay[] = [];
+
     for (let i = firstWeekDay - 1; i >= 0; i--) {
-      this.days.push({
+      built.push({
         day: prevMonthLastDay - i,
         currentMonth: false,
         date: new Date(this.currentYear, this.currentMonth - 1, prevMonthLastDay - i),
@@ -77,7 +93,7 @@ export class Calendar implements OnInit {
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      this.days.push({
+      built.push({
         day,
         currentMonth: true,
         date: new Date(this.currentYear, this.currentMonth, day),
@@ -85,9 +101,9 @@ export class Calendar implements OnInit {
       });
     }
 
-    const remaining = 42 - this.days.length;
+    const remaining = 42 - built.length;
     for (let day = 1; day <= remaining; day++) {
-      this.days.push({
+      built.push({
         day,
         currentMonth: false,
         date: new Date(this.currentYear, this.currentMonth + 1, day),
@@ -95,37 +111,8 @@ export class Calendar implements OnInit {
       });
     }
 
-    this.loadReservations();
-  }
-
-  loadReservations(): void {
-    this.dashboardService
-      .getMonthlyArrivalsList(this.currentMonth + 1, this.currentYear)
-      .subscribe((arrivals: IDashboard[]) => {
-        arrivals.forEach((b: IDashboard) => {
-          const arrivalStr = b.arrivalDate;
-          this.days.forEach((d) => {
-            if (d.currentMonth && formatDate(d.date) === arrivalStr) {
-              d.reservations.push({ type: 'arrival', booking: b });
-            }
-          });
-        });
-        this.cdr.detectChanges();
-      });
-
-    this.dashboardService
-      .getMonthlyDeparturesList(this.currentMonth + 1, this.currentYear)
-      .subscribe((departures: IDashboard[]) => {
-        departures.forEach((b: IDashboard) => {
-          const departureStr = b.departureDate;
-          this.days.forEach((d) => {
-            if (d.currentMonth && formatDate(d.date) === departureStr) {
-              d.reservations.push({ type: 'departure', booking: b });
-            }
-          });
-        });
-        this.cdr.detectChanges();
-      });
+    this.baseDays.set(built);
+    this.dashboardService.loadSummary(this.currentMonth + 1, this.currentYear);
   }
 
   previousMonth(): void {

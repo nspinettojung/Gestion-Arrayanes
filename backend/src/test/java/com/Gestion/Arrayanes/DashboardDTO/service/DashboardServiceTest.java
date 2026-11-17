@@ -9,6 +9,7 @@ import com.Gestion.Arrayanes.DashboardDTO.model.CalendarDayDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.ClientApartmentDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.DashboardDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.DashboardStatsDTO;
+import com.Gestion.Arrayanes.DashboardDTO.model.DashboardSummaryDTO;
 import com.Gestion.Arrayanes.GlobalHandlerException.BadRequestException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
@@ -35,10 +36,12 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -227,6 +230,55 @@ class DashboardServiceTest {
 
         assertEquals(2L, dashboardService.getArrivalsCountByDate(TODAY));
         assertEquals(3L, dashboardService.getDeparturesCountByDate(TODAY));
+    }
+
+    @Test
+    void getSummaryShouldComposeMonthCalendarAndDay() {
+        LocalDate start = LocalDate.of(2026, 11, 1);
+        LocalDate end = LocalDate.of(2026, 11, 30);
+
+        when(bookingRepository.countBookingsByArrivalDateBetween(start, end)).thenReturn(4L);
+        when(bookingRepository.countBookingsByDepartureDateBetween(start, end)).thenReturn(6L);
+        when(bookingRepository.findArrivalsInMonth(start, end)).thenReturn(List.of(booking));
+        when(bookingRepository.findDeparturesInMonth(start, end)).thenReturn(List.of(booking));
+        when(bookingRepository.findBookingsInRange(start, end)).thenReturn(List.of());
+        when(bookingRepository.countBookingsByArrivalDate(TODAY)).thenReturn(2L);
+        when(bookingRepository.countDeparturesByDate(TODAY)).thenReturn(1L);
+        when(bookingRepository.findArrivalsByDate(TODAY)).thenReturn(List.of(booking));
+        when(bookingRepository.findDeparturesByDate(TODAY)).thenReturn(List.of(booking));
+
+        DashboardSummaryDTO summary = dashboardService.getSummary(2026, 11, 14);
+
+        assertEquals(2026, summary.year());
+        assertEquals(11, summary.month());
+        assertEquals(TODAY, summary.date());
+        assertEquals(4L, summary.monthly().arrivalsCount());
+        assertEquals(6L, summary.monthly().departuresCount());
+        assertEquals(1, summary.monthly().arrivals().size());
+        assertEquals(30, summary.monthly().calendar().size());
+        assertEquals(2L, summary.day().arrivalsCount());
+        assertEquals(1L, summary.day().departuresCount());
+        assertEquals(1, summary.day().arrivals().size());
+    }
+
+    @Test
+    void getSummaryWithoutDayShouldNotQueryDayData() {
+        LocalDate start = LocalDate.of(2026, 11, 1);
+        LocalDate end = LocalDate.of(2026, 11, 30);
+
+        when(bookingRepository.countBookingsByArrivalDateBetween(start, end)).thenReturn(4L);
+        when(bookingRepository.countBookingsByDepartureDateBetween(start, end)).thenReturn(6L);
+        when(bookingRepository.findArrivalsInMonth(start, end)).thenReturn(List.of());
+        when(bookingRepository.findDeparturesInMonth(start, end)).thenReturn(List.of());
+        when(bookingRepository.findBookingsInRange(start, end)).thenReturn(List.of());
+
+        DashboardSummaryDTO summary = dashboardService.getSummary(2026, 11, null);
+
+        assertNull(summary.date());
+        assertEquals(0L, summary.day().arrivalsCount());
+        assertTrue(summary.day().arrivals().isEmpty());
+        verify(bookingRepository, never()).countBookingsByArrivalDate(any());
+        verify(bookingRepository, never()).findArrivalsByDate(any());
     }
 
     @Test

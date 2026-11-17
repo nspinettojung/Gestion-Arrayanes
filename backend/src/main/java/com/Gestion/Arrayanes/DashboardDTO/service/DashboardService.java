@@ -8,6 +8,9 @@ import com.Gestion.Arrayanes.DashboardDTO.model.CalendarDayDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.ClientApartmentDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.DashboardDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.DashboardStatsDTO;
+import com.Gestion.Arrayanes.DashboardDTO.model.DashboardSummaryDTO;
+import com.Gestion.Arrayanes.DashboardDTO.model.DaySummaryDTO;
+import com.Gestion.Arrayanes.DashboardDTO.model.MonthlySummaryDTO;
 import com.Gestion.Arrayanes.GlobalHandlerException.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -147,6 +151,36 @@ public class DashboardService {
         }
 
         return ((double) (todayCount - yesterdayCount) / yesterdayCount) * 100;
+    }
+
+    /**
+     * Compone en una sola respuesta todo lo que necesita el panel para un mes
+     * (y opcionalmente un día), reutilizando las mismas consultas de siempre.
+     */
+    public DashboardSummaryDTO getSummary(int year, int month, Integer day) {
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);
+        LocalDate lastDay = yearMonth.atEndOfMonth();
+        LocalDate selectedDate = day == null ? null : yearMonth.atDay(day);
+
+        MonthlySummaryDTO monthly = new MonthlySummaryDTO(
+                getArrivalsCountInMonth(firstDay),
+                getDeparturesCountInMonth(firstDay),
+                getArrivalsListInMonth(firstDay),
+                getDeparturesListInMonth(firstDay),
+                getCalendar(firstDay, lastDay)
+        );
+
+        DaySummaryDTO daySummary = selectedDate == null
+                ? DaySummaryDTO.VACIO
+                : new DaySummaryDTO(
+                        getArrivalsCountByDate(selectedDate),
+                        getDeparturesCountByDate(selectedDate),
+                        getArrivalsByDate(selectedDate),
+                        getDeparturesByDate(selectedDate)
+                );
+
+        return new DashboardSummaryDTO(year, month, selectedDate, monthly, daySummary);
     }
 
     public long getArrivalsCountInMonth(LocalDate date) {

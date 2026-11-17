@@ -36,24 +36,11 @@ export class Mainbooking implements OnInit {
 
     this.bookingService.getBookings();
     this.bookingService.getCurrentDate().subscribe((date) => this.today.set(date));
-    this.dashboardService.getArrivalsByDate(year, month, day);
-    this.dashboardService.getDeparturesByDate(year, month, day);
-    this.dashboardService.getMonthlyArrivals(month, year);
-    this.dashboardService.getMonthlyDepartures(month, year);
-    this.dashboardService.getArrivalsCountByDate(year, month, day);
-    this.dashboardService.getDeparturesCountByDate(year, month, day);
+    this.dashboardService.loadSummary(month, year, day);
   }
 
   onDaySelected(date: Date) {
     this.selectedDay = date.getDate();
-
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-
-    this.dashboardService.getArrivalsByDate(year, month, day);
-    this.dashboardService.getDeparturesByDate(year, month, day);
-    this.dashboardService.getArrivalsCountByDate(year, month, day);
-    this.dashboardService.getDeparturesCountByDate(year, month, day);
+    this.dashboardService.loadSummary(date.getMonth() + 1, date.getFullYear(), date.getDate());
   }
 }

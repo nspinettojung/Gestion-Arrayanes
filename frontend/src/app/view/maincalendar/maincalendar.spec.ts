@@ -11,7 +11,15 @@ describe('Maincalendar', () => {
   let fixture: ComponentFixture<Maincalendar>;
   let dashboard: Dashboard;
   let httpMock: HttpTestingController;
-  let getCalendarSpy: ReturnType<typeof vi.spyOn>;
+  let loadSummarySpy: ReturnType<typeof vi.spyOn>;
+
+  const emptySummary = (month: number, year: number) => ({
+    year,
+    month,
+    date: null,
+    monthly: { arrivalsCount: 0, departuresCount: 0, arrivals: [], departures: [], calendar: [] },
+    day: { arrivalsCount: 0, departuresCount: 0, arrivals: [], departures: [] },
+  });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -23,7 +31,7 @@ describe('Maincalendar', () => {
     component = fixture.componentInstance;
     dashboard = TestBed.inject(Dashboard);
     httpMock = TestBed.inject(HttpTestingController);
-    getCalendarSpy = vi.spyOn(dashboard, 'getCalendar').mockImplementation(() => undefined);
+    loadSummarySpy = vi.spyOn(dashboard, 'loadSummary').mockImplementation(() => undefined);
   });
 
   it('should create', () => {
@@ -34,7 +42,7 @@ describe('Maincalendar', () => {
     fixture.detectChanges();
 
     const now = new Date();
-    expect(getCalendarSpy).toHaveBeenCalledWith(now.getMonth() + 1, now.getFullYear());
+    expect(loadSummarySpy).toHaveBeenCalledWith(now.getMonth() + 1, now.getFullYear());
   });
 
   it('genera siempre una grilla de 42 días', () => {
@@ -43,19 +51,27 @@ describe('Maincalendar', () => {
     expect(component.cells()).toHaveLength(42);
   });
 
-  it('marca como ocupados solo los días con reserva', async () => {
+  it('marca como ocupados solo los días con reserva del resumen', async () => {
     const now = new Date();
     const occupiedIso = toLocalIsoDate(new Date(now.getFullYear(), now.getMonth(), 15));
     const freeIso = toLocalIsoDate(new Date(now.getFullYear(), now.getMonth(), 16));
 
-    getCalendarSpy.mockRestore();
+    loadSummarySpy.mockRestore();
     fixture.detectChanges();
 
-    const request = httpMock.expectOne((req) => req.url.includes('/dashboard/calendar'));
-    request.flush([
-      { date: occupiedIso, hasBooking: true },
-      { date: freeIso, hasBooking: false },
-    ]);
+    const request = httpMock.expectOne((req) => req.url.includes('/dashboard/summary'));
+    expect(request.request.params.get('month')).toBe(String(now.getMonth() + 1));
+    expect(request.request.params.has('day')).toBe(false);
+    request.flush({
+      ...emptySummary(now.getMonth() + 1, now.getFullYear()),
+      monthly: {
+        ...emptySummary(now.getMonth() + 1, now.getFullYear()).monthly,
+        calendar: [
+          { date: occupiedIso, hasBooking: true },
+          { date: freeIso, hasBooking: false },
+        ],
+      },
+    });
     // httpResource resuelve el valor en una tarea asíncrona tras la respuesta.
     await new Promise<void>((resolve) => setTimeout(resolve));
 
@@ -67,37 +83,37 @@ describe('Maincalendar', () => {
   it('retroceder desde enero va a diciembre del año anterior', () => {
     component.viewMonth.set(0);
     component.viewYear.set(2026);
-    getCalendarSpy.mockClear();
+    loadSummarySpy.mockClear();
 
     component.previousMonth();
 
     expect(component.viewMonth()).toBe(11);
     expect(component.viewYear()).toBe(2025);
-    expect(getCalendarSpy).toHaveBeenCalledWith(12, 2025);
+    expect(loadSummarySpy).toHaveBeenCalledWith(12, 2025);
   });
 
   it('avanzar desde diciembre va a enero del año siguiente', () => {
     component.viewMonth.set(11);
     component.viewYear.set(2026);
-    getCalendarSpy.mockClear();
+    loadSummarySpy.mockClear();
 
     component.nextMonth();
 
     expect(component.viewMonth()).toBe(0);
     expect(component.viewYear()).toBe(2027);
-    expect(getCalendarSpy).toHaveBeenCalledWith(1, 2027);
+    expect(loadSummarySpy).toHaveBeenCalledWith(1, 2027);
   });
 
   it('goToToday vuelve al mes actual', () => {
     component.viewMonth.set(0);
     component.viewYear.set(2020);
-    getCalendarSpy.mockClear();
+    loadSummarySpy.mockClear();
 
     component.goToToday();
 
     const now = new Date();
     expect(component.viewMonth()).toBe(now.getMonth());
     expect(component.viewYear()).toBe(now.getFullYear());
-    expect(getCalendarSpy).toHaveBeenCalledWith(now.getMonth() + 1, now.getFullYear());
+    expect(loadSummarySpy).toHaveBeenCalledWith(now.getMonth() + 1, now.getFullYear());
   });
 });
