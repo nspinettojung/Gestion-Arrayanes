@@ -43,7 +43,7 @@ pnpm build
 2. Copia el resultado a `backend/src/main/resources/static` (borra el contenido anterior).
 3. Empaqueta el jar con Maven en `backend/target/Arrayanes-0.0.1-SNAPSHOT.jar`.
 
-Para ejecutar el jar (abre el navegador en modo app, comportamiento de escritorio):
+Para ejecutar el jar (perfil `prod` por defecto: abre el navegador en modo app, comportamiento de escritorio):
 
 ```bash
 pnpm start
@@ -60,10 +60,10 @@ pnpm format:check  # Verifica formato sin escribir
 
 ## Estructura de la API
 
-- `application.properties`: configuración común (H2 en archivo, Flyway, CORS).
-- `application-dev.properties`: consola H2 y SQL visible (perfil por defecto).
+- `application.properties`: configuración común (H2 en archivo, Flyway, CORS, `prod` como perfil por defecto).
+- `application-dev.properties`: consola H2 y SQL visible (se activa con `pnpm dev`).
 - `application-webdev.properties`: lista `arrayanes.dev.ports` (8081–8089) y sin navegador para `pnpm dev`.
-- `application-prod.properties`: sin consola H2 ni SQL.
+- `application-prod.properties`: modo escritorio activo, sin consola H2 ni SQL.
 - `SpaConfiguration` / `SpaResourceResolver`: sirven la SPA y devuelven 404 para rutas
   inexistentes bajo `/api/**`.
 
