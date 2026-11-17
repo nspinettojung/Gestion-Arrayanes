@@ -66,6 +66,9 @@ pnpm format:check  # Verifica formato sin escribir
 - `application-prod.properties`: modo escritorio activo, sin consola H2 ni SQL.
 - `SpaConfiguration` / `SpaResourceResolver`: sirven la SPA y devuelven 404 para rutas
   inexistentes bajo `/api/**`.
+- `GET /api/v1/system/shutdown-token` entrega el token de apagado solo al mismo origen;
+  `POST /api/v1/system/shutdown` exige la cabecera `X-Shutdown-Token`. El token se genera
+  en cada arranque y se puede fijar con `arrayanes.shutdown.token`.
 
 ## CI
 
