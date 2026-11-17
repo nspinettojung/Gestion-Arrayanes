@@ -53,7 +53,7 @@ class BookingServiceTest {
     @Mock
     private BookingValidation bookingValidation;
     @Mock
-    private TransactionCodeGenerator transactionCodeGenerator;
+    private TransactionCodeAllocator transactionCodeAllocator;
 
     @InjectMocks
     private BookingService bookingService;
@@ -102,7 +102,7 @@ class BookingServiceTest {
         when(bookingMapper.toEntity(request, client, apartment)).thenReturn(booking);
         when(bookingValidation.validate(booking, request, apartment)).thenReturn(stay());
         when(bookingMapper.toResponseDTO(booking)).thenReturn(response);
-        when(transactionCodeGenerator.generateNext(any())).thenReturn("RS-2026-0001");
+        when(transactionCodeAllocator.nextCode()).thenReturn("RS-2026-0001");
 
         BookingResponseDTO result = bookingService.saveBooking(request);
 
@@ -152,7 +152,7 @@ class BookingServiceTest {
         assertEquals("RS-2026-0005", booking.getTransactionCode());
         assertEquals(response, result);
         verify(bookingValidation).validate(booking, request, apartment);
-        verify(transactionCodeGenerator, never()).generateNext(any());
+        verify(transactionCodeAllocator, never()).nextCode();
         verify(bookingRepository).save(booking);
     }
 
@@ -165,7 +165,7 @@ class BookingServiceTest {
         when(apartmentRepository.findById(apartmentId)).thenReturn(Optional.of(apartment));
         when(bookingValidation.validate(booking, request, apartment)).thenReturn(stay());
         when(bookingMapper.toResponseDTO(booking)).thenReturn(response);
-        when(transactionCodeGenerator.generateNext(any())).thenReturn("RS-2026-0007");
+        when(transactionCodeAllocator.nextCode()).thenReturn("RS-2026-0007");
 
         bookingService.updateBooking(bookingId, request);
 
@@ -256,7 +256,7 @@ class BookingServiceTest {
         when(bookingMapper.toEntity(request, client, apartment)).thenReturn(booking);
         when(bookingValidation.validate(booking, request, apartment)).thenReturn(stay());
         when(bookingMapper.toResponseDTO(booking)).thenReturn(response);
-        when(transactionCodeGenerator.generateNext(any())).thenReturn("RS-2026-0002");
+        when(transactionCodeAllocator.nextCode()).thenReturn("RS-2026-0002");
 
         BookingResponseDTO result = bookingService.createBookingWithClient(request);
 
@@ -277,7 +277,7 @@ class BookingServiceTest {
         when(bookingMapper.toEntity(request, client, apartment)).thenReturn(booking);
         when(bookingValidation.validate(booking, request, apartment)).thenReturn(stay());
         when(bookingMapper.toResponseDTO(booking)).thenReturn(response);
-        when(transactionCodeGenerator.generateNext(any())).thenReturn("RS-2026-0003");
+        when(transactionCodeAllocator.nextCode()).thenReturn("RS-2026-0003");
 
         BookingResponseDTO result = bookingService.createBookingWithClient(request);
 
@@ -296,7 +296,7 @@ class BookingServiceTest {
         when(bookingMapper.toEntity(request, client, apartment)).thenReturn(booking);
         when(bookingValidation.validate(booking, request, apartment)).thenReturn(stay());
         when(bookingMapper.toResponseDTO(booking)).thenReturn(response);
-        when(transactionCodeGenerator.generateNext(any())).thenReturn("RS-2026-0008");
+        when(transactionCodeAllocator.nextCode()).thenReturn("RS-2026-0008");
 
         bookingService.createBookingWithClient(request);
 

@@ -36,7 +36,7 @@ public class BookingService implements IBookingService {
     private final BookingMapper bookingMapper;
     private final ClientMapper clientMapper;
     private final BookingValidation bookingValidation;
-    private final TransactionCodeGenerator transactionCodeGenerator;
+    private final TransactionCodeAllocator transactionCodeAllocator;
 
     public BookingService(BookingRepository bookingRepository,
                           ClientRepository clientRepository,
@@ -44,14 +44,14 @@ public class BookingService implements IBookingService {
                           BookingMapper bookingMapper,
                           ClientMapper clientMapper,
                           BookingValidation bookingValidation,
-                          TransactionCodeGenerator transactionCodeGenerator) {
+                          TransactionCodeAllocator transactionCodeAllocator) {
         this.bookingRepository = bookingRepository;
         this.clientRepository = clientRepository;
         this.apartmentRepository = apartmentRepository;
         this.bookingMapper = bookingMapper;
         this.clientMapper = clientMapper;
         this.bookingValidation = bookingValidation;
-        this.transactionCodeGenerator = transactionCodeGenerator;
+        this.transactionCodeAllocator = transactionCodeAllocator;
     }
 
     private Booking getBookingById(UUID id) {
@@ -98,7 +98,7 @@ public class BookingService implements IBookingService {
     }
 
     private String nextTransactionCode() {
-        return transactionCodeGenerator.generateNext(bookingRepository.findAllTransactionCodes());
+        return transactionCodeAllocator.nextCode();
     }
 
     private BookingResponseDTO createBooking(BookingBaseRequestDTO request, Client client) {

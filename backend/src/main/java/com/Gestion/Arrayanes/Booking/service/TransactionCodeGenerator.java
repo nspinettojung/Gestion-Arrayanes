@@ -27,21 +27,23 @@ public class TransactionCodeGenerator {
     }
 
     /**
-     * Calcula el siguiente código a partir de los códigos ya persistidos del año en curso.
+     * Calcula el siguiente número de secuencia a partir de los códigos ya persistidos del año en curso.
      * Ignora códigos de otros años o con formato inválido.
      */
-    public String generateNext(Collection<String> existingCodes) {
+    public long nextSequence(Collection<String> existingCodes) {
         String prefix = currentPrefix();
 
-        long maxSequence = existingCodes == null ? 0L : existingCodes.stream()
+        return (existingCodes == null ? 0L : existingCodes.stream()
                 .filter(code -> code != null && code.startsWith(prefix))
                 .map(code -> code.substring(prefix.length()))
                 .filter(sequence -> sequence.matches("\\d+"))
                 .mapToLong(Long::parseLong)
                 .max()
-                .orElse(0L);
+                .orElse(0L)) + 1;
+    }
 
-        return generate(maxSequence + 1);
+    public String generateNext(Collection<String> existingCodes) {
+        return generate(nextSequence(existingCodes));
     }
 
     public String currentPrefix() {
