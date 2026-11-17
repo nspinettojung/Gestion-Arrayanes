@@ -105,7 +105,8 @@ public class BookingService implements IBookingService {
         Apartment apartment = getApartmentById(request.getApartmentId());
         Booking booking = bookingMapper.toEntity(request, client, apartment);
 
-        bookingValidation.validate(booking, request, apartment);
+        Stay stay = bookingValidation.validate(booking, request, apartment);
+        stay.applyTo(booking);
         calculateAndSetTotalPrice(booking, apartment);
         booking.setTransactionCode(nextTransactionCode());
         bookingRepository.save(booking);
@@ -175,7 +176,8 @@ public class BookingService implements IBookingService {
         Apartment apartment = getApartmentById(bookingRequestDTO.getApartmentId());
 
         bookingMapper.bookingUpdate(booking, bookingRequestDTO, client, apartment);
-        bookingValidation.validate(booking, bookingRequestDTO, apartment);
+        Stay stay = bookingValidation.validate(booking, bookingRequestDTO, apartment);
+        stay.applyTo(booking);
         calculateAndSetTotalPrice(booking, apartment);
         if (booking.getTransactionCode() == null || booking.getTransactionCode().isBlank()) {
             booking.setTransactionCode(nextTransactionCode());

@@ -100,6 +100,7 @@ class BookingServiceTest {
         when(clientRepository.findById(clientId)).thenReturn(Optional.of(client));
         when(apartmentRepository.findById(apartmentId)).thenReturn(Optional.of(apartment));
         when(bookingMapper.toEntity(request, client, apartment)).thenReturn(booking);
+        when(bookingValidation.validate(booking, request, apartment)).thenReturn(stay());
         when(bookingMapper.toResponseDTO(booking)).thenReturn(response);
         when(transactionCodeGenerator.generateNext(any())).thenReturn("RS-2026-0001");
 
@@ -142,6 +143,7 @@ class BookingServiceTest {
         when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
         when(clientRepository.findById(clientId)).thenReturn(Optional.of(client));
         when(apartmentRepository.findById(apartmentId)).thenReturn(Optional.of(apartment));
+        when(bookingValidation.validate(booking, request, apartment)).thenReturn(stay());
         when(bookingMapper.toResponseDTO(booking)).thenReturn(response);
 
         BookingResponseDTO result = bookingService.updateBooking(bookingId, request);
@@ -161,6 +163,7 @@ class BookingServiceTest {
         when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
         when(clientRepository.findById(clientId)).thenReturn(Optional.of(client));
         when(apartmentRepository.findById(apartmentId)).thenReturn(Optional.of(apartment));
+        when(bookingValidation.validate(booking, request, apartment)).thenReturn(stay());
         when(bookingMapper.toResponseDTO(booking)).thenReturn(response);
         when(transactionCodeGenerator.generateNext(any())).thenReturn("RS-2026-0007");
 
@@ -251,6 +254,7 @@ class BookingServiceTest {
         when(clientRepository.findByClientDni("12345678")).thenReturn(Optional.of(client));
         when(apartmentRepository.findById(apartmentId)).thenReturn(Optional.of(apartment));
         when(bookingMapper.toEntity(request, client, apartment)).thenReturn(booking);
+        when(bookingValidation.validate(booking, request, apartment)).thenReturn(stay());
         when(bookingMapper.toResponseDTO(booking)).thenReturn(response);
         when(transactionCodeGenerator.generateNext(any())).thenReturn("RS-2026-0002");
 
@@ -271,6 +275,7 @@ class BookingServiceTest {
         when(clientRepository.save(client)).thenReturn(client);
         when(apartmentRepository.findById(apartmentId)).thenReturn(Optional.of(apartment));
         when(bookingMapper.toEntity(request, client, apartment)).thenReturn(booking);
+        when(bookingValidation.validate(booking, request, apartment)).thenReturn(stay());
         when(bookingMapper.toResponseDTO(booking)).thenReturn(response);
         when(transactionCodeGenerator.generateNext(any())).thenReturn("RS-2026-0003");
 
@@ -289,6 +294,7 @@ class BookingServiceTest {
         when(clientRepository.findByClientDni("AB-123")).thenReturn(Optional.of(client));
         when(apartmentRepository.findById(apartmentId)).thenReturn(Optional.of(apartment));
         when(bookingMapper.toEntity(request, client, apartment)).thenReturn(booking);
+        when(bookingValidation.validate(booking, request, apartment)).thenReturn(stay());
         when(bookingMapper.toResponseDTO(booking)).thenReturn(response);
         when(transactionCodeGenerator.generateNext(any())).thenReturn("RS-2026-0008");
 
@@ -331,6 +337,10 @@ class BookingServiceTest {
         when(bookingMapper.toResponseDTO(booking)).thenReturn(response);
 
         assertEquals(response, bookingService.findBookingById(bookingId));
+    }
+
+    private Stay stay() {
+        return new Stay(LocalDate.of(2026, 12, 1), LocalDate.of(2026, 12, 4), 3L);
     }
 
     private BookingWithClientIdRequestDTO saveRequest() {

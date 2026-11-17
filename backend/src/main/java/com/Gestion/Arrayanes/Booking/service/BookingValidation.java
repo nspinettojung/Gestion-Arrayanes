@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Component
@@ -24,62 +23,38 @@ public class BookingValidation {
         this.clock = clock;
     }
 
-    public void validate(Booking booking, BookingBaseRequestDTO dto, Apartment apartment) {
-        validateArrivalDate(booking);
+    public Stay validate(Booking booking, BookingBaseRequestDTO dto, Apartment apartment) {
+        validateArrivalDate(booking.getArrivalDate());
 
-        determineDepartureDate(booking, dto);
+        Stay stay = Stay.from(booking.getArrivalDate(), dto.getDepartureDate(), dto.getNights());
 
-        validateDepartureDate(booking);
-
-        validateArrivalBeforeDeparture(booking);
-
+        validateStayDates(stay);
         validateCapacity(booking, apartment);
+        validateOverlaps(booking, stay, apartment);
 
-        validateOverlaps(booking, apartment);
+        return stay;
     }
 
-    private void validateArrivalDate(Booking booking) {
-        if (booking.getArrivalDate() == null) {
+    private void validateArrivalDate(LocalDate arrivalDate) {
+        if (arrivalDate == null) {
             throw new BadRequestException("La fecha de llegada es obligatoria.");
         }
 
-        if (booking.getArrivalDate().isBefore(LocalDate.now(clock))) {
+        if (arrivalDate.isBefore(LocalDate.now(clock))) {
             throw new BadRequestException("La fecha de llegada no puede ser anterior a hoy.");
         }
     }
 
-    private void determineDepartureDate(Booking booking, BookingBaseRequestDTO dto) {
-        if (dto.getDepartureDate() != null) {
-            booking.setDepartureDate(dto.getDepartureDate());
-            long nights = ChronoUnit.DAYS.between(booking.getArrivalDate(), dto.getDepartureDate());
-            booking.setNights(nights);
-            return;
-        }
-
-        if (dto.getNights() == null) {
-            throw new BadRequestException("Debe indicar la cantidad de noches o la fecha de salida.");
-        }
-
-        if (dto.getNights() <= 0) {
-            throw new BadRequestException("La cantidad de noches debe ser mayor a cero.");
-        }
-
-        booking.setDepartureDate(booking.getArrivalDate().plusDays(dto.getNights()));
-        booking.setNights(dto.getNights());
-    }
-
-    private void validateDepartureDate(Booking booking) {
-        if (booking.getDepartureDate().isBefore(LocalDate.now(clock))) {
+    private void validateStayDates(Stay stay) {
+        if (stay.departureDate().isBefore(LocalDate.now(clock))) {
             throw new BadRequestException("La fecha de salida no puede ser anterior a hoy.");
         }
 
-        if (booking.getDepartureDate().isEqual(booking.getArrivalDate())) {
+        if (stay.departureDate().isEqual(stay.arrivalDate())) {
             throw new BadRequestException("La fecha de salida no puede ser igual a la de llegada.");
         }
-    }
 
-    private void validateArrivalBeforeDeparture(Booking booking) {
-        if (booking.getDepartureDate().isBefore(booking.getArrivalDate())) {
+        if (stay.departureDate().isBefore(stay.arrivalDate())) {
             throw new BadRequestException("La fecha de salida debe ser posterior a la llegada.");
         }
     }
@@ -96,12 +71,12 @@ public class BookingValidation {
         }
     }
 
-    private void validateOverlaps(Booking booking, Apartment apartment) {
+    private void validateOverlaps(Booking booking, Stay stay, Apartment apartment) {
         List<Booking> overlaps = bookingRepository.findOverlappingBookings(
                 apartment.getId(),
                 booking.getId(),
-                booking.getArrivalDate(),
-                booking.getDepartureDate()
+                stay.arrivalDate(),
+                stay.departureDate()
         );
 
         if (!overlaps.isEmpty()) {

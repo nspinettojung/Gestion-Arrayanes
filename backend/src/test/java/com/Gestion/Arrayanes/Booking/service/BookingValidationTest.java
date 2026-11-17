@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -69,9 +70,9 @@ class BookingValidationTest {
         Booking booking = booking(TODAY, 2L);
         stubNoOverlaps();
 
-        validation.validate(booking, dto(null, 1L), apartment);
+        Stay stay = validation.validate(booking, dto(null, 1L), apartment);
 
-        assertEquals(TODAY.plusDays(1), booking.getDepartureDate());
+        assertEquals(TODAY.plusDays(1), stay.departureDate());
     }
 
     @Test
@@ -107,25 +108,27 @@ class BookingValidationTest {
     }
 
     @Test
-    void shouldCalculateDepartureDateFromNights() {
+    void shouldCalculateDepartureDateFromNightsWithoutMutatingBooking() {
         Booking booking = booking(TODAY, 2L);
         stubNoOverlaps();
 
-        validation.validate(booking, dto(null, 3L), apartment);
+        Stay stay = validation.validate(booking, dto(null, 3L), apartment);
 
-        assertEquals(TODAY.plusDays(3), booking.getDepartureDate());
-        assertEquals(3L, booking.getNights());
+        assertEquals(new Stay(TODAY, TODAY.plusDays(3), 3L), stay);
+        assertNull(booking.getDepartureDate());
+        assertNull(booking.getNights());
     }
 
     @Test
-    void shouldCalculateNightsFromDepartureDate() {
+    void shouldCalculateNightsFromDepartureDateWithoutMutatingBooking() {
         Booking booking = booking(TODAY, 2L);
         stubNoOverlaps();
 
-        validation.validate(booking, dto(TODAY.plusDays(2), null), apartment);
+        Stay stay = validation.validate(booking, dto(TODAY.plusDays(2), null), apartment);
 
-        assertEquals(TODAY.plusDays(2), booking.getDepartureDate());
-        assertEquals(2L, booking.getNights());
+        assertEquals(new Stay(TODAY, TODAY.plusDays(2), 2L), stay);
+        assertNull(booking.getDepartureDate());
+        assertNull(booking.getNights());
     }
 
     @Test
