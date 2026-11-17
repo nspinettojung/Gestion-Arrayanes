@@ -8,21 +8,21 @@
 Ejecutar la Fase 2 de refactors de backend (punto por punto, con aprobación del usuario), sobre el monorepo ya armado, sin romper el modo escritorio del jar (perfil `webdev`, puerto 8080).
 
 ## Dónde me quedé
-Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 9):
+Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 9 → 10):
 - Punto 3 `9727662`: `BookingResponseDTO` incluye `clientName`/`apartmentName`.
 - Punto 5 `a93a717`: `DashboardService.validatePagination` (page>=0, 1<=size<=1000, whitelist de campos, asc/desc) + 6 tests.
 - Punto 7 `4a87c7a`: `SpaConfigurationTest` verifica `/api/v1/loquesea`→404 JSON, `/reservas/123`→200 HTML, `/build-info.json`→200.
 - Punto 6 `12bf6d5`: errores RFC 9457 (`ProblemDetail`: type/title/status/detail + requestId, timestamp, errors[]); se eliminó `ErrorResponseDTO`; frontend lee `detail` y `errors[]`.
 - Punto 4 `8b205be`: rutas REST `/api/v1/...` en bookings/clients/apartments/dashboard/system, sin aliases viejos (el jar empaqueta frontend+backend juntos, no hay build anterior servido).
 - Punto 9 `67fb8a4`: asociaciones `Booking.client`/`Booking.apartment`; JPQL, Specifications, mapper y servicios migrados. Los DTO siguen exponiendo `clientId`/`apartmentId`.
+- Punto 10 `96884a0`: único `createBooking` privado para mapear, validar, calcular precio, asignar código y persistir. `saveBooking` y `createBookingWithClient` solo resuelven el cliente. `saveBookingEntity` ya estaba eliminado (`c86639a`).
 
 Verificación base verde: backend 201 tests, frontend 54 tests, lint 0 errors (17 warnings), format y build OK.
 
 ## Siguiente paso
-Punto 10: unificar la creación de reservas (`saveBooking` + `createBookingWithClient`) y sacar `saveBookingEntity`.
+Punto 11: introducir `Stay` en `BookingValidation` para que la validación no mute la entidad.
 
 ## Pendiente (Fase 2, del documento original)
-- 10 Unificar creación (`saveBooking` + `createBookingWithClient`) y sacar `saveBookingEntity`.
 - 11 `Stay` en `BookingValidation` (que no mute la entidad).
 - 12 `transactionCode` con concurrencia (tabla de secuencia por año o SELECT ... FOR UPDATE).
 - 14 Soft delete / estados (CANCELLED, ARCHIVED) y 409 específico al borrar departamento con reservas.
@@ -48,7 +48,7 @@ Punto 10: unificar la creación de reservas (`saveBooking` + `createBookingWithC
 - [x] `generateTransactionCode` eliminado; `findLastArrivalDateByClientId` era código muerto (ausente).
 - [x] Monorepo + tooling raíz (pnpm, lint, format, test, build, CI) — commits `8c75ee0`/`649ccd9`.
 - [x] Fase 2 frontend: stats `440ee4e`, paginación server-side `238d1f5`, vista `/calendar` `9ad6977`, httpResource `93d84ec`.
-- [x] Fase 2 backend (Contrato y API): puntos 3, 5, 7, 6, 4, 9 (ver arriba).
+- [x] Fase 2 backend (Contrato y API): puntos 3, 5, 7, 6, 4, 9, 10 (ver arriba).
 
 ## Contexto histórico
 - Ejecutable nativo GraalVM `target\Arrayanes.exe` verificado con base real antes del monorepo; build nativo necesita vcvars64 y `-H:DeadlockWatchdogInterval=60`.
