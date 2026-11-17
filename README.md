@@ -12,7 +12,7 @@ scripts/    Orquestación de dev, build y test (Node, sin dependencias)
 
 - Node.js 22+
 - pnpm 11 (`corepack enable` o `npm i -g pnpm`)
-- JDK 24+ (el `pom.xml` apunta a Java 24; el wrapper de Maven se encarga del resto)
+- JDK 25 LTS (el `pom.xml` apunta a Java 25; el wrapper de Maven se encarga del resto)
 
 ## Instalación
 
