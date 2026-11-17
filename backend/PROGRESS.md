@@ -8,7 +8,7 @@
 Ejecutar la Fase 2 de refactors de backend (punto por punto, con aprobación del usuario), sobre el monorepo ya armado, sin romper el modo escritorio del jar (perfil `webdev`, puerto 8080).
 
 ## Dónde me quedé
-Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 9 → 10 → 11 → 12):
+Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 9 → 10 → 11 → 12 → 14):
 - Punto 3 `9727662`: `BookingResponseDTO` incluye `clientName`/`apartmentName`.
 - Punto 5 `a93a717`: `DashboardService.validatePagination` (page>=0, 1<=size<=1000, whitelist de campos, asc/desc) + 6 tests.
 - Punto 7 `4a87c7a`: `SpaConfigurationTest` verifica `/api/v1/loquesea`→404 JSON, `/reservas/123`→200 HTML, `/build-info.json`→200.
@@ -18,14 +18,14 @@ Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 
 - Punto 10 `96884a0`: único `createBooking` privado para mapear, validar, calcular precio, asignar código y persistir. `saveBooking` y `createBookingWithClient` solo resuelven el cliente. `saveBookingEntity` ya estaba eliminado (`c86639a`).
 - Punto 11 `cb8865b`: `Stay` inmutable para resolver/validar fechas y noches; `BookingValidation` ya no muta `Booking` y el servicio aplica el `Stay` validado.
 - Punto 12 `73e895e`: tabla singleton `booking_code_sequence` (V4) + `PESSIMISTIC_WRITE`; reinicio anual desde códigos persistidos y `TransactionCodeAllocator` separado del formateo.
+- Punto 14: estados `ACTIVE`/`CANCELLED`/`ARCHIVED` (V5). Borrar reserva = soft delete a `CANCELLED`; `BookingStatusArchiver` pasa a `ARCHIVED` las estadías terminadas con job diario a la 1 AM; consultas operativas y `onlyActive` excluyen canceladas y archivadas; borrar departamento con reservas no canceladas devuelve 409. El `status` viaja en `BookingResponseDTO`/`DashboardDTO` y el frontend muestra "Cancelada"/"Archivada".
 
-Verificación base verde: backend 205 tests, frontend 54 tests, lint 0 errors (17 warnings), format y build OK.
+Verificación base verde: backend 212 tests, frontend 54 tests, lint 0 errors (17 warnings), format y build OK (jar armado).
 
 ## Siguiente paso
-Punto 14: soft delete / estados (CANCELLED, ARCHIVED) y 409 específico al borrar un departamento con reservas.
+Punto 19: N+1 en `DashboardService.getDashboard` y `ClientMapper.toResponseDTO` (proyecciones/@EntityGraph/JOIN FETCH).
 
 ## Pendiente (Fase 2, del documento original)
-- 14 Soft delete / estados (CANCELLED, ARCHIVED) y 409 específico al borrar departamento con reservas.
 - 19 N+1: `DashboardService.getDashboard` y `ClientMapper.toResponseDTO` (proyecciones/@EntityGraph/JOIN FETCH).
 - 20 `GET /api/v1/dashboard/summary` (unificar endpoints chicos).
 - 24 Puerto dev fijo 8080 (`server.port=0` hoy) o proxy de Angular.
@@ -39,7 +39,7 @@ Punto 14: soft delete / estados (CANCELLED, ARCHIVED) y 409 específico al borra
 ## Hecho
 - [x] Bugs críticos + suite de tests base (sesión previa).
 - [x] `transactionCode` persistido + `@Version` con mapeo 409.
-- [x] Perfiles `dev`/`prod`/`test` + Flyway (V1 baseline, V2 columnas, V3 índices/únicos/price) + `validate`.
+- [x] Perfiles `dev`/`prod`/`test` + Flyway (V1 baseline, V2 columnas, V3 índices/únicos/price, V4 secuencia, V5 estados) + `validate`.
 - [x] CORS centralizado (`CorsWebConfiguration`) + bind loopback.
 - [x] Listas vacías 200 `[]`; paquete `Price` eliminado.
 - [x] DTOs partidos (crear con cliente nuevo / con cliente existente / actualizar); `totalPrice` solo sale del servidor.
@@ -48,7 +48,7 @@ Punto 14: soft delete / estados (CANCELLED, ARCHIVED) y 409 específico al borra
 - [x] `generateTransactionCode` eliminado; `findLastArrivalDateByClientId` era código muerto (ausente).
 - [x] Monorepo + tooling raíz (pnpm, lint, format, test, build, CI) — commits `8c75ee0`/`649ccd9`.
 - [x] Fase 2 frontend: stats `440ee4e`, paginación server-side `238d1f5`, vista `/calendar` `9ad6977`, httpResource `93d84ec`.
-- [x] Fase 2 backend (Contrato y API): puntos 3, 5, 7, 6, 4, 9, 10, 11, 12 (ver arriba).
+- [x] Fase 2 backend (Contrato y API): puntos 3, 5, 7, 6, 4, 9, 10, 11, 12, 14 (ver arriba).
 
 ## Contexto histórico
 - Ejecutable nativo GraalVM `target\Arrayanes.exe` verificado con base real antes del monorepo; build nativo necesita vcvars64 y `-H:DeadlockWatchdogInterval=60`.
