@@ -21,8 +21,9 @@ const staticCopy = runSync(process.execPath, [join(root, 'frontend', 'scripts', 
 });
 if (staticCopy !== 0) fail('static', staticCopy);
 
+// `clean` evita que un cambio de java.version deje clases viejas mezcladas en el jar.
 announce('backend', 'empaquetando con Maven');
-const backend = runSync(mvnw, ['-B', 'package'], { cwd: join(root, 'backend') });
+const backend = runSync(mvnw, ['-B', 'clean', 'package'], { cwd: join(root, 'backend') });
 if (backend !== 0) fail('backend', backend);
 
 console.log('\n[build] Listo. Jar en backend/target/Arrayanes-0.0.1-SNAPSHOT.jar');
