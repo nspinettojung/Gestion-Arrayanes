@@ -25,6 +25,9 @@ jobs:
       - name: Compilar y verificar
         run: ./mvnw -B verify
 
+      - name: El contrato OpenAPI está actualizado
+        run: diff -u ../frontend/src/app/core/api/openapi.json target/openapi.json
+
   frontend:
     name: Frontend
     runs-on: ubuntu-latest
@@ -46,6 +49,11 @@ jobs:
 
       - name: Instalar dependencias
         run: pnpm install --frozen-lockfile
+
+      - name: Los tipos TypeScript están actualizados
+        run: |
+          pnpm generate:api
+          git diff --exit-code -- src/app/core/api/api-types.ts
 
       - name: Lint
         run: pnpm lint

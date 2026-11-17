@@ -30,6 +30,11 @@ class DefaultProfileTest {
     }
 
     @Test
+    void elPerfilProdNoExponeElContratoOpenApi() throws IOException {
+        assertEquals("false", leer("application-prod.properties").getProperty("springdoc.api-docs.enabled"));
+    }
+
+    @Test
     void elPerfilDevMantieneLaConsolaH2EnTestdb() throws IOException {
         Properties dev = leer("application-dev.properties");
         assertEquals("true", dev.getProperty("spring.h2.console.enabled"));

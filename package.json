@@ -11,6 +11,7 @@
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/build.mjs",
     "test": "node scripts/test.mjs",
+    "api": "node scripts/api.mjs",
     "start": "node scripts/start.mjs",
     "lint": "node scripts/frontend.mjs lint",
     "format": "node scripts/frontend.mjs format",

@@ -2,25 +2,13 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, switchMap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import type { components } from '../../api/api-types';
 import { LocalTokenService } from '../system/local-token';
 
-export interface BackupInfo {
-  name: string;
-  kind: string;
-  createdAt: string;
-  sizeBytes: number;
-  pending: boolean;
-}
-
-export interface BackupListResponse {
-  backups: BackupInfo[];
-  pendingRestore: string | null;
-}
-
-export interface RestoreResponse {
-  message: string;
-  backupName: string;
-}
+// Tipos generados desde los controladores por `pnpm api`; no se mantienen a mano.
+export type BackupInfo = components['schemas']['BackupInfo'];
+export type BackupListResponse = components['schemas']['BackupListResponse'];
+export type RestoreResponse = components['schemas']['RestoreResponse'];
 
 @Injectable({
   providedIn: 'root',

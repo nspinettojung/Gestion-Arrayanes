@@ -4,3 +4,7 @@ node_modules/
 coverage/
 public/build-info.json
 pnpm-lock.yaml
+
+# Artefactos generados por `pnpm api` desde el contrato OpenAPI.
+src/app/core/api/openapi.json
+src/app/core/api/api-types.ts

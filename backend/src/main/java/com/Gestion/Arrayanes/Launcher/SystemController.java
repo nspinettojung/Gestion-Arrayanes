@@ -1,6 +1,7 @@
 package com.Gestion.Arrayanes.Launcher;
 
 import com.Gestion.Arrayanes.GlobalHandlerException.GlobalCustomException;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,6 +51,7 @@ public class SystemController {
         return response;
     }
 
-    public record ShutdownTokenResponse(String token) {
+    public record ShutdownTokenResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String token) {
     }
 }

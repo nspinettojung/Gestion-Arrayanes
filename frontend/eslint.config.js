@@ -5,6 +5,8 @@ const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
 
 module.exports = defineConfig([
+  // Contrato y tipos generados por `pnpm api`: no se editan a mano.
+  { ignores: ['src/app/core/api/api-types.ts'] },
   {
     files: ['**/*.ts'],
     extends: [

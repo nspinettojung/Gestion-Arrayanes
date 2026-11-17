@@ -1,0 +1,1480 @@
+{
+  "components" : {
+    "schemas" : {
+      "ApartmentRequestDTO" : {
+        "properties" : {
+          "apartmentMaxNumber" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "apartmentName" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "price" : {
+            "type" : "number"
+          }
+        },
+        "required" : [ "apartmentMaxNumber", "apartmentName", "price" ],
+        "type" : "object"
+      },
+      "ApartmentResponseDTO" : {
+        "properties" : {
+          "apartmentMaxNumber" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "apartmentName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "price" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "BackupInfo" : {
+        "properties" : {
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "pending" : {
+            "type" : "boolean"
+          },
+          "sizeBytes" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "createdAt", "kind", "name", "pending", "sizeBytes" ],
+        "type" : "object"
+      },
+      "BackupListResponse" : {
+        "properties" : {
+          "backups" : {
+            "items" : {
+              "$ref" : "#/components/schemas/BackupInfo"
+            },
+            "type" : "array"
+          },
+          "pendingRestore" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "backups", "pendingRestore" ],
+        "type" : "object"
+      },
+      "BookingResponseDTO" : {
+        "properties" : {
+          "amountPeople" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "apartmentId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "apartmentName" : {
+            "type" : "string"
+          },
+          "arrivalDate" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "clientId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "clientName" : {
+            "type" : "string"
+          },
+          "departureDate" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "nights" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "status" : {
+            "enum" : [ "ACTIVE", "CANCELLED", "ARCHIVED" ],
+            "type" : "string"
+          },
+          "totalPrice" : {
+            "type" : "number"
+          },
+          "transactionCode" : {
+            "type" : "string"
+          },
+          "version" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "BookingUpdateRequestDTO" : {
+        "properties" : {
+          "amountPeople" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "apartmentId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "arrivalDate" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "clientId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "departureDate" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "nights" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "version" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "amountPeople", "apartmentId", "arrivalDate", "clientId", "version" ],
+        "type" : "object"
+      },
+      "BookingWithClientIdRequestDTO" : {
+        "properties" : {
+          "amountPeople" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "apartmentId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "arrivalDate" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "clientId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "departureDate" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "nights" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "amountPeople", "apartmentId", "arrivalDate", "clientId" ],
+        "type" : "object"
+      },
+      "BookingWithNewClientRequestDTO" : {
+        "properties" : {
+          "amountPeople" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "apartmentId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "arrivalDate" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "client" : {
+            "$ref" : "#/components/schemas/ClientRequestDTO"
+          },
+          "departureDate" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "nights" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "amountPeople", "apartmentId", "arrivalDate", "client" ],
+        "type" : "object"
+      },
+      "CalendarDayDTO" : {
+        "properties" : {
+          "date" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "hasBooking" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "ClientApartmentDTO" : {
+        "properties" : {
+          "apartmentName" : {
+            "type" : "string"
+          },
+          "arrivalDate" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "clientLastName" : {
+            "type" : "string"
+          },
+          "clientName" : {
+            "type" : "string"
+          },
+          "departureDate" : {
+            "format" : "date",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ClientRequestDTO" : {
+        "properties" : {
+          "clientDni" : {
+            "minLength" : 1,
+            "pattern" : "^[0-9A-Za-z.-]{6,15}$",
+            "type" : "string"
+          },
+          "clientLastName" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "clientName" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "clientPhone" : {
+            "minLength" : 1,
+            "pattern" : "^(?=(?:\\D*\\d){6,})[+0-9()\\s-]{6,20}$",
+            "type" : "string"
+          }
+        },
+        "required" : [ "clientDni", "clientLastName", "clientName", "clientPhone" ],
+        "type" : "object"
+      },
+      "ClientResponseDTO" : {
+        "properties" : {
+          "clientDni" : {
+            "type" : "string"
+          },
+          "clientLastName" : {
+            "type" : "string"
+          },
+          "clientName" : {
+            "type" : "string"
+          },
+          "clientPhone" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "lastCheckIn" : {
+            "format" : "date",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "DashboardDTO" : {
+        "properties" : {
+          "amountPeople" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "apartmentId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "apartmentName" : {
+            "type" : "string"
+          },
+          "arrivalDate" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "clientId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "clientLastName" : {
+            "type" : "string"
+          },
+          "clientName" : {
+            "type" : "string"
+          },
+          "departureDate" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "nights" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "status" : {
+            "enum" : [ "ACTIVE", "CANCELLED", "ARCHIVED" ],
+            "type" : "string"
+          },
+          "totalPrice" : {
+            "type" : "number"
+          },
+          "transactionCode" : {
+            "type" : "string"
+          },
+          "version" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "DashboardStatsDTO" : {
+        "properties" : {
+          "growth" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "occupancy" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "todayBookings" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalApartments" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalBookings" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "DashboardSummaryDTO" : {
+        "properties" : {
+          "date" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "day" : {
+            "$ref" : "#/components/schemas/DaySummaryDTO"
+          },
+          "month" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "monthly" : {
+            "$ref" : "#/components/schemas/MonthlySummaryDTO"
+          },
+          "year" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "DaySummaryDTO" : {
+        "properties" : {
+          "arrivals" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ClientApartmentDTO"
+            },
+            "type" : "array"
+          },
+          "arrivalsCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "departures" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ClientApartmentDTO"
+            },
+            "type" : "array"
+          },
+          "departuresCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "MonthlySummaryDTO" : {
+        "properties" : {
+          "arrivals" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ClientApartmentDTO"
+            },
+            "type" : "array"
+          },
+          "arrivalsCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "calendar" : {
+            "items" : {
+              "$ref" : "#/components/schemas/CalendarDayDTO"
+            },
+            "type" : "array"
+          },
+          "departures" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ClientApartmentDTO"
+            },
+            "type" : "array"
+          },
+          "departuresCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "PageDashboardDTO" : {
+        "properties" : {
+          "content" : {
+            "items" : {
+              "$ref" : "#/components/schemas/DashboardDTO"
+            },
+            "type" : "array"
+          },
+          "empty" : {
+            "type" : "boolean"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
+          "number" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "numberOfElements" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
+          "size" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
+          "totalElements" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalPages" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "PageableObject" : {
+        "properties" : {
+          "offset" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "pageNumber" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "pageSize" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "paged" : {
+            "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
+          "unpaged" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "RestoreResponse" : {
+        "properties" : {
+          "backupName" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "backupName", "message" ],
+        "type" : "object"
+      },
+      "ShutdownTokenResponse" : {
+        "properties" : {
+          "token" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "token" ],
+        "type" : "object"
+      },
+      "SortObject" : {
+        "properties" : {
+          "empty" : {
+            "type" : "boolean"
+          },
+          "sorted" : {
+            "type" : "boolean"
+          },
+          "unsorted" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      }
+    }
+  },
+  "info" : {
+    "title" : "OpenAPI definition",
+    "version" : "v0"
+  },
+  "openapi" : "3.1.0",
+  "paths" : {
+    "/api/v1/apartments" : {
+      "get" : {
+        "operationId" : "getApartmentList",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ApartmentResponseDTO"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "apartment-controller" ]
+      },
+      "post" : {
+        "operationId" : "saveApartment",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ApartmentRequestDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApartmentResponseDTO"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "apartment-controller" ]
+      }
+    },
+    "/api/v1/apartments/{id}" : {
+      "delete" : {
+        "operationId" : "deleteApartment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "apartment-controller" ]
+      },
+      "get" : {
+        "operationId" : "getApartmentById",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApartmentResponseDTO"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "apartment-controller" ]
+      },
+      "put" : {
+        "operationId" : "updateApartment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ApartmentRequestDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApartmentResponseDTO"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "apartment-controller" ]
+      }
+    },
+    "/api/v1/apartments/{id}/maxnumber" : {
+      "get" : {
+        "operationId" : "getApartmentMaxNumber",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "format" : "int64",
+                  "type" : "integer"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "apartment-controller" ]
+      }
+    },
+    "/api/v1/apartments/{id}/name" : {
+      "get" : {
+        "operationId" : "getApartmentNameById",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "apartment-controller" ]
+      },
+      "patch" : {
+        "operationId" : "updateApartmentName",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "additionalProperties" : {
+                  "type" : "string"
+                },
+                "type" : "object"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApartmentResponseDTO"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "apartment-controller" ]
+      }
+    },
+    "/api/v1/apartments/{id}/price" : {
+      "get" : {
+        "operationId" : "getPriceById",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "number"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "apartment-controller" ]
+      },
+      "patch" : {
+        "operationId" : "updatePrice",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "additionalProperties" : {
+                  "type" : "number"
+                },
+                "type" : "object"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApartmentResponseDTO"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "apartment-controller" ]
+      }
+    },
+    "/api/v1/bookings" : {
+      "delete" : {
+        "operationId" : "deleteBookingList",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "items" : {
+                  "format" : "uuid",
+                  "type" : "string"
+                },
+                "type" : "array"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "booking-controller" ]
+      },
+      "get" : {
+        "operationId" : "getBookingList",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/BookingResponseDTO"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "booking-controller" ]
+      },
+      "post" : {
+        "operationId" : "createBooking",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BookingWithClientIdRequestDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingResponseDTO"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "booking-controller" ]
+      }
+    },
+    "/api/v1/bookings/currentdate" : {
+      "get" : {
+        "operationId" : "getCurrentDate",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "format" : "date",
+                  "type" : "string"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "booking-controller" ]
+      }
+    },
+    "/api/v1/bookings/with-client" : {
+      "post" : {
+        "operationId" : "createBookingWithClient",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BookingWithNewClientRequestDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingResponseDTO"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "booking-controller" ]
+      }
+    },
+    "/api/v1/bookings/{id}" : {
+      "delete" : {
+        "operationId" : "deleteBooking",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "booking-controller" ]
+      },
+      "put" : {
+        "operationId" : "updateBooking",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BookingUpdateRequestDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingResponseDTO"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "booking-controller" ]
+      }
+    },
+    "/api/v1/clients" : {
+      "get" : {
+        "operationId" : "getClientList",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ClientResponseDTO"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "client-controller" ]
+      },
+      "post" : {
+        "operationId" : "createClient",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ClientRequestDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClientResponseDTO"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "client-controller" ]
+      }
+    },
+    "/api/v1/clients/{id}" : {
+      "delete" : {
+        "operationId" : "deleteClient",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "client-controller" ]
+      },
+      "get" : {
+        "operationId" : "getClientById",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClientResponseDTO"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "client-controller" ]
+      },
+      "put" : {
+        "operationId" : "updateClient",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ClientRequestDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClientResponseDTO"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "client-controller" ]
+      }
+    },
+    "/api/v1/dashboard" : {
+      "get" : {
+        "operationId" : "getDashboard",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/DashboardDTO"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "dashboard-controller" ]
+      }
+    },
+    "/api/v1/dashboard/filter" : {
+      "get" : {
+        "operationId" : "filterDashboard",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "lastName",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "start",
+          "required" : false,
+          "schema" : {
+            "format" : "date",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "end",
+          "required" : false,
+          "schema" : {
+            "format" : "date",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "apartmentId",
+          "required" : false,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "default" : 0,
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "default" : 10,
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sortBy",
+          "required" : false,
+          "schema" : {
+            "default" : "arrivalDate",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sortDir",
+          "required" : false,
+          "schema" : {
+            "default" : "asc",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "onlyActive",
+          "required" : false,
+          "schema" : {
+            "default" : false,
+            "type" : "boolean"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageDashboardDTO"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "dashboard-controller" ]
+      }
+    },
+    "/api/v1/dashboard/stats" : {
+      "get" : {
+        "operationId" : "getStats",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DashboardStatsDTO"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "dashboard-controller" ]
+      }
+    },
+    "/api/v1/dashboard/summary" : {
+      "get" : {
+        "operationId" : "getSummary",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "year",
+          "required" : true,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "month",
+          "required" : true,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "day",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DashboardSummaryDTO"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "dashboard-controller" ]
+      }
+    },
+    "/api/v1/system/backups" : {
+      "get" : {
+        "operationId" : "list",
+        "parameters" : [ {
+          "in" : "header",
+          "name" : "X-Shutdown-Token",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BackupListResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "backup-controller" ]
+      },
+      "post" : {
+        "operationId" : "create",
+        "parameters" : [ {
+          "in" : "header",
+          "name" : "X-Shutdown-Token",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BackupInfo"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "backup-controller" ]
+      }
+    },
+    "/api/v1/system/backups/{name}/restore" : {
+      "post" : {
+        "operationId" : "restore",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "header",
+          "name" : "X-Shutdown-Token",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RestoreResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "backup-controller" ]
+      }
+    },
+    "/api/v1/system/shutdown" : {
+      "post" : {
+        "operationId" : "shutdownApp",
+        "parameters" : [ {
+          "in" : "header",
+          "name" : "X-Shutdown-Token",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "system-controller" ]
+      }
+    },
+    "/api/v1/system/shutdown-token" : {
+      "get" : {
+        "operationId" : "shutdownToken",
+        "parameters" : [ {
+          "in" : "header",
+          "name" : "Sec-Fetch-Site",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ShutdownTokenResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "system-controller" ]
+      }
+    }
+  },
+  "servers" : [ {
+    "description" : "Generated server url",
+    "url" : "http://localhost"
+  } ]
+}
