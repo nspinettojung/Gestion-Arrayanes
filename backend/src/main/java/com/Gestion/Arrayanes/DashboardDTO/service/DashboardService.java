@@ -2,6 +2,7 @@ package com.Gestion.Arrayanes.DashboardDTO.service;
 
 import com.Gestion.Arrayanes.Apartment.repository.ApartmentRepository;
 import com.Gestion.Arrayanes.Booking.model.Booking;
+import com.Gestion.Arrayanes.Booking.model.BookingStatus;
 import com.Gestion.Arrayanes.Booking.repository.BookingRepository;
 import com.Gestion.Arrayanes.DashboardDTO.model.CalendarDayDTO;
 import com.Gestion.Arrayanes.DashboardDTO.model.ClientApartmentDTO;
@@ -43,7 +44,7 @@ public class DashboardService {
     }
 
     public List<DashboardDTO> getDashboard() {
-        List<Booking> bookings = bookingRepository.findAll();
+        List<Booking> bookings = bookingRepository.findAllByStatusNot(BookingStatus.CANCELLED);
 
         return bookings.stream()
                 .map(b -> new DashboardDTO(
@@ -59,6 +60,7 @@ public class DashboardService {
                         b.getNights(),
                         b.getAmountPeople(),
                         b.getTotalPrice(),
+                        b.getStatus(),
                         b.getVersion()
                 ))
                 .toList();
@@ -70,7 +72,7 @@ public class DashboardService {
 
         validatePagination(page, size, sortBy, sortDir);
 
-        Specification<Booking> spec = Specification.where((root, query, cb) -> cb.conjunction());
+        Specification<Booking> spec = BookingSpecifications.statusNot(BookingStatus.CANCELLED);
 
         if (lastName != null) {
             spec = spec.and(BookingSpecifications.hasClientLastName(lastName));
@@ -82,7 +84,8 @@ public class DashboardService {
             spec = spec.and(BookingSpecifications.apartmentEquals(apartmentId));
         }
         if (onlyActive) {
-            spec = spec.and(BookingSpecifications.departureOnOrAfter(LocalDate.now(clock)));
+            spec = spec.and(BookingSpecifications.statusEquals(BookingStatus.ACTIVE))
+                    .and(BookingSpecifications.departureOnOrAfter(LocalDate.now(clock)));
         }
 
 
@@ -107,6 +110,7 @@ public class DashboardService {
                         b.getNights(),
                         b.getAmountPeople(),
                         b.getTotalPrice(),
+                        b.getStatus(),
                         b.getVersion()
                 ));
     }
@@ -114,7 +118,7 @@ public class DashboardService {
 
     public DashboardStatsDTO getStats() {
         LocalDate today = LocalDate.now(clock);
-        long totalBookings = bookingRepository.count();
+        long totalBookings = bookingRepository.countByStatusNot(BookingStatus.CANCELLED);
         long totalApartments = apartmentRepository.count();
         long occupied = bookingRepository.countOccupiedBookingsOnDate(today);
         long todayArrivals = bookingRepository.countBookingsByArrivalDate(today);

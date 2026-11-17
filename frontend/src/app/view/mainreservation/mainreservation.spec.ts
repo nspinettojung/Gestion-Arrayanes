@@ -28,6 +28,7 @@ const savedBooking: IBooking = {
   apartmentName: 'AP 1',
   amountPeople: 1,
   totalPrice: 10_000,
+  status: 'ACTIVE',
   version: 0,
 };
 

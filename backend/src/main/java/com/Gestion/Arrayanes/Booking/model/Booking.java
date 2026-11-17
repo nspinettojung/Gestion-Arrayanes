@@ -42,6 +42,9 @@ public class Booking {
     private BigDecimal totalPrice;
     @Column(name = "transaction_code", unique = true, length = 32)
     private String transactionCode;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private BookingStatus status = BookingStatus.ACTIVE;
     @Version
     @Column(name = "version", nullable = false, columnDefinition = "bigint default 0")
     private long version;

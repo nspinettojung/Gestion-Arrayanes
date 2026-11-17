@@ -5,6 +5,8 @@ import com.Gestion.Arrayanes.Apartment.dto.ApartmentResponseDTO;
 import com.Gestion.Arrayanes.Apartment.mapper.ApartmentMapper;
 import com.Gestion.Arrayanes.Apartment.model.Apartment;
 import com.Gestion.Arrayanes.Apartment.repository.ApartmentRepository;
+import com.Gestion.Arrayanes.Booking.model.BookingStatus;
+import com.Gestion.Arrayanes.Booking.repository.BookingRepository;
 import com.Gestion.Arrayanes.GlobalHandlerException.BadRequestException;
 import com.Gestion.Arrayanes.GlobalHandlerException.GlobalCustomException;
 import com.Gestion.Arrayanes.GlobalHandlerException.ResourceNotFoundException;
@@ -20,10 +22,13 @@ public class ApartmentService implements IApartmentService {
 
     private final ApartmentRepository apartmentRepository;
     private final ApartmentMapper apartmentMapper;
+    private final BookingRepository bookingRepository;
 
-    public ApartmentService(ApartmentRepository apartmentRepository, ApartmentMapper apartmentMapper) {
+    public ApartmentService(ApartmentRepository apartmentRepository, ApartmentMapper apartmentMapper,
+                            BookingRepository bookingRepository) {
         this.apartmentRepository = apartmentRepository;
         this.apartmentMapper = apartmentMapper;
+        this.bookingRepository = bookingRepository;
     }
 
     private Apartment getApartmentById(UUID id) {
@@ -59,6 +64,13 @@ public class ApartmentService implements IApartmentService {
     @Transactional
     public void deleteApartment(UUID id) {
         Apartment apartment = getApartmentById(id);
+
+        long bookings = bookingRepository.countByApartmentIdAndStatusNot(id, BookingStatus.CANCELLED);
+        if (bookings > 0) {
+            throw new GlobalCustomException(
+                    "No se puede eliminar el departamento porque tiene reservas asociadas.");
+        }
+
         apartmentRepository.delete(apartment);
     }
 

@@ -1,6 +1,7 @@
 package com.Gestion.Arrayanes.DashboardDTO.service;
 
 import com.Gestion.Arrayanes.Booking.model.Booking;
+import com.Gestion.Arrayanes.Booking.model.BookingStatus;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
@@ -25,5 +26,13 @@ public class BookingSpecifications {
 
     public static Specification<Booking> departureOnOrAfter(LocalDate date) {
         return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("departureDate"), date);
+    }
+
+    public static Specification<Booking> statusNot(BookingStatus status) {
+        return (root, query, cb) -> cb.notEqual(root.get("status"), status);
+    }
+
+    public static Specification<Booking> statusEquals(BookingStatus status) {
+        return (root, query, cb) -> cb.equal(root.get("status"), status);
     }
 }

@@ -9,6 +9,7 @@ import com.Gestion.Arrayanes.Booking.dto.BookingWithClientIdRequestDTO;
 import com.Gestion.Arrayanes.Booking.dto.BookingWithNewClientRequestDTO;
 import com.Gestion.Arrayanes.Booking.mapper.BookingMapper;
 import com.Gestion.Arrayanes.Booking.model.Booking;
+import com.Gestion.Arrayanes.Booking.model.BookingStatus;
 import com.Gestion.Arrayanes.Booking.repository.BookingRepository;
 import com.Gestion.Arrayanes.Clients.dto.ClientRequestDTO;
 import com.Gestion.Arrayanes.Clients.mapper.ClientMapper;
@@ -22,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +40,7 @@ public class BookingService implements IBookingService {
     private final ClientMapper clientMapper;
     private final BookingValidation bookingValidation;
     private final TransactionCodeAllocator transactionCodeAllocator;
+    private final Clock clock;
 
     public BookingService(BookingRepository bookingRepository,
                           ClientRepository clientRepository,
@@ -44,7 +48,8 @@ public class BookingService implements IBookingService {
                           BookingMapper bookingMapper,
                           ClientMapper clientMapper,
                           BookingValidation bookingValidation,
-                          TransactionCodeAllocator transactionCodeAllocator) {
+                          TransactionCodeAllocator transactionCodeAllocator,
+                          Clock clock) {
         this.bookingRepository = bookingRepository;
         this.clientRepository = clientRepository;
         this.apartmentRepository = apartmentRepository;
@@ -52,11 +57,34 @@ public class BookingService implements IBookingService {
         this.clientMapper = clientMapper;
         this.bookingValidation = bookingValidation;
         this.transactionCodeAllocator = transactionCodeAllocator;
+        this.clock = clock;
     }
 
     private Booking getBookingById(UUID id) {
         return bookingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada."));
+    }
+
+    /** Las reservas canceladas se ocultan como si no existieran. */
+    private Booking getVisibleBookingById(UUID id) {
+        Booking booking = getBookingById(id);
+
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new ResourceNotFoundException("Reserva no encontrada.");
+        }
+
+        return booking;
+    }
+
+    /** Una reserva pasada queda como historial; una futura vuelve a estar activa. */
+    private void applyStatusFromDates(Booking booking) {
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            return;
+        }
+
+        LocalDate today = LocalDate.now(clock);
+        boolean expired = booking.getDepartureDate() != null && booking.getDepartureDate().isBefore(today);
+        booking.setStatus(expired ? BookingStatus.ARCHIVED : BookingStatus.ACTIVE);
     }
 
     private Client getClientById(UUID id) {
@@ -107,6 +135,7 @@ public class BookingService implements IBookingService {
 
         Stay stay = bookingValidation.validate(booking, request, apartment);
         stay.applyTo(booking);
+        applyStatusFromDates(booking);
         calculateAndSetTotalPrice(booking, apartment);
         booking.setTransactionCode(nextTransactionCode());
         bookingRepository.save(booking);
@@ -124,7 +153,8 @@ public class BookingService implements IBookingService {
     @Transactional
     public void deleteBooking(UUID id) {
         Booking booking = getBookingById(id);
-        bookingRepository.delete(booking);
+        booking.setStatus(BookingStatus.CANCELLED);
+        bookingRepository.save(booking);
     }
 
     @Override
@@ -146,13 +176,15 @@ public class BookingService implements IBookingService {
             throw new ResourceNotFoundException("Una o más reservas no existen.");
         }
 
-        bookingRepository.deleteAll(bookings);
+        bookings.forEach(booking -> booking.setStatus(BookingStatus.CANCELLED));
+        bookingRepository.saveAll(bookings);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<BookingResponseDTO> getListBooking() {
-        List<Booking> bookings = bookingRepository.findAll();
+        List<Booking> bookings = bookingRepository
+                .findAllByStatusNotOrderByArrivalDateAsc(BookingStatus.CANCELLED);
 
         return bookings.stream()
                 .map(bookingMapper::toResponseDTO)
@@ -162,7 +194,7 @@ public class BookingService implements IBookingService {
     @Override
     @Transactional(readOnly = true)
     public BookingResponseDTO findBookingById(UUID id) {
-        Booking booking = getBookingById(id);
+        Booking booking = getVisibleBookingById(id);
 
         return bookingMapper.toResponseDTO(booking);
     }
@@ -170,7 +202,7 @@ public class BookingService implements IBookingService {
     @Override
     @Transactional
     public BookingResponseDTO updateBooking(UUID id, BookingUpdateRequestDTO bookingRequestDTO) {
-        Booking booking = getBookingById(id);
+        Booking booking = getVisibleBookingById(id);
         validateVersion(booking, bookingRequestDTO);
         Client client = getClientById(bookingRequestDTO.getClientId());
         Apartment apartment = getApartmentById(bookingRequestDTO.getApartmentId());
@@ -178,6 +210,7 @@ public class BookingService implements IBookingService {
         bookingMapper.bookingUpdate(booking, bookingRequestDTO, client, apartment);
         Stay stay = bookingValidation.validate(booking, bookingRequestDTO, apartment);
         stay.applyTo(booking);
+        applyStatusFromDates(booking);
         calculateAndSetTotalPrice(booking, apartment);
         if (booking.getTransactionCode() == null || booking.getTransactionCode().isBlank()) {
             booking.setTransactionCode(nextTransactionCode());

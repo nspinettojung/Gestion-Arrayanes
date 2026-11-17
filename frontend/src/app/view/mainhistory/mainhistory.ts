@@ -119,7 +119,7 @@ export class Mainhistory implements OnInit {
     }
 
     const confirmed = await this.confirmation.confirmDelete(
-      `¿Seguro que querés eliminar ${this.idSelected().size} reserva(s)? Esta acción no se puede deshacer.`,
+      `¿Seguro que querés cancelar ${this.idSelected().size} reserva(s)? Las reservas se conservarán como canceladas.`,
     );
 
     if (!confirmed) {
@@ -134,7 +134,7 @@ export class Mainhistory implements OnInit {
       .pipe(finalize(() => this.deletingSelection.set(false)))
       .subscribe({
         next: () => {
-          this.notifications.success('Reservas eliminadas correctamente.');
+          this.notifications.success('Reservas canceladas correctamente.');
           this.idSelected.set(new Set());
           this.dashboardService.getDashboardData();
         },
@@ -150,7 +150,7 @@ export class Mainhistory implements OnInit {
     }
 
     const confirmed = await this.confirmation.confirmDelete(
-      '¿Seguro que querés eliminar esta reserva? Esta acción no se puede deshacer.',
+      '¿Seguro que querés cancelar esta reserva? La reserva se conservará como cancelada.',
     );
 
     if (!confirmed) {
@@ -163,7 +163,7 @@ export class Mainhistory implements OnInit {
       .pipe(finalize(() => this.deletingId.set(null)))
       .subscribe({
         next: () => {
-          this.notifications.success('Reserva eliminada correctamente.');
+          this.notifications.success('Reserva cancelada correctamente.');
           this.dashboardService.getDashboardData();
         },
         error: () => {

@@ -2,6 +2,7 @@ package com.Gestion.Arrayanes.DashboardDTO.service;
 
 import com.Gestion.Arrayanes.Apartment.repository.ApartmentRepository;
 import com.Gestion.Arrayanes.Booking.model.Booking;
+import com.Gestion.Arrayanes.Booking.model.BookingStatus;
 import com.Gestion.Arrayanes.Booking.repository.BookingRepository;
 import com.Gestion.Arrayanes.Clients.model.Client;
 import com.Gestion.Arrayanes.DashboardDTO.model.CalendarDayDTO;
@@ -83,7 +84,7 @@ class DashboardServiceTest {
 
     @Test
     void getStatsShouldAggregateDashboardCounters() {
-        when(bookingRepository.count()).thenReturn(7L);
+        when(bookingRepository.countByStatusNot(BookingStatus.CANCELLED)).thenReturn(7L);
         when(apartmentRepository.count()).thenReturn(4L);
         when(bookingRepository.countOccupiedBookingsOnDate(TODAY)).thenReturn(2L);
         when(bookingRepository.countBookingsByArrivalDate(TODAY)).thenReturn(3L);
@@ -100,7 +101,7 @@ class DashboardServiceTest {
 
     @Test
     void getStatsShouldReturnZeroWithoutData() {
-        when(bookingRepository.count()).thenReturn(0L);
+        when(bookingRepository.countByStatusNot(BookingStatus.CANCELLED)).thenReturn(0L);
         when(apartmentRepository.count()).thenReturn(0L);
         when(bookingRepository.countOccupiedBookingsOnDate(TODAY)).thenReturn(0L);
         when(bookingRepository.countBookingsByArrivalDate(TODAY)).thenReturn(0L);
@@ -117,7 +118,7 @@ class DashboardServiceTest {
 
     @Test
     void getStatsShouldReturnOneHundredGrowthWhenYesterdayWasZero() {
-        when(bookingRepository.count()).thenReturn(1L);
+        when(bookingRepository.countByStatusNot(BookingStatus.CANCELLED)).thenReturn(1L);
         when(apartmentRepository.count()).thenReturn(2L);
         when(bookingRepository.countOccupiedBookingsOnDate(TODAY)).thenReturn(1L);
         when(bookingRepository.countBookingsByArrivalDate(TODAY)).thenReturn(2L);
@@ -131,7 +132,7 @@ class DashboardServiceTest {
 
     @Test
     void getStatsShouldCalculateNegativeGrowth() {
-        when(bookingRepository.count()).thenReturn(2L);
+        when(bookingRepository.countByStatusNot(BookingStatus.CANCELLED)).thenReturn(2L);
         when(apartmentRepository.count()).thenReturn(2L);
         when(bookingRepository.countOccupiedBookingsOnDate(TODAY)).thenReturn(1L);
         when(bookingRepository.countBookingsByArrivalDate(TODAY)).thenReturn(1L);
@@ -230,7 +231,7 @@ class DashboardServiceTest {
 
     @Test
     void getDashboardShouldMapAllBookings() {
-        when(bookingRepository.findAll()).thenReturn(List.of(booking));
+        when(bookingRepository.findAllByStatusNot(BookingStatus.CANCELLED)).thenReturn(List.of(booking));
 
         List<DashboardDTO> result = dashboardService.getDashboard();
 
@@ -241,6 +242,7 @@ class DashboardServiceTest {
         assertEquals("Ana", dto.getClientName());
         assertEquals("Arrayanes 1", dto.getApartmentName());
         assertEquals(booking.getTotalPrice(), dto.getTotalPrice());
+        assertEquals(BookingStatus.ACTIVE, dto.getStatus());
         assertEquals(4L, dto.getVersion());
     }
 
@@ -330,6 +332,8 @@ class DashboardServiceTest {
         Root<Booking> root = mock(Root.class);
         CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
         Path<LocalDate> departurePath = mock(Path.class);
+        Path<BookingStatus> statusPath = mock(Path.class);
+        when(root.<BookingStatus>get("status")).thenReturn(statusPath);
         when(root.<LocalDate>get("departureDate")).thenReturn(departurePath);
 
         captor.getValue().toPredicate(root, null, criteriaBuilder);

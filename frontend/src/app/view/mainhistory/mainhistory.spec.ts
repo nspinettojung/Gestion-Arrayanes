@@ -19,6 +19,7 @@ function buildBooking(id: string, transactionCode: string | null): IDashboard {
     nights: 2,
     amountPeople: 2,
     totalPrice: 100_000,
+    status: 'ACTIVE',
     version: 0,
   };
 }

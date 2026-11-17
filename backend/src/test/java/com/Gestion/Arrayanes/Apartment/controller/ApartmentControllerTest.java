@@ -19,6 +19,7 @@ import java.util.UUID;
 import static org.hamcrest.Matchers.endsWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -161,6 +162,19 @@ class ApartmentControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(apartmentService).deleteApartment(APARTMENT_ID);
+    }
+
+    @Test
+    void deleteApartmentShouldReturnConflictWhenItHasBookings() throws Exception {
+        doThrow(new GlobalCustomException(
+                        "No se puede eliminar el departamento porque tiene reservas asociadas."))
+                .when(apartmentService).deleteApartment(APARTMENT_ID);
+
+        mockMvc.perform(delete("/api/v1/apartments/{id}", APARTMENT_ID))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail")
+                        .value("No se puede eliminar el departamento porque tiene reservas asociadas."))
+                .andExpect(jsonPath("$.status").value(409));
     }
 
     private ApartmentResponseDTO response() {

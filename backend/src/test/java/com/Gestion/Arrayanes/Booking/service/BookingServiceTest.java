@@ -9,6 +9,7 @@ import com.Gestion.Arrayanes.Booking.dto.BookingWithClientIdRequestDTO;
 import com.Gestion.Arrayanes.Booking.dto.BookingWithNewClientRequestDTO;
 import com.Gestion.Arrayanes.Booking.mapper.BookingMapper;
 import com.Gestion.Arrayanes.Booking.model.Booking;
+import com.Gestion.Arrayanes.Booking.model.BookingStatus;
 import com.Gestion.Arrayanes.Booking.repository.BookingRepository;
 import com.Gestion.Arrayanes.Clients.dto.ClientRequestDTO;
 import com.Gestion.Arrayanes.Clients.mapper.ClientMapper;
@@ -19,13 +20,15 @@ import com.Gestion.Arrayanes.GlobalHandlerException.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,7 +58,6 @@ class BookingServiceTest {
     @Mock
     private TransactionCodeAllocator transactionCodeAllocator;
 
-    @InjectMocks
     private BookingService bookingService;
 
     private UUID bookingId;
@@ -91,6 +93,10 @@ class BookingServiceTest {
 
         response = new BookingResponseDTO();
         response.setId(bookingId);
+
+        Clock clock = Clock.fixed(Instant.parse("2026-11-14T12:00:00Z"), ZoneOffset.UTC);
+        bookingService = new BookingService(bookingRepository, clientRepository, apartmentRepository,
+                bookingMapper, clientMapper, bookingValidation, transactionCodeAllocator, clock);
     }
 
     @Test
@@ -109,6 +115,7 @@ class BookingServiceTest {
         // (10000 + 1 persona extra * 5000) * 3 noches
         assertEquals(0, new BigDecimal("45000.00").compareTo(booking.getTotalPrice()));
         assertEquals("RS-2026-0001", booking.getTransactionCode());
+        assertEquals(BookingStatus.ACTIVE, booking.getStatus());
         assertEquals(response, result);
         verify(bookingValidation).validate(booking, request, apartment);
         verify(bookingRepository).save(booking);
@@ -214,12 +221,14 @@ class BookingServiceTest {
     }
 
     @Test
-    void deleteBookingShouldDeleteExistingBooking() {
+    void deleteBookingShouldCancelExistingBookingWithoutRemovingIt() {
         when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
 
         bookingService.deleteBooking(bookingId);
 
-        verify(bookingRepository).delete(booking);
+        assertEquals(BookingStatus.CANCELLED, booking.getStatus());
+        verify(bookingRepository).save(booking);
+        verify(bookingRepository, never()).delete(any(Booking.class));
     }
 
     @Test
@@ -236,16 +245,43 @@ class BookingServiceTest {
         assertThrows(ResourceNotFoundException.class,
                 () -> bookingService.deleteBookings(List.of(bookingId, missing)));
 
-        verify(bookingRepository, never()).deleteAll(any());
+        verify(bookingRepository, never()).saveAll(any());
     }
 
     @Test
-    void deleteBookingsShouldDeleteAllWhenAllExist() {
+    void deleteBookingsShouldCancelAllWhenAllExist() {
         when(bookingRepository.findAllById(any())).thenReturn(List.of(booking));
 
         bookingService.deleteBookings(List.of(bookingId));
 
-        verify(bookingRepository).deleteAll(List.of(booking));
+        assertEquals(BookingStatus.CANCELLED, booking.getStatus());
+        verify(bookingRepository).saveAll(List.of(booking));
+        verify(bookingRepository, never()).deleteAll(any());
+    }
+
+    @Test
+    void saveBookingShouldArchiveAnAlreadyFinishedStay() {
+        BookingWithClientIdRequestDTO request = saveRequest();
+        Stay pastStay = new Stay(LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 3), 2L);
+
+        when(clientRepository.findById(clientId)).thenReturn(Optional.of(client));
+        when(apartmentRepository.findById(apartmentId)).thenReturn(Optional.of(apartment));
+        when(bookingMapper.toEntity(request, client, apartment)).thenReturn(booking);
+        when(bookingValidation.validate(booking, request, apartment)).thenReturn(pastStay);
+        when(bookingMapper.toResponseDTO(booking)).thenReturn(response);
+        when(transactionCodeAllocator.nextCode()).thenReturn("RS-2026-0001");
+
+        bookingService.saveBooking(request);
+
+        assertEquals(BookingStatus.ARCHIVED, booking.getStatus());
+    }
+
+    @Test
+    void cancelledBookingShouldNotBeVisibleById() {
+        booking.setStatus(BookingStatus.CANCELLED);
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
+
+        assertThrows(ResourceNotFoundException.class, () -> bookingService.findBookingById(bookingId));
     }
 
     @Test
@@ -325,7 +361,8 @@ class BookingServiceTest {
 
     @Test
     void getListBookingShouldMapAllBookings() {
-        when(bookingRepository.findAll()).thenReturn(List.of(booking));
+        when(bookingRepository.findAllByStatusNotOrderByArrivalDateAsc(BookingStatus.CANCELLED))
+                .thenReturn(List.of(booking));
         when(bookingMapper.toResponseDTO(booking)).thenReturn(response);
 
         assertEquals(List.of(response), bookingService.getListBooking());

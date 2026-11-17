@@ -5,6 +5,8 @@ import com.Gestion.Arrayanes.Apartment.dto.ApartmentResponseDTO;
 import com.Gestion.Arrayanes.Apartment.mapper.ApartmentMapper;
 import com.Gestion.Arrayanes.Apartment.model.Apartment;
 import com.Gestion.Arrayanes.Apartment.repository.ApartmentRepository;
+import com.Gestion.Arrayanes.Booking.model.BookingStatus;
+import com.Gestion.Arrayanes.Booking.repository.BookingRepository;
 import com.Gestion.Arrayanes.GlobalHandlerException.BadRequestException;
 import com.Gestion.Arrayanes.GlobalHandlerException.GlobalCustomException;
 import com.Gestion.Arrayanes.GlobalHandlerException.ResourceNotFoundException;
@@ -36,6 +38,8 @@ class ApartmentServiceTest {
     private ApartmentRepository apartmentRepository;
     @Mock
     private ApartmentMapper apartmentMapper;
+    @Mock
+    private BookingRepository bookingRepository;
 
     @InjectMocks
     private ApartmentService apartmentService;
@@ -227,12 +231,25 @@ class ApartmentServiceTest {
     }
 
     @Test
-    void deleteApartmentShouldDeleteExistingApartment() {
+    void deleteApartmentShouldDeleteExistingApartmentWithoutBookings() {
         when(apartmentRepository.findById(apartmentId)).thenReturn(Optional.of(apartment));
+        when(bookingRepository.countByApartmentIdAndStatusNot(apartmentId, BookingStatus.CANCELLED))
+                .thenReturn(0L);
 
         apartmentService.deleteApartment(apartmentId);
 
         verify(apartmentRepository).delete(apartment);
+    }
+
+    @Test
+    void deleteApartmentShouldFailWithConflictWhenItHasBookings() {
+        when(apartmentRepository.findById(apartmentId)).thenReturn(Optional.of(apartment));
+        when(bookingRepository.countByApartmentIdAndStatusNot(apartmentId, BookingStatus.CANCELLED))
+                .thenReturn(2L);
+
+        assertThrows(GlobalCustomException.class, () -> apartmentService.deleteApartment(apartmentId));
+
+        verify(apartmentRepository, never()).delete(any());
     }
 
     @Test

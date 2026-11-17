@@ -130,6 +130,13 @@
           } @else {
             <span class="text-on-surface-variant">—</span>
           }
+          @if (booking.status && booking.status !== 'ACTIVE') {
+            <span
+              class="ml-1 inline-flex items-center rounded bg-secondary/10 px-2 py-0.5 text-xs text-secondary"
+            >
+              {{ booking.status === 'ARCHIVED' ? 'Archivada' : 'Cancelada' }}
+            </span>
+          }
         </td>
         <td class="px-space-md py-4">
           <div class="flex items-center space-x-3">
@@ -168,7 +175,7 @@
           <button
             class="flex p-1.5 hover:bg-error/10 rounded-xl text-error transition-colors justify-center disabled:cursor-not-allowed disabled:opacity-50"
             type="button"
-            aria-label="Eliminar reserva"
+            aria-label="Cancelar reserva"
             [disabled]="deletingId() === booking.id"
             (click)="deleteBooking(booking.id); $event.stopPropagation()"
           >

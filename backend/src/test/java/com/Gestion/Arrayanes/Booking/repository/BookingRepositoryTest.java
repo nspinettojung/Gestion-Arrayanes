@@ -3,9 +3,11 @@ package com.Gestion.Arrayanes.Booking.repository;
 import com.Gestion.Arrayanes.Apartment.model.Apartment;
 import com.Gestion.Arrayanes.Apartment.repository.ApartmentRepository;
 import com.Gestion.Arrayanes.Booking.model.Booking;
+import com.Gestion.Arrayanes.Booking.model.BookingStatus;
 import com.Gestion.Arrayanes.Clients.model.Client;
 import com.Gestion.Arrayanes.Clients.repository.ClientRepository;
 import com.Gestion.Arrayanes.DashboardDTO.service.BookingSpecifications;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +39,9 @@ class BookingRepositoryTest {
 
     @Autowired
     private ApartmentRepository apartmentRepository;
+
+    @Autowired
+    private EntityManager entityManager;
 
     private Client client;
     private Apartment apartment;
@@ -157,7 +162,8 @@ class BookingRepositoryTest {
         Booking older = bookingRepository.save(
                 booking(client, apartment, NOV_10.minusDays(10), NOV_10.minusDays(9)));
 
-        Optional<Booking> last = bookingRepository.findTopByClientOrderByArrivalDateDesc(client);
+        Optional<Booking> last = bookingRepository
+                .findTopByClientAndStatusNotOrderByArrivalDateDesc(client, BookingStatus.CANCELLED);
 
         assertTrue(last.isPresent());
         assertEquals(booking.getId(), last.get().getId());
@@ -207,6 +213,44 @@ class BookingRepositoryTest {
                 BookingSpecifications.apartmentEquals(apartment.getId())).size());
         assertTrue(bookingRepository.findAll(
                 BookingSpecifications.apartmentEquals(UUID.randomUUID())).isEmpty());
+    }
+
+    @Test
+    void operationalQueriesShouldIgnoreCancelledAndArchivedBookings() {
+        booking.setStatus(BookingStatus.CANCELLED);
+        bookingRepository.saveAndFlush(booking);
+
+        Booking archived = bookingRepository.save(
+                booking(client, apartment, NOV_10.plusDays(5), NOV_10.plusDays(7)));
+        archived.setStatus(BookingStatus.ARCHIVED);
+        bookingRepository.saveAndFlush(archived);
+
+        assertEquals(0L, bookingRepository.countBookingsByArrivalDate(NOV_10));
+        assertEquals(0L, bookingRepository.countOccupiedBookingsOnDate(NOV_10));
+        // Las canceladas no bloquean el borrado; las archivadas siguen siendo historial.
+        assertEquals(1L, bookingRepository.countByApartmentIdAndStatusNot(
+                apartment.getId(), BookingStatus.CANCELLED));
+        assertTrue(bookingRepository.findOverlappingBookings(
+                apartment.getId(), null, NOV_10, NOV_10.plusDays(1)).isEmpty());
+        assertTrue(bookingRepository.findBookingsInRange(NOV_10, NOV_10.plusDays(1)).isEmpty());
+    }
+
+    @Test
+    void archiveExpiredBookingsShouldOnlyUpdateFinishedActiveBookings() {
+        Booking finished = bookingRepository.save(
+                booking(client, apartment, NOV_10.minusDays(9), NOV_10.minusDays(8)));
+
+        int updated = bookingRepository.archiveExpiredBookings(
+                NOV_10.plusDays(1), BookingStatus.ACTIVE, BookingStatus.ARCHIVED);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        assertEquals(1, updated);
+        assertEquals(BookingStatus.ARCHIVED,
+                bookingRepository.findById(finished.getId()).orElseThrow().getStatus());
+        assertEquals(BookingStatus.ACTIVE,
+                bookingRepository.findById(booking.getId()).orElseThrow().getStatus());
     }
 
     private Booking booking(Client client, Apartment apartment, LocalDate arrival, LocalDate departure) {

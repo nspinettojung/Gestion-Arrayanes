@@ -10,6 +10,7 @@ export interface IBooking {
   apartmentName: string;
   amountPeople: number;
   totalPrice: number;
+  status: 'ACTIVE' | 'CANCELLED' | 'ARCHIVED';
   version: number;
 }
 

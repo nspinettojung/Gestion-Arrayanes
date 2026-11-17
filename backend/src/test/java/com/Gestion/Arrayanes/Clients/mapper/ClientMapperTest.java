@@ -1,6 +1,7 @@
 package com.Gestion.Arrayanes.Clients.mapper;
 
 import com.Gestion.Arrayanes.Booking.model.Booking;
+import com.Gestion.Arrayanes.Booking.model.BookingStatus;
 import com.Gestion.Arrayanes.Booking.repository.BookingRepository;
 import com.Gestion.Arrayanes.Clients.dto.ClientRequestDTO;
 import com.Gestion.Arrayanes.Clients.dto.ClientResponseDTO;
@@ -73,7 +74,7 @@ class ClientMapperTest {
         Booking lastBooking = new Booking();
         lastBooking.setArrivalDate(LocalDate.of(2026, 10, 5));
 
-        when(bookingRepository.findTopByClientOrderByArrivalDateDesc(client))
+        when(bookingRepository.findTopByClientAndStatusNotOrderByArrivalDateDesc(client, BookingStatus.CANCELLED))
                 .thenReturn(Optional.of(lastBooking));
 
         ClientResponseDTO dto = mapper.toResponseDTO(client);
