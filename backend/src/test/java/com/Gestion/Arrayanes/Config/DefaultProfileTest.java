@@ -22,6 +22,20 @@ class DefaultProfileTest {
         assertEquals("true", leer("application-prod.properties").getProperty("arrayanes.desktop.enabled"));
     }
 
+    @Test
+    void elPerfilProdDesactivaLaConsolaH2() throws IOException {
+        Properties prod = leer("application-prod.properties");
+        assertEquals("false", prod.getProperty("spring.h2.console.enabled"));
+        assertEquals("false", prod.getProperty("spring.jpa.show-sql"));
+    }
+
+    @Test
+    void elPerfilDevMantieneLaConsolaH2EnTestdb() throws IOException {
+        Properties dev = leer("application-dev.properties");
+        assertEquals("true", dev.getProperty("spring.h2.console.enabled"));
+        assertEquals("/testdb", dev.getProperty("spring.h2.console.path"));
+    }
+
     private Properties leer(String nombre) throws IOException {
         Properties properties = new Properties();
         Path archivo = Path.of("src", "main", "resources", nombre);
