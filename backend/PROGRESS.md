@@ -8,7 +8,7 @@
 Ejecutar la Fase 2 de refactors de backend (punto por punto, con aprobación del usuario), sobre el monorepo ya armado, sin romper el modo escritorio del jar (perfil `prod`, puerto dinámico y navegador en modo app).
 
 ## Dónde me quedé
-Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 9 → 10 → 11 → 12 → 14 → 19 → 20 → 24 → 25 → 26):
+Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 9 → 10 → 11 → 12 → 14 → 19 → 20 → 24 → 25 → 26 → 27):
 - Punto 3 `9727662`: `BookingResponseDTO` incluye `clientName`/`apartmentName`.
 - Punto 5 `a93a717`: `DashboardService.validatePagination` (page>=0, 1<=size<=1000, whitelist de campos, asc/desc) + 6 tests.
 - Punto 7 `4a87c7a`: `SpaConfigurationTest` verifica `/api/v1/loquesea`→404 JSON, `/reservas/123`→200 HTML, `/build-info.json`→200.
@@ -26,14 +26,15 @@ Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 
 
 - Punto 25: `spring.profiles.default=prod` en `application.properties`, con `arrayanes.desktop.enabled=true` explícito en `application-prod.properties`. El jar sin perfiles arranca en modo escritorio (navegador app, sin consola H2 ni SQL) y `pnpm dev` sigue forzando `dev,webdev`. `DefaultProfileTest` fija ambos valores.
 - Punto 26: `spring.h2.console.enabled=false` y `spring.jpa.show-sql=false` ya estaban en `application-prod.properties`; se amplía `DefaultProfileTest` para fijar ese apagado en prod y, de contraste, la consola H2 activa en `/testdb` bajo el perfil `dev`.
+- Punto 27: `ShutdownToken` genera un UUID por arranque (fijable con `arrayanes.shutdown.token`). `POST /api/v1/system/shutdown` exige `X-Shutdown-Token` y responde 403 RFC 9457 si falta o es inválido; `GET /api/v1/system/shutdown-token` lo entrega solo a peticiones `same-origin`/`none` (rechaza `cross-site`). El `System.exit` pasó a `ShutdownInvoker` para testear sin matar la JVM. `SystemService` pide el token y lo reenvía; 5 tests backend y 1 frontend nuevos.
 
-Verificación base verde: backend 224 tests (tras punto 26), frontend 54 tests, lint 0 errors (17 warnings), format y build OK (jar armado).
+Verificación base verde: backend 229 tests (tras punto 27), frontend 55 tests, lint 0 errors (17 warnings), format y build OK (jar armado).
 
 ## Siguiente paso
-Punto 27: token local en `/api/v1/system/shutdown`.
+Punto 28: backups H2 (`BACKUP TO` diario/al cerrar + restauración desde UI).
 
 ## Pendiente (Fase 2, del documento original)
-- 27 Token local en `/api/v1/system/shutdown`.
+- 28 Backups H2 (`BACKUP TO` diario/al cerrar + restauración desde UI).
 - 28 Backups H2 (`BACKUP TO` diario/al cerrar + restauración desde UI).
 - 29 Java 25 LTS.
 - OpenAPI + cliente TypeScript generado: pendiente; sí estaba en la lista original del usuario.
