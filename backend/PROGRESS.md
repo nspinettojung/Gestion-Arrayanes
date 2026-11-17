@@ -5,10 +5,10 @@
 **Rama:** master (monorepo raíz con frontend/ y backend/)
 
 ## Objetivo
-Ejecutar la Fase 2 de refactors de backend (punto por punto, con aprobación del usuario), sobre el monorepo ya armado, sin romper el modo escritorio del jar (perfil `webdev`, puerto 8080).
+Ejecutar la Fase 2 de refactors de backend (punto por punto, con aprobación del usuario), sobre el monorepo ya armado, sin romper el modo escritorio del jar (perfil `dev`, puerto dinámico y navegador en modo app).
 
 ## Dónde me quedé
-Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 9 → 10 → 11 → 12 → 14 → 19 → 20):
+Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 9 → 10 → 11 → 12 → 14 → 19 → 20 → 24):
 - Punto 3 `9727662`: `BookingResponseDTO` incluye `clientName`/`apartmentName`.
 - Punto 5 `a93a717`: `DashboardService.validatePagination` (page>=0, 1<=size<=1000, whitelist de campos, asc/desc) + 6 tests.
 - Punto 7 `4a87c7a`: `SpaConfigurationTest` verifica `/api/v1/loquesea`→404 JSON, `/reservas/123`→200 HTML, `/build-info.json`→200.
@@ -22,13 +22,14 @@ Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 
 - Punto 19 `5ea74b8`: `@EntityGraph({"client", "apartment"})` en las consultas del dashboard (incluida `findAll(spec, pageable)`) y proyección agrupada `ClientLastCheckIn` para el listado de clientes. El mapper recibe un `Map<UUID, LocalDate>`; las operaciones de un solo cliente conservan su query individual. Tests con `StatementInspector` comprueban 1 SELECT para listas y 2 (count + datos) para la página filtrada.
 - Punto 20: `GET /api/v1/dashboard/summary?year=&month=&day?` con `DashboardSummaryDTO` (resumen mensual: contadores, listas y calendario; y resumen del día opcional). Se retiraron los 9 endpoints de un solo número/lista (`monthlyArrivalsCount`, `monthlyDeparturesCount`, `monthlyArrivalsList`, `monthlyDeparturesList`, `arrivalsByDate`, `departuresByDate`, `calendar`, `arrivalsCountByDate`, `departuresCountByDate`). El frontend consume el resumen desde un único `httpResource` (`loadSummary`) y el calendario deriva las reservas de las listas mensuales. Se conservan `/dashboard`, `/filter` y `/stats`. Fechas imposibles siguen dando 400 RFC 9457.
 
-Verificación base verde: backend 217 tests (tras punto 20), frontend 54 tests, lint 0 errors (17 warnings), format y build OK (jar armado).
+- Punto 24: `DevPortCustomizer` (@Profile `webdev`) elige el primer puerto libre de `arrayanes.dev.ports` (8081–8089 por defecto) y falla con 500 si no hay lugar. `ApiPortPublisher` escribe `backend/api-port.txt`; `pnpm dev` borra el archivo viejo, espera el puerto, genera `frontend/proxy.dev.conf.json` y levanta Angular con `--proxy-config`. `ng serve` standalone usa `frontend/proxy.conf.json` → 8081 y el entorno de desarrollo usa `apiUrl: '/api/v1'`. El 8080 queda reservado para el jar. Smoke: con 8081 ocupado, la API arrancó en 8082 y el proxy apuntó a 8082.
+
+Verificación base verde: backend 220 tests (tras punto 24), frontend 54 tests, lint 0 errors (17 warnings), format y build OK (jar armado).
 
 ## Siguiente paso
-Punto 24: puerto dev fijo 8080 (`server.port=0` hoy) o proxy de Angular.
+Punto 25: perfil default prod/desktop para el .exe (hoy arranca con `dev`).
 
 ## Pendiente (Fase 2, del documento original)
-- 24 Puerto dev fijo 8080 (`server.port=0` hoy) o proxy de Angular.
 - 25 Perfil default prod/desktop para el .exe (hoy arranca con `dev`).
 - 26 Consola H2 apagada explícitamente en prod.
 - 27 Token local en `/api/v1/system/shutdown`.
