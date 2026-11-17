@@ -86,8 +86,8 @@ class BookingServiceTest {
         booking.setNights(3L);
         booking.setDepartureDate(LocalDate.of(2026, 12, 4));
         booking.setAmountPeople(2L);
-        booking.setClientId(client);
-        booking.setApartmentId(apartment);
+        booking.setClient(client);
+        booking.setApartment(apartment);
 
         response = new BookingResponseDTO();
         response.setId(bookingId);

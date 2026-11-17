@@ -49,11 +49,11 @@ public class DashboardService {
                 .map(b -> new DashboardDTO(
                         b.getId(),
                         b.getTransactionCode(),
-                        b.getClientId().getId(),
-                        b.getClientId().getClientName(),
-                        b.getClientId().getClientLastName(),
-                        b.getApartmentId().getId(),
-                        b.getApartmentId().getApartmentName(),
+                        b.getClient().getId(),
+                        b.getClient().getClientName(),
+                        b.getClient().getClientLastName(),
+                        b.getApartment().getId(),
+                        b.getApartment().getApartmentName(),
                         b.getArrivalDate(),
                         b.getDepartureDate(),
                         b.getNights(),
@@ -97,11 +97,11 @@ public class DashboardService {
                 .map(b -> new DashboardDTO(
                         b.getId(),
                         b.getTransactionCode(),
-                        b.getClientId().getId(),
-                        b.getClientId().getClientName(),
-                        b.getClientId().getClientLastName(),
-                        b.getApartmentId().getId(),
-                        b.getApartmentId().getApartmentName(),
+                        b.getClient().getId(),
+                        b.getClient().getClientName(),
+                        b.getClient().getClientLastName(),
+                        b.getApartment().getId(),
+                        b.getApartment().getApartmentName(),
                         b.getArrivalDate(),
                         b.getDepartureDate(),
                         b.getNights(),
@@ -194,9 +194,9 @@ public class DashboardService {
 
         return bookings.stream()
                 .map(b -> new ClientApartmentDTO(
-                        b.getClientId().getClientName(),
-                        b.getClientId().getClientLastName(),
-                        b.getApartmentId().getApartmentName(),
+                        b.getClient().getClientName(),
+                        b.getClient().getClientLastName(),
+                        b.getApartment().getApartmentName(),
                         b.getArrivalDate(),
                         b.getDepartureDate()
 
@@ -210,9 +210,9 @@ public class DashboardService {
 
         return bookings.stream()
                 .map(b -> new ClientApartmentDTO(
-                        b.getClientId().getClientName(),
-                        b.getClientId().getClientLastName(),
-                        b.getApartmentId().getApartmentName(),
+                        b.getClient().getClientName(),
+                        b.getClient().getClientLastName(),
+                        b.getApartment().getApartmentName(),
                         b.getArrivalDate(),
                         b.getDepartureDate()
                 ))
@@ -223,9 +223,9 @@ public class DashboardService {
         List<Booking> bookings = bookingRepository.findArrivalsByDate(date);
         return bookings.stream()
                 .map(b -> new ClientApartmentDTO(
-                        b.getClientId().getClientName(),
-                        b.getClientId().getClientLastName(),
-                        b.getApartmentId().getApartmentName(),
+                        b.getClient().getClientName(),
+                        b.getClient().getClientLastName(),
+                        b.getApartment().getApartmentName(),
                         b.getArrivalDate(),
                         b.getDepartureDate()
                 ))
@@ -236,9 +236,9 @@ public class DashboardService {
         List<Booking> bookings = bookingRepository.findDeparturesByDate(date);
         return bookings.stream()
                 .map(b -> new ClientApartmentDTO(
-                        b.getClientId().getClientName(),
-                        b.getClientId().getClientLastName(),
-                        b.getApartmentId().getApartmentName(),
+                        b.getClient().getClientName(),
+                        b.getClient().getClientLastName(),
+                        b.getApartment().getApartmentName(),
                         b.getArrivalDate(),
                         b.getDepartureDate()
                 ))

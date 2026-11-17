@@ -157,7 +157,7 @@ class BookingRepositoryTest {
         Booking older = bookingRepository.save(
                 booking(client, apartment, NOV_10.minusDays(10), NOV_10.minusDays(9)));
 
-        Optional<Booking> last = bookingRepository.findTopByClientIdOrderByArrivalDateDesc(client);
+        Optional<Booking> last = bookingRepository.findTopByClientOrderByArrivalDateDesc(client);
 
         assertTrue(last.isPresent());
         assertEquals(booking.getId(), last.get().getId());

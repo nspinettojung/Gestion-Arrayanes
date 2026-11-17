@@ -71,8 +71,8 @@ class DashboardServiceTest {
         booking = new Booking();
         booking.setId(UUID.randomUUID());
         booking.setTransactionCode("RS-2026-0001");
-        booking.setClientId(client);
-        booking.setApartmentId(apartment);
+        booking.setClient(client);
+        booking.setApartment(apartment);
         booking.setArrivalDate(LocalDate.of(2026, 11, 10));
         booking.setDepartureDate(LocalDate.of(2026, 11, 12));
         booking.setNights(2L);

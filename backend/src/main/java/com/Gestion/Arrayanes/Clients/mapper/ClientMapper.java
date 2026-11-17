@@ -41,7 +41,7 @@ public class ClientMapper {
         clientDto.setClientDni(client.getClientDni());
         clientDto.setClientPhone(client.getClientPhone());
 
-        Optional<Booking> lastBooking = bookingRepository.findTopByClientIdOrderByArrivalDateDesc(client);
+        Optional<Booking> lastBooking = bookingRepository.findTopByClientOrderByArrivalDateDesc(client);
 
         lastBooking.ifPresent(b -> clientDto.setLastCheckIn(b.getArrivalDate()));
 

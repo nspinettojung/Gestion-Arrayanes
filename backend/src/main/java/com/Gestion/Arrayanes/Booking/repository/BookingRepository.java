@@ -41,7 +41,7 @@ public interface BookingRepository extends JpaRepository<Booking, UUID>, JpaSpec
 
 
     @Query("SELECT b FROM Booking b " +
-            "WHERE b.apartmentId.id = :apartmentId " +
+            "WHERE b.apartment.id = :apartmentId " +
             "AND (:bookingId IS NULL OR b.id <> :bookingId) " +
             "AND b.arrivalDate < :departureDate " +
             "AND b.departureDate > :arrivalDate")
@@ -51,25 +51,25 @@ public interface BookingRepository extends JpaRepository<Booking, UUID>, JpaSpec
                                           LocalDate departureDate);
 
     @Query("SELECT b FROM Booking b " +
-            "JOIN FETCH b.clientId c " +
-            "JOIN FETCH b.apartmentId a " +
+            "JOIN FETCH b.client c " +
+            "JOIN FETCH b.apartment a " +
             "WHERE b.arrivalDate BETWEEN :start AND :end")
     List<Booking> findArrivalsInMonth(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
 
     @Query("SELECT b FROM Booking b " +
-            "JOIN FETCH b.clientId c " +
-            "JOIN FETCH b.apartmentId a " +
+            "JOIN FETCH b.client c " +
+            "JOIN FETCH b.apartment a " +
             "WHERE b.departureDate BETWEEN :start AND :end")
     List<Booking> findDeparturesInMonth(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
 
     // Buscar reservas que llegan en una fecha específica
-    @Query("SELECT b FROM Booking b JOIN FETCH b.clientId c JOIN FETCH b.apartmentId a WHERE b.arrivalDate = :date")
+    @Query("SELECT b FROM Booking b JOIN FETCH b.client c JOIN FETCH b.apartment a WHERE b.arrivalDate = :date")
     List<Booking> findArrivalsByDate(@Param("date") LocalDate date);
 
     // Buscar reservas que salen en una fecha específica
-    @Query("SELECT b FROM Booking b JOIN FETCH b.clientId c JOIN FETCH b.apartmentId a WHERE b.departureDate = :date")
+    @Query("SELECT b FROM Booking b JOIN FETCH b.client c JOIN FETCH b.apartment a WHERE b.departureDate = :date")
     List<Booking> findDeparturesByDate(@Param("date") LocalDate date);
 
     @Query("SELECT b FROM Booking b WHERE b.arrivalDate <= :end AND b.departureDate > :start")
@@ -77,6 +77,6 @@ public interface BookingRepository extends JpaRepository<Booking, UUID>, JpaSpec
 
     List<Booking> findAllByOrderByArrivalDateAsc();
 
-    Optional<Booking> findTopByClientIdOrderByArrivalDateDesc(Client client);
+    Optional<Booking> findTopByClientOrderByArrivalDateDesc(Client client);
 
 }

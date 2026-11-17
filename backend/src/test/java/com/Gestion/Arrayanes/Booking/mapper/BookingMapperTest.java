@@ -36,8 +36,8 @@ class BookingMapperTest {
         assertEquals(dto.getArrivalDate(), booking.getArrivalDate());
         assertEquals(dto.getNights(), booking.getNights());
         assertEquals(dto.getDepartureDate(), booking.getDepartureDate());
-        assertEquals(client, booking.getClientId());
-        assertEquals(apartment, booking.getApartmentId());
+        assertEquals(client, booking.getClient());
+        assertEquals(apartment, booking.getApartment());
         assertEquals(dto.getAmountPeople(), booking.getAmountPeople());
         assertNull(booking.getTotalPrice());
     }
@@ -82,8 +82,8 @@ class BookingMapperTest {
         assertEquals(dto.getArrivalDate(), booking.getArrivalDate());
         assertEquals(dto.getNights(), booking.getNights());
         assertEquals(dto.getDepartureDate(), booking.getDepartureDate());
-        assertEquals(client, booking.getClientId());
-        assertEquals(apartment, booking.getApartmentId());
+        assertEquals(client, booking.getClient());
+        assertEquals(apartment, booking.getApartment());
         assertEquals(dto.getAmountPeople(), booking.getAmountPeople());
         assertEquals(new BigDecimal("45000"), booking.getTotalPrice());
     }

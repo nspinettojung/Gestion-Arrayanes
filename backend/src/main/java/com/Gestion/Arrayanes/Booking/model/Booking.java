@@ -32,10 +32,10 @@ public class Booking {
     private LocalDate departureDate;
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)
-    private Client clientId;
+    private Client client;
     @ManyToOne
     @JoinColumn(name = "apartment_id", nullable = false)
-    private Apartment apartmentId;
+    private Apartment apartment;
     @Column(name = "amount_people")
     private Long amountPeople;
     @Column(name = "total_price")
@@ -46,17 +46,16 @@ public class Booking {
     @Column(name = "version", nullable = false, columnDefinition = "bigint default 0")
     private long version;
 
-
     public Booking() {
     }
 
-    public Booking(UUID id, LocalDate arrivalDate, Long nights, LocalDate departureDate, Client clientId, Apartment apartmentId, Long amountPeople, BigDecimal totalPrice) {
+    public Booking(UUID id, LocalDate arrivalDate, Long nights, LocalDate departureDate, Client client, Apartment apartment, Long amountPeople, BigDecimal totalPrice) {
         this.id = id;
         this.arrivalDate = arrivalDate;
         this.nights = nights;
         this.departureDate = departureDate;
-        this.clientId = clientId;
-        this.apartmentId = apartmentId;
+        this.client = client;
+        this.apartment = apartment;
         this.amountPeople = amountPeople;
         this.totalPrice = totalPrice;
     }

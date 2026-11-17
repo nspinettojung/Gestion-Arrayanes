@@ -73,7 +73,7 @@ class ClientMapperTest {
         Booking lastBooking = new Booking();
         lastBooking.setArrivalDate(LocalDate.of(2026, 10, 5));
 
-        when(bookingRepository.findTopByClientIdOrderByArrivalDateDesc(client))
+        when(bookingRepository.findTopByClientOrderByArrivalDateDesc(client))
                 .thenReturn(Optional.of(lastBooking));
 
         ClientResponseDTO dto = mapper.toResponseDTO(client);

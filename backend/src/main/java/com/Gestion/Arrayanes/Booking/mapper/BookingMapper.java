@@ -21,8 +21,8 @@ public class BookingMapper {
         booking.setArrivalDate(bookingDto.getArrivalDate());
         booking.setNights(bookingDto.getNights());
         booking.setDepartureDate(bookingDto.getDepartureDate());
-        booking.setClientId(client);
-        booking.setApartmentId(apartment);
+        booking.setClient(client);
+        booking.setApartment(apartment);
         booking.setAmountPeople(bookingDto.getAmountPeople());
         return booking;
     }
@@ -33,10 +33,10 @@ public class BookingMapper {
         dto.setArrivalDate(booking.getArrivalDate());
         dto.setNights(booking.getNights());
         dto.setDepartureDate(booking.getDepartureDate());
-        dto.setClientId(booking.getClientId().getId());
-        dto.setClientName(booking.getClientId().getClientName());
-        dto.setApartmentId(booking.getApartmentId().getId());
-        dto.setApartmentName(booking.getApartmentId().getApartmentName());
+        dto.setClientId(booking.getClient().getId());
+        dto.setClientName(booking.getClient().getClientName());
+        dto.setApartmentId(booking.getApartment().getId());
+        dto.setApartmentName(booking.getApartment().getApartmentName());
         dto.setAmountPeople(booking.getAmountPeople());
         dto.setTotalPrice(booking.getTotalPrice());
         dto.setTransactionCode(booking.getTransactionCode());
@@ -52,8 +52,8 @@ public class BookingMapper {
         booking.setArrivalDate(bookingDto.getArrivalDate());
         booking.setNights(bookingDto.getNights());
         booking.setDepartureDate(bookingDto.getDepartureDate());
-        booking.setClientId(client);
-        booking.setApartmentId(apartment);
+        booking.setClient(client);
+        booking.setApartment(apartment);
         booking.setAmountPeople(bookingDto.getAmountPeople());
     }
 }

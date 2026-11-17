@@ -10,7 +10,7 @@ public class BookingSpecifications {
 
     public static Specification<Booking> hasClientLastName(String lastName) {
         return (root, query, cb) -> cb.like(
-                cb.lower(root.get("clientId").get("clientLastName")),
+                cb.lower(root.get("client").get("clientLastName")),
                 "%" + lastName.toLowerCase() + "%"
         );
     }
@@ -20,7 +20,7 @@ public class BookingSpecifications {
     }
 
     public static Specification<Booking> apartmentEquals(UUID apartmentId) {
-        return (root, query, cb) -> cb.equal(root.get("apartmentId").get("id"), apartmentId);
+        return (root, query, cb) -> cb.equal(root.get("apartment").get("id"), apartmentId);
     }
 
     public static Specification<Booking> departureOnOrAfter(LocalDate date) {
