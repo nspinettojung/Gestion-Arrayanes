@@ -37,5 +37,10 @@ export const routes: Routes = [
     loadComponent: () => import('./view/maincalendar/maincalendar').then((m) => m.Maincalendar),
     data: { title: 'Calendario', icon: 'event' },
   },
+  {
+    path: 'backups',
+    loadComponent: () => import('./view/mainbackups/mainbackups').then((m) => m.Mainbackups),
+    data: { title: 'Copias de seguridad', icon: 'backup' },
+  },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 ];

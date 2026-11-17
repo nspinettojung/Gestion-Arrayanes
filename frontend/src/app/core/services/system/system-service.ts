@@ -2,20 +2,21 @@ import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable, switchMap } from 'rxjs';
+import { LocalTokenService } from './local-token';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SystemService {
   private url = `${environment.apiUrl}/system/shutdown`;
-  private tokenUrl = `${environment.apiUrl}/system/shutdown-token`;
   private http = inject(HttpClient);
+  private localToken = inject(LocalTokenService);
 
   closeApp(): Observable<void> {
-    return this.http
-      .get<{ token: string }>(this.tokenUrl)
+    return this.localToken
+      .get()
       .pipe(
-        switchMap(({ token }) =>
+        switchMap((token) =>
           this.http.post<void>(this.url, {}, { headers: { 'X-Shutdown-Token': token } }),
         ),
       );

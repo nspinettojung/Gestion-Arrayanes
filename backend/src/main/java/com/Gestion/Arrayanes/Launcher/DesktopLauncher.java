@@ -27,6 +27,9 @@ public class DesktopLauncher {
     @Autowired
     private Environment environment;
 
+    @Autowired
+    private ShutdownInvoker shutdownInvoker;
+
     @EventListener(ApplicationReadyEvent.class)
     public void launchApp() {
         if (!environment.getProperty("arrayanes.desktop.enabled", Boolean.class, Boolean.TRUE)) {
@@ -113,7 +116,8 @@ public class DesktopLauncher {
                 return;
             }
 
-            System.exit(0);
+            // Pasa por el apagado común para guardar la copia al cerrar la ventana.
+            shutdownInvoker.shutdown();
         }, "browser-watcher");
 
         watcher.setDaemon(true);

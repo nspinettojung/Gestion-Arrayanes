@@ -1,0 +1,79 @@
+<div class="pt-4 space-y-4">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+      <h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">
+        Copias de seguridad
+      </h2>
+      <p class="text-on-surface-variant font-body-md">
+        Creá copias de la base y elegí una para restaurar al reiniciar la aplicación.
+      </p>
+    </div>
+    <button
+      type="button"
+      class="btn-nimbus-primary px-space-md py-2.5 rounded shadow-sm text-sm font-bold flex items-center gap-2 hover:brightness-110 active:brightness-90 transition-all disabled:opacity-50"
+      (click)="create()"
+      [disabled]="working()"
+    >
+      <span class="material-symbols-outlined text-sm">backup</span>
+      Crear copia
+    </button>
+  </div>
+
+  @if (pendingRestore(); as pending) {
+    <div
+      class="rounded-lg border border-secondary-container bg-secondary-container/20 p-space-md text-sm text-on-surface"
+    >
+      <span class="material-symbols-outlined text-base align-middle mr-2">info</span>
+      La copia <strong class="font-code">{{ pending }}</strong> se restaurará al volver a abrir la
+      aplicación.
+    </div>
+  }
+
+  <div class="rounded-lg border border-outline-variant bg-surface-bright shadow-sm overflow-hidden">
+    <table class="w-full text-sm text-on-surface">
+      <thead class="bg-primary-container/20 text-left text-on-surface-variant">
+        <tr>
+          <th class="px-space-md py-3 font-semibold">Archivo</th>
+          <th class="px-space-md py-3 font-semibold">Tipo</th>
+          <th class="px-space-md py-3 font-semibold">Fecha</th>
+          <th class="px-space-md py-3 font-semibold">Tamaño</th>
+          <th class="px-space-md py-3 font-semibold text-right">Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (backup of backups(); track backup.name) {
+          <tr class="border-t border-outline-variant/50">
+            <td class="px-space-md py-3 font-code text-xs">
+              {{ backup.name }}
+              @if (backup.pending) {
+                <span class="ml-2 text-xs text-primary font-semibold">Pendiente</span>
+              }
+            </td>
+            <td class="px-space-md py-3">{{ kindLabel(backup.kind) }}</td>
+            <td class="px-space-md py-3">{{ backup.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td class="px-space-md py-3">{{ sizeLabel(backup.sizeBytes) }}</td>
+            <td class="px-space-md py-3 text-right">
+              <button
+                type="button"
+                class="px-3 py-1.5 rounded text-sm font-semibold text-error border border-error hover:bg-error/10 transition-colors disabled:opacity-50"
+                (click)="restore(backup)"
+                [disabled]="working()"
+              >
+                Restaurar
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="px-space-md py-6 text-center text-on-surface-variant">
+              Todavía no hay copias de seguridad.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if (loading()) {
+      <p class="px-space-md py-3 text-sm text-on-surface-variant">Cargando copias…</p>
+    }
+  </div>
+</div>
