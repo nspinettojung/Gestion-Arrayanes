@@ -69,6 +69,24 @@ pnpm format:check  # Verifica formato sin escribir
 - `GET /api/v1/system/shutdown-token` entrega el token de apagado solo al mismo origen;
   `POST /api/v1/system/shutdown` exige la cabecera `X-Shutdown-Token`. El token se genera
   en cada arranque y se puede fijar con `arrayanes.shutdown.token`.
+- `GET /api/v1/system/backups` lista las copias y la pendiente; `POST /api/v1/system/backups`
+  crea una copia manual; `POST /api/v1/system/backups/{nombre}/restore` la marca para
+  restaurar. Los tres exigen `X-Shutdown-Token`.
+
+## Copias de seguridad
+
+El jar hace una copia diaria (3 AM, configurable con `arrayanes.backup.daily-cron`) y otra
+al cerrar, además de las manuales. Se guardan como zip en `arrayanes.backup.directory`
+(`backend/datos/backups` por defecto) con nombres `backup-{diario|cierre|manual}-{fecha}.zip`.
+
+Desde **Copias de seguridad** en la UI se crea una copia o se elige una para restaurar. La
+restauración no toca la base en caliente: se marca la copia, se cierra la app y, al volver a
+abrir el jar, `RestoreOnStartup` extrae el `.mv.db` del zip y reemplaza la base antes de que
+arranque Spring. Primero guarda la base actual como `mibasedatos.mv.db.bak-{fecha}`; si la
+copia es inválida, conserva el marcador y deja la base intacta.
+
+En los tests la base es en memoria, así que no se crean copias. El job diario se puede
+desactivar con `arrayanes.backup.scheduler.enabled=false`.
 
 ## CI
 

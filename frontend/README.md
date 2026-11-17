@@ -76,11 +76,19 @@ pnpm --dir frontend format:check
   así la interfaz funciona sin internet y sin flash de estilos.
 - El modo oscuro se activa con la clase `.dark` en `<html>`.
 
+## Copias de seguridad y token local
+
+La ruta `/backups` permite crear copias y elegir una para restaurar. `LocalTokenService` pide
+una vez el token local (`GET /api/v1/system/shutdown-token`) y lo reutilizan `SystemService`
+(apagado) y `BackupService` (listado, creación y restauración) en la cabecera
+`X-Shutdown-Token`. Al restaurar se marca la copia y se cierra la app; el cambio se aplica al
+volver a abrir el jar, con la base detenida.
+
 ## Estructura
 
 ```
-src/app/core/services/    servicios de API + build-info
-src/app/view/             páginas (dashboard, reservas, clientes, departamentos, historial)
+src/app/core/services/    servicios de API + build-info + token local + copias
+src/app/view/             páginas (dashboard, reservas, clientes, departamentos, historial, copias)
 src/app/view/assets/      componentes compartidos (tabla, modal, calendario, pipes)
 src/environments/         URL de la API por entorno
 scripts/                  build-info y copia del build al static
