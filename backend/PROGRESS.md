@@ -8,7 +8,7 @@
 Ejecutar la Fase 2 de refactors de backend (punto por punto, con aprobación del usuario), sobre el monorepo ya armado, sin romper el modo escritorio del jar (perfil `webdev`, puerto 8080).
 
 ## Dónde me quedé
-Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 9 → 10 → 11):
+Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 9 → 10 → 11 → 12):
 - Punto 3 `9727662`: `BookingResponseDTO` incluye `clientName`/`apartmentName`.
 - Punto 5 `a93a717`: `DashboardService.validatePagination` (page>=0, 1<=size<=1000, whitelist de campos, asc/desc) + 6 tests.
 - Punto 7 `4a87c7a`: `SpaConfigurationTest` verifica `/api/v1/loquesea`→404 JSON, `/reservas/123`→200 HTML, `/build-info.json`→200.
@@ -17,14 +17,14 @@ Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 
 - Punto 9 `67fb8a4`: asociaciones `Booking.client`/`Booking.apartment`; JPQL, Specifications, mapper y servicios migrados. Los DTO siguen exponiendo `clientId`/`apartmentId`.
 - Punto 10 `96884a0`: único `createBooking` privado para mapear, validar, calcular precio, asignar código y persistir. `saveBooking` y `createBookingWithClient` solo resuelven el cliente. `saveBookingEntity` ya estaba eliminado (`c86639a`).
 - Punto 11 `cb8865b`: `Stay` inmutable para resolver/validar fechas y noches; `BookingValidation` ya no muta `Booking` y el servicio aplica el `Stay` validado.
+- Punto 12 `73e895e`: tabla singleton `booking_code_sequence` (V4) + `PESSIMISTIC_WRITE`; reinicio anual desde códigos persistidos y `TransactionCodeAllocator` separado del formateo.
 
-Verificación base verde: backend 201 tests, frontend 54 tests, lint 0 errors (17 warnings), format y build OK.
+Verificación base verde: backend 205 tests, frontend 54 tests, lint 0 errors (17 warnings), format y build OK.
 
 ## Siguiente paso
-Punto 12: generar `transactionCode` con concurrencia segura (tabla de secuencia por año o `SELECT ... FOR UPDATE`).
+Punto 14: soft delete / estados (CANCELLED, ARCHIVED) y 409 específico al borrar un departamento con reservas.
 
 ## Pendiente (Fase 2, del documento original)
-- 12 `transactionCode` con concurrencia (tabla de secuencia por año o SELECT ... FOR UPDATE).
 - 14 Soft delete / estados (CANCELLED, ARCHIVED) y 409 específico al borrar departamento con reservas.
 - 19 N+1: `DashboardService.getDashboard` y `ClientMapper.toResponseDTO` (proyecciones/@EntityGraph/JOIN FETCH).
 - 20 `GET /api/v1/dashboard/summary` (unificar endpoints chicos).
@@ -48,7 +48,7 @@ Punto 12: generar `transactionCode` con concurrencia segura (tabla de secuencia 
 - [x] `generateTransactionCode` eliminado; `findLastArrivalDateByClientId` era código muerto (ausente).
 - [x] Monorepo + tooling raíz (pnpm, lint, format, test, build, CI) — commits `8c75ee0`/`649ccd9`.
 - [x] Fase 2 frontend: stats `440ee4e`, paginación server-side `238d1f5`, vista `/calendar` `9ad6977`, httpResource `93d84ec`.
-- [x] Fase 2 backend (Contrato y API): puntos 3, 5, 7, 6, 4, 9, 10, 11 (ver arriba).
+- [x] Fase 2 backend (Contrato y API): puntos 3, 5, 7, 6, 4, 9, 10, 11, 12 (ver arriba).
 
 ## Contexto histórico
 - Ejecutable nativo GraalVM `target\Arrayanes.exe` verificado con base real antes del monorepo; build nativo necesita vcvars64 y `-H:DeadlockWatchdogInterval=60`.
