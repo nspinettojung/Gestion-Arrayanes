@@ -56,7 +56,24 @@ pnpm test          # mvnw verify + ng test --watch=false
 pnpm lint          # ESLint (Angular + TypeScript)
 pnpm format        # Prettier
 pnpm format:check  # Verifica formato sin escribir
+pnpm api           # Regenera el contrato OpenAPI y los tipos TypeScript
 ```
+
+## Contrato OpenAPI
+
+`pnpm api` ejecuta `OpenApiSpecTest`, que pide `/v3/api-docs` a los controladores reales y
+guarda el JSON canonicalizado (claves ordenadas) en `frontend/src/app/core/api/openapi.json`.
+Luego `openapi-typescript` genera `frontend/src/app/core/api/api-types.ts`. Ambos archivos son
+artefactos: no se editan a mano y están excluidos de Prettier y ESLint.
+
+Los servicios Angular usan los esquemas generados en vez de interfaces duplicadas; por ejemplo
+`BackupService` y `LocalTokenService` importan `components['schemas']`. Los DTOs consumidos por
+la UI declaran `@Schema(requiredMode = REQUIRED)` para que los campos obligatorios no salgan
+opcionales en TypeScript.
+
+El endpoint `/v3/api-docs` está activo en desarrollo y tests, pero desactivado en el jar
+(`springdoc.api-docs.enabled=false` en el perfil `prod`). No se incluye Swagger UI. La CI falla
+si el contrato o los tipos generados están desactualizados.
 
 ## Estructura de la API
 

@@ -84,9 +84,17 @@ una vez el token local (`GET /api/v1/system/shutdown-token`) y lo reutilizan `Sy
 `X-Shutdown-Token`. Al restaurar se marca la copia y se cierra la app; el cambio se aplica al
 volver a abrir el jar, con la base detenida.
 
+## Contrato OpenAPI y tipos generados
+
+Desde la raíz, `pnpm api` genera `src/app/core/api/openapi.json` desde los controladores y
+`src/app/core/api/api-types.ts` con `pnpm generate:api`. Los servicios consumen esos esquemas
+(`components['schemas']`) en lugar de declarar interfaces propias. No se editan a mano: están
+excluidos de Prettier (`.prettierignore`) y de ESLint (`eslint.config.js`).
+
 ## Estructura
 
 ```
+src/app/core/api/         contrato OpenAPI y tipos TypeScript generados
 src/app/core/services/    servicios de API + build-info + token local + copias
 src/app/view/             páginas (dashboard, reservas, clientes, departamentos, historial, copias)
 src/app/view/assets/      componentes compartidos (tabla, modal, calendario, pipes)

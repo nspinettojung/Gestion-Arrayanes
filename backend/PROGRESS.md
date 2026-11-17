@@ -8,7 +8,7 @@
 Ejecutar la Fase 2 de refactors de backend (punto por punto, con aprobación del usuario), sobre el monorepo ya armado, sin romper el modo escritorio del jar (perfil `prod`, puerto dinámico y navegador en modo app).
 
 ## Dónde me quedé
-Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 9 → 10 → 11 → 12 → 14 → 19 → 20 → 24 → 25 → 26 → 27 → 28 → 29):
+Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 9 → 10 → 11 → 12 → 14 → 19 → 20 → 24 → 25 → 26 → 27 → 28 → 29 + OpenAPI/cliente TS):
 - Punto 3 `9727662`: `BookingResponseDTO` incluye `clientName`/`apartmentName`.
 - Punto 5 `a93a717`: `DashboardService.validatePagination` (page>=0, 1<=size<=1000, whitelist de campos, asc/desc) + 6 tests.
 - Punto 7 `4a87c7a`: `SpaConfigurationTest` verifica `/api/v1/loquesea`→404 JSON, `/reservas/123`→200 HTML, `/build-info.json`→200.
@@ -29,14 +29,15 @@ Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 
 - Punto 27: `ShutdownToken` genera un UUID por arranque (fijable con `arrayanes.shutdown.token`). `POST /api/v1/system/shutdown` exige `X-Shutdown-Token` y responde 403 RFC 9457 si falta o es inválido; `GET /api/v1/system/shutdown-token` lo entrega solo a peticiones `same-origin`/`none` (rechaza `cross-site`). El `System.exit` pasó a `ShutdownInvoker` para testear sin matar la JVM. `SystemService` pide el token y lo reenvía; 5 tests backend y 1 frontend nuevos.
 - Punto 28: copias H2 con `BACKUP TO` (zip con `.mv.db`, no `RUNSCRIPT`). `BackupService` crea copias diarias/al cerrar/manuales en `arrayanes.backup.directory` (`./datos/backups`), valida nombres y marca la copia elegida en `.restore-pending`. `BackupScheduler` (3 AM, `arrayanes.backup.daily-cron`) se desactiva en tests. `ShutdownInvoker.shutdown()` guarda la copia al cerrar y lo usa también `DesktopLauncher` cuando se cierra la ventana. `RestoreOnStartup` corre antes de Spring, extrae el `.mv.db`, guarda `mibasedatos.mv.db.bak-{fecha}` y reemplaza la base; si falla, conserva el marcador. Endpoints `/api/v1/system/backups` (GET/POST/POST restore) con `X-Shutdown-Token`. Frontend: `LocalTokenService` reutilizable, `BackupService`, vista `/backups` con confirmación y cierre de la app. 17 tests backend y 8 frontend nuevos.
 - Punto 29: `java.version=25` en `pom.xml` (JDK 25 LTS instalado; la CI ya usaba Temurin 25, no hubo que tocarla). `JavaVersionTest` fija tanto la propiedad declarada como el major 69 del bytecode compilado: sin `clean` detectó clases viejas de Java 24, por lo que `pnpm build` ahora ejecuta `mvnw clean package` para que el jar nunca arrastre bytecode de otra versión.
+- OpenAPI + cliente TypeScript: springdoc `3.0.3` (solo `-api`, sin UI), desactivado en prod con `springdoc.api-docs.enabled=false` y fijado por `DefaultProfileTest`. `OpenApiSpecTest` genera `/v3/api-docs` y canonicaliza las claves (la reflexión de paginación no es determinista). `pnpm api` copia el spec a `frontend/src/app/core/api/openapi.json` y ejecuta `openapi-typescript` para generar `api-types.ts`; `BackupService` y `LocalTokenService` consumen `components['schemas']` en vez de interfaces duplicadas. Los DTOs usados por la UI declaran `@Schema(requiredMode = REQUIRED)` y `pendingRestore` es `string | null`. Artefactos excluidos de Prettier/ESLint; CI verifica que spec y tipos estén actualizados.
 
-Verificación base verde: backend 248 tests (tras punto 29), frontend 63 tests, lint 0 errors (17 warnings), format y build OK (jar armado con Java 25).
+Verificación final: backend 250 tests, frontend 63 tests, lint 0 errors (17 warnings), format y build OK (jar armado con Java 25). Fase 2 cerrada.
 
 ## Siguiente paso
-OpenAPI + cliente TypeScript generado (último punto pendiente de la lista original).
+Ninguno pendiente de la Fase 2. Si aparece nueva demanda, arrancar una nueva fase con aprobación punto por punto.
 
 ## Pendiente (Fase 2, del documento original)
-- OpenAPI + cliente TypeScript generado: pendiente; sí estaba en la lista original del usuario.
+- Nada: todos los puntos acordados están cerrados.
 
 ## Hecho
 - [x] Bugs críticos + suite de tests base (sesión previa).
@@ -50,7 +51,7 @@ OpenAPI + cliente TypeScript generado (último punto pendiente de la lista origi
 - [x] `generateTransactionCode` eliminado; `findLastArrivalDateByClientId` era código muerto (ausente).
 - [x] Monorepo + tooling raíz (pnpm, lint, format, test, build, CI) — commits `8c75ee0`/`649ccd9`.
 - [x] Fase 2 frontend: stats `440ee4e`, paginación server-side `238d1f5`, vista `/calendar` `9ad6977`, httpResource `93d84ec`.
-- [x] Fase 2 backend (Contrato y API): puntos 3, 5, 7, 6, 4, 9, 10, 11, 12, 14, 19, 20, 24, 25, 26, 27, 28, 29 (ver arriba).
+- [x] Fase 2 backend (Contrato y API): puntos 3, 5, 7, 6, 4, 9, 10, 11, 12, 14, 19, 20, 24, 25, 26, 27, 28, 29 + OpenAPI/cliente TypeScript (ver arriba).
 
 ## Contexto histórico
 - Ejecutable nativo GraalVM `target\Arrayanes.exe` verificado con base real antes del monorepo; build nativo necesita vcvars64 y `-H:DeadlockWatchdogInterval=60`.
