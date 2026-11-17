@@ -8,7 +8,7 @@ contra el mismo origen.
 
 - Node.js 22+
 - pnpm 11
-- API corriendo en `http://127.0.0.1:8080` para desarrollo
+- API corriendo en el primer puerto libre entre `8081` y `8089` para desarrollo (`pnpm dev` la inicia)
 
 ## Desarrollo
 
@@ -18,14 +18,19 @@ Desde la raíz del repo:
 pnpm dev
 ```
 
-Abre `http://localhost:4200`. La URL de la API está en
-`src/environments/environment.development.ts` y el backend permite ese origen por CORS.
+Abre `http://localhost:4200`. `pnpm dev` espera a que el backend publique el puerto elegido en
+`backend/api-port.txt`, genera `proxy.dev.conf.json` y levanta Angular con `--proxy-config`.
+En desarrollo la URL de la API es relativa (`/api/v1`), definida en
+`src/environments/environment.development.ts`; el proxy reenvía `/api` al puerto elegido.
 
 También se puede levantar solo el frontend:
 
 ```bash
 pnpm --dir frontend start
 ```
+
+En ese caso se usa `proxy.conf.json`, que apunta a `http://127.0.0.1:8081` por defecto. Si el backend
+eligió otro puerto, pasá `--proxy-config proxy.dev.conf.json` (generado por `pnpm dev`).
 
 ## Build
 

@@ -1,10 +1,14 @@
 import { spawn, spawnSync } from 'node:child_process';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { join } from 'node:path';
 import { isWindows, mvnw, quoteArg, root } from './util.mjs';
 
 const children = new Set();
+const apiPortFile = join(root, 'backend', 'api-port.txt');
+const proxyFile = join(root, 'frontend', 'proxy.dev.conf.json');
 let shuttingDown = false;
+let pollTimer;
 
 function prefix(name, stream, output) {
   const lines = createInterface({ input: stream });
@@ -24,6 +28,7 @@ function stop(child) {
 function shutdown(code) {
   if (shuttingDown) return;
   shuttingDown = true;
+  clearTimeout(pollTimer);
 
   for (const child of children) stop(child);
   process.exit(code);
@@ -61,11 +66,45 @@ function start(name, command, args, cwd) {
   });
 }
 
+function publishedPort() {
+  if (!existsSync(apiPortFile)) return null;
+  const text = readFileSync(apiPortFile, 'utf8').trim();
+  return /^\d+$/.test(text) ? Number(text) : null;
+}
+
+/** El backend publica el puerto elegido en api-port.txt al iniciar el servidor. */
+function waitForApiPort(deadline = Date.now() + 60000) {
+  if (shuttingDown) return Promise.reject(new Error('shutdown'));
+
+  const port = publishedPort();
+  if (port !== null) return Promise.resolve(port);
+  if (Date.now() > deadline) return Promise.reject(new Error('timeout'));
+
+  return new Promise((resolve, reject) => {
+    pollTimer = setTimeout(() => {
+      waitForApiPort(deadline).then(resolve, reject);
+    }, 250);
+  });
+}
+
+function writeProxy(port) {
+  const config = {
+    '/api': {
+      target: `http://127.0.0.1:${port}`,
+      changeOrigin: true,
+    },
+  };
+  writeFileSync(proxyFile, `${JSON.stringify(config, null, 2)}\n`, 'utf8');
+}
+
 process.on('SIGINT', () => shutdown(0));
 process.on('SIGTERM', () => shutdown(0));
 process.on('SIGHUP', () => shutdown(0));
 
-console.log('API:     http://127.0.0.1:8080/api/v1');
+// Evitamos leer el puerto de una ejecución anterior.
+rmSync(apiPortFile, { force: true });
+
+console.log('API: eligiendo el primer puerto libre de 8081 a 8089...');
 console.log('Frontend: http://localhost:4200');
 console.log('Ctrl+C corta ambos procesos.\n');
 
@@ -76,4 +115,21 @@ start(
   join(root, 'backend'),
 );
 
-start('web', process.execPath, ['--run', 'start'], join(root, 'frontend'));
+waitForApiPort()
+  .then((port) => {
+    if (shuttingDown) return;
+    writeProxy(port);
+    console.log(`API: http://127.0.0.1:${port}/api/v1`);
+    console.log(`Proxy Angular: /api -> http://127.0.0.1:${port}`);
+    start(
+      'web',
+      process.execPath,
+      ['--run', 'start', '--', '--proxy-config', 'proxy.dev.conf.json'],
+      join(root, 'frontend'),
+    );
+  })
+  .catch((error) => {
+    if (shuttingDown || error.message === 'shutdown') return;
+    console.error('[dev] La API no publicó su puerto en 60 segundos. Revisá el log de [api].');
+    shutdown(1);
+  });

@@ -26,8 +26,10 @@ pnpm --dir frontend install
 pnpm dev
 ```
 
-- API: `http://127.0.0.1:8080/api` (perfiles `dev,webdev`, sin abrir el navegador)
-- Frontend: `http://localhost:4200` (Angular dev server)
+- API: primer puerto libre entre `8081` y `8089` (perfiles `dev,webdev`, sin abrir el navegador).
+- Frontend: `http://localhost:4200` (Angular dev server).
+
+El backend publica el puerto elegido en `backend/api-port.txt`. `pnpm dev` espera a que exista ese archivo, genera `frontend/proxy.dev.conf.json` y recién entonces levanta Angular con el proxy hacia ese puerto. El 8080 queda reservado para el jar. Para usar `ng serve` por separado, el proxy por defecto apunta a `8081` (`frontend/proxy.conf.json`).
 
 El backend usa `backend/datos/mibasedatos` como base H2. `Ctrl+C` corta ambos procesos.
 
@@ -60,7 +62,7 @@ pnpm format:check  # Verifica formato sin escribir
 
 - `application.properties`: configuración común (H2 en archivo, Flyway, CORS).
 - `application-dev.properties`: consola H2 y SQL visible (perfil por defecto).
-- `application-webdev.properties`: puerto fijo 8080 y sin navegador para `pnpm dev`.
+- `application-webdev.properties`: lista `arrayanes.dev.ports` (8081–8089) y sin navegador para `pnpm dev`.
 - `application-prod.properties`: sin consola H2 ni SQL.
 - `SpaConfiguration` / `SpaResourceResolver`: sirven la SPA y devuelven 404 para rutas
   inexistentes bajo `/api/**`.

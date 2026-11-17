@@ -68,7 +68,8 @@
               "buildTarget": "GestionArrayanes:build:production"
             },
             "development": {
-              "buildTarget": "GestionArrayanes:build:development"
+              "buildTarget": "GestionArrayanes:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

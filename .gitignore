@@ -18,6 +18,7 @@ frontend/.angular/
 frontend/coverage/
 frontend/public/build-info.json
 frontend/.vite/
+frontend/proxy.dev.conf.json
 
 # Raíz
 node_modules/
