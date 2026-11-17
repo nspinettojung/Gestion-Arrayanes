@@ -8,7 +8,7 @@
 Ejecutar la Fase 2 de refactors de backend (punto por punto, con aprobación del usuario), sobre el monorepo ya armado, sin romper el modo escritorio del jar (perfil `prod`, puerto dinámico y navegador en modo app).
 
 ## Dónde me quedé
-Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 9 → 10 → 11 → 12 → 14 → 19 → 20 → 24 → 25):
+Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 9 → 10 → 11 → 12 → 14 → 19 → 20 → 24 → 25 → 26):
 - Punto 3 `9727662`: `BookingResponseDTO` incluye `clientName`/`apartmentName`.
 - Punto 5 `a93a717`: `DashboardService.validatePagination` (page>=0, 1<=size<=1000, whitelist de campos, asc/desc) + 6 tests.
 - Punto 7 `4a87c7a`: `SpaConfigurationTest` verifica `/api/v1/loquesea`→404 JSON, `/reservas/123`→200 HTML, `/build-info.json`→200.
@@ -25,14 +25,14 @@ Fase 2 — Contrato y API cerrada (orden acordado 3 → 5 → 7 → 6 → 4 → 
 - Punto 24: `DevPortCustomizer` (@Profile `webdev`) elige el primer puerto libre de `arrayanes.dev.ports` (8081–8089 por defecto) y falla con 500 si no hay lugar. `ApiPortPublisher` escribe `backend/api-port.txt`; `pnpm dev` borra el archivo viejo, espera el puerto, genera `frontend/proxy.dev.conf.json` y levanta Angular con `--proxy-config`. `ng serve` standalone usa `frontend/proxy.conf.json` → 8081 y el entorno de desarrollo usa `apiUrl: '/api/v1'`. El 8080 queda reservado para el jar. Smoke: con 8081 ocupado, la API arrancó en 8082 y el proxy apuntó a 8082.
 
 - Punto 25: `spring.profiles.default=prod` en `application.properties`, con `arrayanes.desktop.enabled=true` explícito en `application-prod.properties`. El jar sin perfiles arranca en modo escritorio (navegador app, sin consola H2 ni SQL) y `pnpm dev` sigue forzando `dev,webdev`. `DefaultProfileTest` fija ambos valores.
+- Punto 26: `spring.h2.console.enabled=false` y `spring.jpa.show-sql=false` ya estaban en `application-prod.properties`; se amplía `DefaultProfileTest` para fijar ese apagado en prod y, de contraste, la consola H2 activa en `/testdb` bajo el perfil `dev`.
 
-Verificación base verde: backend 222 tests (tras punto 25), frontend 54 tests, lint 0 errors (17 warnings), format y build OK (jar armado).
+Verificación base verde: backend 224 tests (tras punto 26), frontend 54 tests, lint 0 errors (17 warnings), format y build OK (jar armado).
 
 ## Siguiente paso
-Punto 26: consola H2 apagada explícitamente en prod.
+Punto 27: token local en `/api/v1/system/shutdown`.
 
 ## Pendiente (Fase 2, del documento original)
-- 26 Consola H2 apagada explícitamente en prod.
 - 27 Token local en `/api/v1/system/shutdown`.
 - 28 Backups H2 (`BACKUP TO` diario/al cerrar + restauración desde UI).
 - 29 Java 25 LTS.
