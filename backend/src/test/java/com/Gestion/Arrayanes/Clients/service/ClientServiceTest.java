@@ -1,9 +1,11 @@
 package com.Gestion.Arrayanes.Clients.service;
 
+import com.Gestion.Arrayanes.Booking.model.BookingStatus;
 import com.Gestion.Arrayanes.Clients.dto.ClientRequestDTO;
 import com.Gestion.Arrayanes.Clients.dto.ClientResponseDTO;
 import com.Gestion.Arrayanes.Clients.mapper.ClientMapper;
 import com.Gestion.Arrayanes.Clients.model.Client;
+import com.Gestion.Arrayanes.Clients.repository.ClientLastCheckIn;
 import com.Gestion.Arrayanes.Clients.repository.ClientRepository;
 import com.Gestion.Arrayanes.GlobalHandlerException.GlobalCustomException;
 import com.Gestion.Arrayanes.GlobalHandlerException.ResourceNotFoundException;
@@ -14,13 +16,18 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -108,11 +115,20 @@ class ClientServiceTest {
     }
 
     @Test
-    void getClientListShouldMapAllClients() {
+    void getClientListShouldMapAllClientsWithOneGroupedQuery() {
+        ClientLastCheckIn lastCheckIn = mock(ClientLastCheckIn.class);
+        when(lastCheckIn.getClientId()).thenReturn(clientId);
+        when(lastCheckIn.getLastCheckIn()).thenReturn(LocalDate.of(2026, 11, 1));
+        when(clientRepository.findLastCheckIns(BookingStatus.CANCELLED))
+                .thenReturn(List.of(lastCheckIn));
         when(clientRepository.findAll()).thenReturn(List.of(client));
-        when(clientMapper.toResponseDTO(client)).thenReturn(response);
+        when(clientMapper.toResponseDTO(eq(client), anyMap())).thenReturn(response);
 
         assertEquals(List.of(response), clientService.getClientList());
+
+        verify(clientRepository).findLastCheckIns(BookingStatus.CANCELLED);
+        verify(clientMapper).toResponseDTO(eq(client), eq(Map.of(clientId, LocalDate.of(2026, 11, 1))));
+        verify(clientMapper, never()).toResponseDTO(client);
     }
 
     @Test

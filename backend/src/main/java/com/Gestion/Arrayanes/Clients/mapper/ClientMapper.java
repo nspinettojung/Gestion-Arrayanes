@@ -9,7 +9,10 @@ import com.Gestion.Arrayanes.Clients.model.Client;
 import com.Gestion.Arrayanes.Clients.util.ClientNormalization;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class ClientMapper {
@@ -32,8 +35,22 @@ public class ClientMapper {
         return client;
     }
 
-    public ClientResponseDTO toResponseDTO(Client client){
+    /** Para operaciones de un solo cliente; el listado usa la variante con mapa. */
+    public ClientResponseDTO toResponseDTO(Client client) {
+        Optional<Booking> lastBooking = bookingRepository
+                .findTopByClientAndStatusNotOrderByArrivalDateDesc(client, BookingStatus.CANCELLED);
 
+        return toResponseDTO(client,
+                lastBooking.map(Booking::getArrivalDate).orElse(null));
+    }
+
+    /** El mapa viene de una consulta agrupada: una sola query para todo el listado. */
+    public ClientResponseDTO toResponseDTO(Client client, Map<UUID, LocalDate> lastCheckIns) {
+        return toResponseDTO(client,
+                lastCheckIns == null ? null : lastCheckIns.get(client.getId()));
+    }
+
+    private ClientResponseDTO toResponseDTO(Client client, LocalDate lastCheckIn) {
         ClientResponseDTO clientDto = new ClientResponseDTO();
 
         clientDto.setId(client.getId());
@@ -41,11 +58,7 @@ public class ClientMapper {
         clientDto.setClientLastName(client.getClientLastName());
         clientDto.setClientDni(client.getClientDni());
         clientDto.setClientPhone(client.getClientPhone());
-
-        Optional<Booking> lastBooking = bookingRepository
-                .findTopByClientAndStatusNotOrderByArrivalDateDesc(client, BookingStatus.CANCELLED);
-
-        lastBooking.ifPresent(b -> clientDto.setLastCheckIn(b.getArrivalDate()));
+        clientDto.setLastCheckIn(lastCheckIn);
 
         return clientDto;
     }

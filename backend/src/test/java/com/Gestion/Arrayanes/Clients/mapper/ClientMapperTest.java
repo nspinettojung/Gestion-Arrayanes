@@ -13,11 +13,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -66,6 +68,18 @@ class ClientMapperTest {
         assertEquals("12345678", dto.getClientDni());
         assertEquals("555", dto.getClientPhone());
         assertNull(dto.getLastCheckIn());
+    }
+
+    @Test
+    void toResponseDTOShouldUseProvidedLastCheckInsWithoutQuerying() {
+        Client client = new Client(UUID.randomUUID(), "Ana", "Perez", "12345678", "555");
+        LocalDate lastCheckIn = LocalDate.of(2026, 11, 1);
+
+        ClientResponseDTO dto = mapper.toResponseDTO(client, Map.of(client.getId(), lastCheckIn));
+
+        assertEquals(client.getId(), dto.getId());
+        assertEquals(lastCheckIn, dto.getLastCheckIn());
+        verifyNoInteractions(bookingRepository);
     }
 
     @Test

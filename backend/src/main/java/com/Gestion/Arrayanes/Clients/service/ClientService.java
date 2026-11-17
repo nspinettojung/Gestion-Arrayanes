@@ -1,9 +1,11 @@
 package com.Gestion.Arrayanes.Clients.service;
 
+import com.Gestion.Arrayanes.Booking.model.BookingStatus;
 import com.Gestion.Arrayanes.Clients.dto.ClientRequestDTO;
 import com.Gestion.Arrayanes.Clients.dto.ClientResponseDTO;
 import com.Gestion.Arrayanes.Clients.mapper.ClientMapper;
 import com.Gestion.Arrayanes.Clients.model.Client;
+import com.Gestion.Arrayanes.Clients.repository.ClientLastCheckIn;
 import com.Gestion.Arrayanes.Clients.repository.ClientRepository;
 import com.Gestion.Arrayanes.Clients.util.ClientNormalization;
 import com.Gestion.Arrayanes.GlobalHandlerException.GlobalCustomException;
@@ -11,7 +13,10 @@ import com.Gestion.Arrayanes.GlobalHandlerException.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -56,8 +61,12 @@ public class ClientService implements IClientService {
     @Override
     @Transactional(readOnly = true)
     public List<ClientResponseDTO> getClientList() {
+        Map<UUID, LocalDate> lastCheckIns = new HashMap<>();
+        clientRepository.findLastCheckIns(BookingStatus.CANCELLED)
+                .forEach(row -> lastCheckIns.put(row.getClientId(), row.getLastCheckIn()));
+
         return clientRepository.findAll().stream()
-                .map(clientMapper::toResponseDTO)
+                .map(client -> clientMapper.toResponseDTO(client, lastCheckIns))
                 .toList();
     }
 

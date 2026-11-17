@@ -8,6 +8,10 @@ import java.util.UUID;
 import com.Gestion.Arrayanes.Booking.model.Booking;
 import com.Gestion.Arrayanes.Booking.model.BookingStatus;
 import com.Gestion.Arrayanes.Clients.model.Client;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -80,9 +84,16 @@ public interface BookingRepository extends JpaRepository<Booking, UUID>, JpaSpec
 
     List<Booking> findAllByOrderByArrivalDateAsc();
 
+    @EntityGraph(attributePaths = {"client", "apartment"})
     List<Booking> findAllByStatusNotOrderByArrivalDateAsc(BookingStatus status);
 
+    @EntityGraph(attributePaths = {"client", "apartment"})
     List<Booking> findAllByStatusNot(BookingStatus status);
+
+    /** El dashboard filtrado necesita las mismas relaciones en una sola consulta. */
+    @Override
+    @EntityGraph(attributePaths = {"client", "apartment"})
+    Page<Booking> findAll(Specification<Booking> spec, Pageable pageable);
 
     long countByStatusNot(BookingStatus status);
 

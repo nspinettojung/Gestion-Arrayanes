@@ -8,12 +8,17 @@ import com.Gestion.Arrayanes.Clients.model.Client;
 import com.Gestion.Arrayanes.Clients.repository.ClientRepository;
 import com.Gestion.Arrayanes.DashboardDTO.service.BookingSpecifications;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceUnitUtil;
+import com.Gestion.Arrayanes.support.SqlStatementCollector;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -27,6 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataJpaTest
 @ImportAutoConfiguration(FlywayAutoConfiguration.class)
+@TestPropertySource(properties =
+        "spring.jpa.properties.hibernate.session_factory.statement_inspector="
+                + "com.Gestion.Arrayanes.support.SqlStatementCollector")
 class BookingRepositoryTest {
 
     private static final LocalDate NOV_10 = LocalDate.of(2026, 11, 10);
@@ -251,6 +259,41 @@ class BookingRepositoryTest {
                 bookingRepository.findById(finished.getId()).orElseThrow().getStatus());
         assertEquals(BookingStatus.ACTIVE,
                 bookingRepository.findById(booking.getId()).orElseThrow().getStatus());
+    }
+
+    @Test
+    void dashboardListShouldFetchRelationsInOneQuery() {
+        bookingRepository.save(booking(client, apartment, NOV_10.plusDays(3), NOV_10.plusDays(5)));
+        entityManager.flush();
+        entityManager.clear();
+        SqlStatementCollector.reset();
+
+        List<Booking> bookings = bookingRepository.findAllByStatusNot(BookingStatus.CANCELLED);
+
+        assertEquals(2, bookings.size());
+        PersistenceUnitUtil util = entityManager.getEntityManagerFactory().getPersistenceUnitUtil();
+        assertTrue(util.isLoaded(bookings.get(0), "client"));
+        assertTrue(util.isLoaded(bookings.get(0), "apartment"));
+        assertEquals(1, SqlStatementCollector.selectCount());
+    }
+
+    @Test
+    void filteredDashboardShouldFetchRelationsWithoutNPlusOne() {
+        bookingRepository.save(booking(client, apartment, NOV_10.plusDays(3), NOV_10.plusDays(5)));
+        entityManager.flush();
+        entityManager.clear();
+        SqlStatementCollector.reset();
+
+        // PageSize=1 fuerza el count: Spring Data lo omite si la página no se llena.
+        Page<Booking> page = bookingRepository.findAll(
+                BookingSpecifications.statusEquals(BookingStatus.ACTIVE), PageRequest.of(0, 1));
+
+        assertEquals(2, page.getTotalElements());
+        PersistenceUnitUtil util = entityManager.getEntityManagerFactory().getPersistenceUnitUtil();
+        assertTrue(util.isLoaded(page.getContent().get(0), "client"));
+        assertTrue(util.isLoaded(page.getContent().get(0), "apartment"));
+        // Una de count y una de datos; nunca una por reserva.
+        assertEquals(2, SqlStatementCollector.selectCount());
     }
 
     private Booking booking(Client client, Apartment apartment, LocalDate arrival, LocalDate departure) {
