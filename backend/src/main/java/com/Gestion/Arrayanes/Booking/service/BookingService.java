@@ -2,6 +2,7 @@ package com.Gestion.Arrayanes.Booking.service;
 
 import com.Gestion.Arrayanes.Apartment.model.Apartment;
 import com.Gestion.Arrayanes.Apartment.repository.ApartmentRepository;
+import com.Gestion.Arrayanes.Booking.dto.BookingBaseRequestDTO;
 import com.Gestion.Arrayanes.Booking.dto.BookingResponseDTO;
 import com.Gestion.Arrayanes.Booking.dto.BookingUpdateRequestDTO;
 import com.Gestion.Arrayanes.Booking.dto.BookingWithClientIdRequestDTO;
@@ -100,19 +101,22 @@ public class BookingService implements IBookingService {
         return transactionCodeGenerator.generateNext(bookingRepository.findAllTransactionCodes());
     }
 
-    @Override
-    @Transactional
-    public BookingResponseDTO saveBooking(BookingWithClientIdRequestDTO bookingRequestDTO) {
-        Client client = getClientById(bookingRequestDTO.getClientId());
-        Apartment apartment = getApartmentById(bookingRequestDTO.getApartmentId());
-        Booking booking = bookingMapper.toEntity(bookingRequestDTO, client, apartment);
+    private BookingResponseDTO createBooking(BookingBaseRequestDTO request, Client client) {
+        Apartment apartment = getApartmentById(request.getApartmentId());
+        Booking booking = bookingMapper.toEntity(request, client, apartment);
 
-        bookingValidation.validate(booking, bookingRequestDTO, apartment);
+        bookingValidation.validate(booking, request, apartment);
         calculateAndSetTotalPrice(booking, apartment);
         booking.setTransactionCode(nextTransactionCode());
         bookingRepository.save(booking);
 
         return bookingMapper.toResponseDTO(booking);
+    }
+
+    @Override
+    @Transactional
+    public BookingResponseDTO saveBooking(BookingWithClientIdRequestDTO bookingRequestDTO) {
+        return createBooking(bookingRequestDTO, getClientById(bookingRequestDTO.getClientId()));
     }
 
     @Override
@@ -194,15 +198,6 @@ public class BookingService implements IBookingService {
                         ClientNormalization.normalizeDni(clientDto.getClientDni()))
                 .orElseGet(() -> clientRepository.save(clientMapper.toEntity(clientDto)));
 
-        Apartment apartment = getApartmentById(request.getApartmentId());
-
-        Booking booking = bookingMapper.toEntity(request, client, apartment);
-        bookingValidation.validate(booking, request, apartment);
-        calculateAndSetTotalPrice(booking, apartment);
-        booking.setTransactionCode(nextTransactionCode());
-
-        bookingRepository.save(booking);
-
-        return bookingMapper.toResponseDTO(booking);
+        return createBooking(request, client);
     }
 }
