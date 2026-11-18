@@ -6,13 +6,13 @@
 
 ## Estado actual
 
-- **Fase:** Estabilización / nueva ronda de rebanadas
-- **Última actualización:** 2026-11-18
-- **Resumen:** Fase 2 de refactors (puntos 3 → 29 + OpenAPI) cerrada y commiteada en `master @ 3aeeba3`, con backend 250 tests y frontend 63 en verde. Jar de escritorio y `Arrayanes.exe` conviven en `backend/target/`. Se adoptó la memoria en `docs/`; alcance confirmado, PRD definitivo pendiente. Smoke del jar y de restauración verdes.
+- **Fase:** Ronda de mejoras cerrada / entrega final
+- **Última actualización:** 2026-11-18 18:05
+- **Resumen:** Fase 2 (puntos 3 → 29 + OpenAPI) y ronda RF-13…RF-16 cerradas en `master @ 550feb3`; 254 tests backend y 56 frontend, lint 0 errores y 0 warnings. `pnpm build` regeneró el jar el 18/11 18:04 con el SPA copiado a las 18:03 (hash verificado dentro de `BOOT-INF/classes/static/`), y `.exe` + 10 DLL se restauraron desde copia con SHA-256. PRD definitivo: §1 permanece `(inferido)` porque el usuario no conserva las peticiones originales.
 
 ## Siguiente paso
 
-1. Armar el PRD definitivo con la "Solicitud original" del usuario (§1 sigue como `(inferido)`) y cerrar la memoria de la ronda.
+1. Ninguno. Solo hacer `git push` de `master` si el usuario lo pide.
 
 ## Tablero de requisitos
 
@@ -71,11 +71,12 @@ cmd /c '"D:\ProgramData\Microsoft\VisualStudio\VC\Auxiliary\Build\vcvars64.bat" 
 
 | Qué | Resultado | Fecha |
 |---|---|---|
-| Compila backend | Sí (`mvnw -B clean package`) | 2026-11-17 |
+| Compila backend | Sí (`mvnw -B clean package`) | 2026-11-17 → 2026-11-18 |
 | Tests backend | Sí, 250 tests → 254 con RF-15 | 2026-11-17 → 2026-11-18 |
-| Build frontend | Sí | 2026-11-17 |
+| Build frontend | Sí, `ng build` dentro de `pnpm build` | 2026-11-17 → 2026-11-18 |
 | Tests frontend | Sí, 63 tests (56 tras quitar Calendario) | 2026-11-17 → 2026-11-18 |
 | Lint / formato | 0 errores y 0 warnings / OK | 2026-11-17 → 2026-11-18 |
+| Build final (`pnpm build`) | Sí: jar 18:04 con `static/index.html` 18:03, mismo SHA-256 dentro del jar; nativo restaurado | 2026-11-18 |
 | Migración de tipos (RF-14) | Sí: `ng build` + 56 tests + formato + lint sin errores | 2026-11-18 |
 | Smoke del jar (`pnpm start`) | Sí: SPA 200, token, copia manual creada, apagado limpio; Brave abierto en modo app | 2026-11-18 |
 | Smoke de restauración | Sí: copia marcada, `.restore-pending` visible y aplicada al tercer arranque en sandbox | 2026-11-18 |
@@ -89,9 +90,14 @@ cmd /c '"D:\ProgramData\Microsoft\VisualStudio\VC\Auxiliary\Build\vcvars64.bat" 
 
 ## Preguntas abiertas para el usuario
 
-- [ ] Confirmar el PRD reconstruido `(inferido)`, en especial la "Solicitud original" literal.
+- Ninguna. El usuario confirmó el 2026-11-18 que no tiene las peticiones originales por separado; el PRD queda definitivo con §1 `(inferido)`.
 
 ## Registro de sesiones (más reciente primero)
+
+### 2026-11-18 — Cierre de ronda y build final
+- Hecho: `pnpm build` compiló Angular, copió el SPA a `backend/src/main/resources/static` y empaquetó el jar con `mvnw -B clean package` (254 tests backend en verde). Se preservaron `Arrayanes.exe` y los 10 DLL en `C:\Users\nicos\AppData\Local\Temp\opencode\gestion-arrayanes-native-20261118-180300`, se restauraron y se verificaron por SHA-256. El `index.html` del jar coincide con el del `static`. PRD cerrado como definitivo con §1 `(inferido)`.
+- Decisiones tomadas: ninguna nueva; se respeta la solicitud original no disponible y la retención de 10 copias (ADR-0009).
+- Quedó pendiente: push opcional de `master`.
 
 ### 2026-11-18 — Corrección documental del puerto
 - Hecho: README, PRD, ADR-0002 y comentarios de `application.properties` y `DevPortCustomizer` ya describen `server.port=0` con el puerto real publicado en `backend/api-port.txt`. `backend/PROGRESS.md` conserva el texto histórico con una nota de corrección.

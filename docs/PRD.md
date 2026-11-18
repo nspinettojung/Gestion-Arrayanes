@@ -5,13 +5,15 @@
 
 | Campo | Valor |
 |---|---|
-| Versión del PRD | 1.0 |
+| Versión del PRD | 1.1 |
 | Fecha | 2026-11-18 |
-| Estado | Borrador — reconstrucción `(inferido)` pendiente de confirmación del usuario |
+| Estado | Definitivo — reconstrucción `(inferido)` confirmada; la solicitud original literal no está disponible |
 
 ## 1. Solicitud original (literal, no editar)
 
 > No disponible: el mensaje original no quedó registrado literalmente en el repo ni en el historial conservado de la conversación. Este PRD se reconstruyó `(inferido)` del código, los README, `backend/PROGRESS.md` y el resumen de la sesión. Si aparece el texto original, pegarlo aquí sin editarlo.
+
+Confirmado por el usuario el 2026-11-18: no dispone de las peticiones originales por separado, por lo que esta sección se conserva tal cual y el carácter `(inferido)` del resto del documento se mantiene.
 
 ## 2. Resumen `(inferido)`
 
@@ -69,7 +71,7 @@ Gestión Arrayanes es una aplicación de escritorio para gestionar reservas de d
 | RNF-04 | Puertos | El jar usa un puerto efímero publicado en `backend/api-port.txt`; `pnpm dev` usa el primer puerto libre entre 8081 y 8089 |
 | RNF-05 | Seguridad | Sin consola H2 ni `/v3/api-docs` en el jar de producción |
 | RNF-06 | Calidad | Tests backend y frontend en verde; `format:check` y lint sin errores |
-| RNF-07 | Accesibilidad | Etiquetas de formulario, foco y contraste en las plantillas (deuda parcial) |
+| RNF-07 | Accesibilidad | Etiquetas de formulario, foco y contraste en las plantillas |
 
 ## 8. Modelo de datos preliminar `(inferido)`
 
@@ -105,22 +107,23 @@ Angular standalone + signals, Tailwind v4 con design tokens, Material Symbols e 
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
-| El smoke del escritorio no se ha repetido tras puntos 25/28/29 y OpenAPI | Medio | Ejecutar `pnpm start` y probar crear/restaurar copia antes de cerrar la fase |
+| Smoke del escritorio tras la ronda RF-13…RF-16 | Medio | Ejecutado el 2026-11-18 con ese código: SPA 200, token, copias y restauración; el jar final se regeneró a las 18:04 y se verificó el hash del SPA empaquetado |
 | El build nativo necesita entorno MSVC y puede requerir metadatos de reflexión | Medio | Ya verificado el 2026-11-17; documentado el comando exacto en DECISIONS |
 | Los artefactos OpenAPI cambian de orden entre ejecuciones | Bajo | El test canonicaliza claves; CI compara spec y tipos |
 
 ## 14. Preguntas abiertas
 
-- [ ] Armar el PRD definitivo con la solicitud original del usuario (§1 sigue como `(inferido)`).
+- [x] Armar el PRD definitivo. El usuario confirmó que no tiene las peticiones originales por separado; §1 se conserva `(inferido)` y no queda nada por reconstruir.
 
 **Resuelta el 2026-11-18:** retención de copias (RF-15) → máximo 10 zips y 10 `.bak-*` por configuración, sin borrar la copia pendiente.
 
 ## 15. Definición de terminado
 
-Requisitos Must y Should cumplidos, `pnpm test` en verde (backend + frontend), `format:check` y lint sin errores, `pnpm build` generando jar, `.exe` revalidado, smoke manual del escritorio documentado y memoria (`docs/`) al día.
+Requisitos Must y Should cumplidos, `pnpm test` en verde (backend + frontend), `format:check` y lint sin errores ni warnings, `pnpm build` generando el jar con el SPA actual y preservando `.exe` + DLL, smoke manual del escritorio documentado y memoria (`docs/`) al día.
 
 ## 16. Historial de cambios del PRD
 
 | Versión | Fecha | Cambio | Motivo | Confirmado por |
 |---|---|---|---|---|
 | 1.0 | 2026-11-18 | Versión inicial reconstruida `(inferido)` | El proyecto ya existía y no tenía PRD; se adoptó la memoria de la skill | Pendiente |
+| 1.1 | 2026-11-18 | PRD definitivo; §1 se mantiene `(inferido)` y se registra el build final | El usuario confirmó que no conserva las peticiones originales por separado | Usuario (confirmación 2026-11-18) |
