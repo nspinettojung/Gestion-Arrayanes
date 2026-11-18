@@ -15,16 +15,13 @@ export class Navbar implements OnInit {
   private destroyRef = inject(DestroyRef);
   private systemService = inject(SystemService);
   private confirmation = inject(ConfirmationService);
+  private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
 
   pageTitle = 'Mi App';
   pageIcon = '';
   closing = signal(false);
   closed = signal(false);
-
-  constructor(
-    private router: Router,
-    private activatedRoute: ActivatedRoute,
-  ) {}
 
   ngOnInit() {
     this.router.events

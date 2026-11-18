@@ -9,7 +9,7 @@ export class Modal {
   title = input<string>('');
   show = input<boolean>(false);
   busy = input<boolean>(false);
-  close = output<void>();
+  closeRequested = output<void>();
 
   constructor() {
     effect((onCleanup) => {
@@ -28,16 +28,10 @@ export class Modal {
     }
   }
 
-  onBackdrop(event: MouseEvent): void {
-    if (event.target === event.currentTarget) {
-      this.onClose();
-    }
-  }
-
   onClose(): void {
     if (this.busy()) {
       return;
     }
-    this.close.emit();
+    this.closeRequested.emit();
   }
 }

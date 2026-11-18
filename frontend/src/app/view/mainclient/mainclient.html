@@ -74,11 +74,12 @@
         </td>
         <td class="px-space-md py-4 text-right flex flex-colum justify-center">
           <button
+            type="button"
             class="flex p-1.5 hover:bg-secondary/10 rounded-xl text-secondary transition-colors justify-center"
+            aria-label="Editar cliente"
+            (click)="openEditClient(client)"
           >
-            <span class="material-symbols-outlined" (click)="openEditClient(client)"
-              >edit_square</span
-            >
+            <span class="material-symbols-outlined">edit_square</span>
           </button>
           <button
             class="flex p-1.5 hover:bg-error/10 rounded-xl text-error transition-colors justify-center disabled:cursor-not-allowed disabled:opacity-50"
@@ -106,7 +107,7 @@
     [title]="'Editar Cliente'"
     [show]="showModal"
     [busy]="saving()"
-    (close)="showModal = false"
+    (closeRequested)="showModal = false"
   >
     <div
       class="border-b border-outline-variant pb-space-sm mb-space-md flex items-center gap-2 form-title"
@@ -117,8 +118,9 @@
 
     <div class="grid grid-cols-2 gap-space-md form-body">
       <div>
-        <label>Nombre</label>
+        <label for="edit-client-name">Nombre</label>
         <input
+          id="edit-client-name"
           class="w-full px-3 py-2"
           type="text"
           placeholder="Nombre"
@@ -130,8 +132,9 @@
       </div>
 
       <div>
-        <label>Apellido</label>
+        <label for="edit-client-last-name">Apellido</label>
         <input
+          id="edit-client-last-name"
           class="w-full px-3 py-2"
           type="text"
           placeholder="Apellido"
@@ -144,8 +147,9 @@
         }
       </div>
       <div>
-        <label>DNI/Pasaporte</label>
+        <label for="edit-client-dni">DNI/Pasaporte</label>
         <input
+          id="edit-client-dni"
           class="w-full px-3 py-2"
           type="text"
           placeholder="12345678 o AB123456"
@@ -158,8 +162,9 @@
         }
       </div>
       <div>
-        <label>Teléfono</label>
+        <label for="edit-client-phone">Teléfono</label>
         <input
+          id="edit-client-phone"
           class="w-full px-3 py-2"
           type="tel"
           placeholder="+54 9 11 5555-1234"

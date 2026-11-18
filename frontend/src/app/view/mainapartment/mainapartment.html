@@ -118,7 +118,7 @@
     [title]="isEditing ? 'Editar Departamento' : 'Agregar Departamento'"
     [show]="showModal"
     [busy]="saving()"
-    (close)="closeModal()"
+    (closeRequested)="closeModal()"
   >
     <div
       class="border-b border-outline-variant pb-space-sm mb-space-md flex items-center gap-2 form-title"
@@ -132,8 +132,9 @@
     <div class="grid grid-cols-1 gap-space-md form-body">
       <div class="grid grid-cols-2 gap-space-md">
         <div>
-          <label>Nombre</label>
+          <label for="edit-apartment-name">Nombre</label>
           <input
+            id="edit-apartment-name"
             class="w-full px-3 py-2"
             type="text"
             placeholder="Nombre"
@@ -141,8 +142,9 @@
           />
         </div>
         <div>
-          <label>Cantidad Max. Personas</label>
+          <label for="edit-apartment-max">Cantidad Max. Personas</label>
           <input
+            id="edit-apartment-max"
             class="w-full px-3 py-2"
             type="number"
             placeholder="Cantidad Max. Personas"
@@ -152,8 +154,9 @@
       </div>
       <div class="w-full">
         <div>
-          <label>Precio</label>
+          <label for="edit-apartment-price">Precio</label>
           <input
+            id="edit-apartment-price"
             class="w-full px-3 py-2"
             type="number"
             placeholder="Precio"

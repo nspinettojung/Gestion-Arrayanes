@@ -205,7 +205,12 @@
 </div>
 
 <form [formGroup]="bookingForm" (ngSubmit)="onEdit()">
-  <gda-modal [title]="'Editar Reserva'" [show]="showModal" [busy]="saving()" (close)="closeModal()">
+  <gda-modal
+    [title]="'Editar Reserva'"
+    [show]="showModal"
+    [busy]="saving()"
+    (closeRequested)="closeModal()"
+  >
     <div
       class="border-b border-outline-variant pb-space-sm mb-space-md flex items-center gap-2 form-title"
     >

@@ -44,7 +44,11 @@
     <div class="calendar-grid h-[calc(100vh-280px)] min-h-125">
       @for (day of days(); track day.date) {
         <div
+          role="button"
+          tabindex="0"
           (click)="selectDay(day)"
+          (keydown.enter)="selectDay(day)"
+          (keydown.space)="$event.preventDefault(); selectDay(day)"
           [class.bg-secondary-container/5]="selectedDay === day.day"
           [class.ring-2]="selectedDay === day.day"
           [class.ring-secondary-container]="selectedDay === day.day"
