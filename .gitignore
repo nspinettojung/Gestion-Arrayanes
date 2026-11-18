@@ -23,4 +23,5 @@ frontend/proxy.dev.conf.json
 # Raíz
 node_modules/
 .tools/
+.opencode/
 *.log

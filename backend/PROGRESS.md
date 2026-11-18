@@ -1,7 +1,9 @@
-# Progreso
+# Progreso (histórico de la Fase 2)
 
-**Estado:** en curso (Fase 2 de refactors de backend, monorepo)
-**Actualizado:** 2026-11-17
+> El tablero vivo está en `docs/PROGRESS.md`. Este archivo conserva el detalle histórico de la Fase 2.
+
+**Estado:** en pausa
+**Actualizado:** 2026-11-18
 **Rama:** master (monorepo raíz con frontend/ y backend/)
 
 ## Objetivo
