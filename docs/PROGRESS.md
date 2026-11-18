@@ -12,8 +12,7 @@
 
 ## Siguiente paso
 
-1. RF-16: revisar los 17 warnings de lint preexistentes (accesibilidad en plantillas, selectores y `prefer-inject`).
-2. Al terminar la ronda, armar el PRD definitivo (la "Solicitud original" sigue sin texto literal) y corregir la doc del puerto efímero.
+1. Armar el PRD definitivo con la "Solicitud original" del usuario (§1 sigue como `(inferido)`) y cerrar la memoria de la ronda.
 
 ## Tablero de requisitos
 
@@ -34,7 +33,7 @@
 | RF-13 quitar Calendario | Hecho | ruta y enlace eliminados, `maincalendar/` borrado | frontend 56 tests | `/booking` ya incrusta `gda-calendar` |
 | RF-14 migrar servicios a tipos | Hecho | `core/services/` (booking, clients, apartment, dashboard) | build + 56 tests | Interfaces manuales borradas; alias derivados de `components['schemas']` (ADR-0008) |
 | RF-15 retención de copias | Hecho | `BackupService.java`, `application.properties` | 4 tests nuevos (254 backend) | Máximo 10 zips y 10 `.bak-*`, configurable; protege la copia pendiente (ADR-0009) |
-| RF-16 warnings de lint | Pendiente | plantillas y `navbar.ts` | lint | 17 warnings preexistentes |
+| RF-16 warnings de lint | Hecho | plantillas de calendario/modal/clientes/departamentos y `navbar.ts` | lint limpio | 0 errores y 0 warnings; `close` pasó a `closeRequested` |
 
 ## Mapa del repositorio
 
@@ -76,7 +75,7 @@ cmd /c '"D:\ProgramData\Microsoft\VisualStudio\VC\Auxiliary\Build\vcvars64.bat" 
 | Tests backend | Sí, 250 tests → 254 con RF-15 | 2026-11-17 → 2026-11-18 |
 | Build frontend | Sí | 2026-11-17 |
 | Tests frontend | Sí, 63 tests (56 tras quitar Calendario) | 2026-11-17 → 2026-11-18 |
-| Lint / formato | 0 errores, 17 warnings / OK | 2026-11-17 → 2026-11-18 |
+| Lint / formato | 0 errores y 0 warnings / OK | 2026-11-17 → 2026-11-18 |
 | Migración de tipos (RF-14) | Sí: `ng build` + 56 tests + formato + lint sin errores | 2026-11-18 |
 | Smoke del jar (`pnpm start`) | Sí: SPA 200, token, copia manual creada, apagado limpio; Brave abierto en modo app | 2026-11-18 |
 | Smoke de restauración | Sí: copia marcada, `.restore-pending` visible y aplicada al tercer arranque en sandbox | 2026-11-18 |
@@ -86,8 +85,6 @@ cmd /c '"D:\ProgramData\Microsoft\VisualStudio\VC\Auxiliary\Build\vcvars64.bat" 
 
 ## Problemas conocidos y deuda técnica
 
-- El jar usa `server.port=0` (puerto efímero publicado en `backend/api-port.txt`), no el 8080 fijo que dicen algunos comentarios/README; el navegador se abre al puerto real. No rompe nada, pero conviene corregir la documentación.
-- 17 warnings de lint preexistentes (accesibilidad en plantillas, selectores, `prefer-inject`).
 - El build nativo depende de `vcvars64` y no existe un script raíz para él.
 
 ## Preguntas abiertas para el usuario
@@ -95,6 +92,16 @@ cmd /c '"D:\ProgramData\Microsoft\VisualStudio\VC\Auxiliary\Build\vcvars64.bat" 
 - [ ] Confirmar el PRD reconstruido `(inferido)`, en especial la "Solicitud original" literal.
 
 ## Registro de sesiones (más reciente primero)
+
+### 2026-11-18 — Corrección documental del puerto
+- Hecho: README, PRD, ADR-0002 y comentarios de `application.properties` y `DevPortCustomizer` ya describen `server.port=0` con el puerto real publicado en `backend/api-port.txt`. `backend/PROGRESS.md` conserva el texto histórico con una nota de corrección.
+- Decisiones tomadas: ninguna nueva.
+- Quedó pendiente: PRD definitivo.
+
+### 2026-11-18 — RF-16: lint sin warnings
+- Hecho: el día del calendario tiene `role`/`tabindex` y atajos de teclado; el fondo del modal es un botón accesible y el output `close` pasó a `closeRequested`; las etiquetas de clientes y departamentos se asociaron a sus inputs; `navbar.ts` usa `inject()`. `ng lint` limpio, build y 56 tests en verde.
+- Decisiones tomadas: ninguna nueva.
+- Quedó pendiente: documentación del puerto efímero y PRD definitivo.
 
 ### 2026-11-18 — RF-15: retención de copias
 - Hecho: `BackupService` conserva las 10 copias y los 10 `.bak-*` más recientes al crear una copia, con límite configurable (`arrayanes.backup.max-copies`). Nunca borra la copia marcada para restaurar. 4 tests nuevos; `pnpm test` en verde con 254 backend + 56 frontend.

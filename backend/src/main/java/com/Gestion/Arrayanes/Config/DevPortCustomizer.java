@@ -16,7 +16,8 @@ import java.util.List;
 
 /**
  * En desarrollo web elige el primer puerto libre de una lista corta, para no
- * depender de un único puerto fijo. El 8080 queda reservado para el jar.
+ * depender de un único puerto fijo. El jar de escritorio usa server.port=0
+ * (puerto efímero publicado en api-port.txt), así que no comparte estos puertos.
  */
 @Component
 @Profile("webdev")

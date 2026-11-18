@@ -36,7 +36,7 @@ Gestión Arrayanes es una aplicación de escritorio para gestionar reservas de d
 
 **Dentro (esta versión):** reservas, clientes, departamentos, dashboard, historial, copias de seguridad con retención automática, modo escritorio del jar, contrato OpenAPI, servicios Angular migrados al contrato generado y ejecutable nativo.
 
-**Fuera (para después o nunca):** autenticación, upgrade de Angular/Spring Boot, corrección de warnings de accesibilidad preexistentes.
+**Fuera (para después o nunca):** autenticación, upgrade de Angular/Spring Boot.
 
 ## 6. Requisitos funcionales
 
@@ -51,7 +51,7 @@ Gestión Arrayanes es una aplicación de escritorio para gestionar reservas de d
 | RF-07 | Consultar el historial de reservas | Should | Dado un código de transacción, cuando se busca, entonces filtra los resultados |
 | RF-08 | Crear copias y restaurar una copia elegida | Must | Dada una copia válida, cuando se elige restaurar, entonces se marca, se cierra la app y al reiniciar se extrae el `.mv.db` con la base detenida, conservando un `.bak-*` |
 | RF-09 | Proteger el apagado y las copias con token local | Must | Dada una petición sin `X-Shutdown-Token` válido, entonces responde 403 RFC 9457; el token solo se entrega al mismo origen |
-| RF-10 | Ejecutar la app como escritorio desde el jar | Must | Dado `pnpm start`, cuando arranca sin perfiles, entonces usa `prod`, escucha en 8080 y abre el navegador en modo app sin consola H2 |
+| RF-10 | Ejecutar la app como escritorio desde el jar | Must | Dado `pnpm start`, cuando arranca sin perfiles, entonces usa `prod`, elige un puerto efímero, lo publica en `backend/api-port.txt` y abre el navegador en modo app sin consola H2 |
 | RF-11 | Generar contrato OpenAPI y tipos TS | Should | Dado `pnpm api`, cuando cambia un DTO, entonces se regeneran spec y `api-types.ts` y la CI detecta artefactos desactualizados |
 | RF-12 | Generar el ejecutable nativo GraalVM | Should | Dado el entorno con `vcvars64`, cuando se compila con el perfil `native`, entonces se produce `backend/target/Arrayanes.exe` |
 | RF-13 | Quitar la sección Calendario duplicada | Should | Dado que `/booking` ya incrusta `gda-calendar`, cuando se navega el menú, entonces no aparece un enlace Calendario ni existe la ruta `/calendar` |
@@ -66,7 +66,7 @@ Gestión Arrayanes es una aplicación de escritorio para gestionar reservas de d
 | RNF-01 | Versiones | Java 25 LTS, Spring Boot 4.0.6, Angular 21, Node ≥ 22, pnpm 11; versiones fijadas en los manifests |
 | RNF-02 | Persistencia | H2 en archivo con Flyway (`ddl-auto=validate`); en tests, H2 en memoria |
 | RNF-03 | Errores | Formato RFC 9457 (`ProblemDetail` con `detail`, `errors[]`, `requestId`) |
-| RNF-04 | Puertos | 8080 reservado al jar; `pnpm dev` usa el primer puerto libre entre 8081 y 8089 |
+| RNF-04 | Puertos | El jar usa un puerto efímero publicado en `backend/api-port.txt`; `pnpm dev` usa el primer puerto libre entre 8081 y 8089 |
 | RNF-05 | Seguridad | Sin consola H2 ni `/v3/api-docs` en el jar de producción |
 | RNF-06 | Calidad | Tests backend y frontend en verde; `format:check` y lint sin errores |
 | RNF-07 | Accesibilidad | Etiquetas de formulario, foco y contraste en las plantillas (deuda parcial) |

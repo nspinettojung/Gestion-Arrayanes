@@ -29,7 +29,7 @@ pnpm dev
 - API: primer puerto libre entre `8081` y `8089` (perfiles `dev,webdev`, sin abrir el navegador).
 - Frontend: `http://localhost:4200` (Angular dev server).
 
-El backend publica el puerto elegido en `backend/api-port.txt`. `pnpm dev` espera a que exista ese archivo, genera `frontend/proxy.dev.conf.json` y recién entonces levanta Angular con el proxy hacia ese puerto. El 8080 queda reservado para el jar. Para usar `ng serve` por separado, el proxy por defecto apunta a `8081` (`frontend/proxy.conf.json`).
+El backend publica el puerto elegido en `backend/api-port.txt`. `pnpm dev` espera a que exista ese archivo, genera `frontend/proxy.dev.conf.json` y recién entonces levanta Angular con el proxy hacia ese puerto. El jar de escritorio (`pnpm start`) usa `server.port=0`, es decir un puerto efímero: el puerto real se publica en `backend/api-port.txt` y el navegador se abre ahí, no en un 8080 fijo. Para usar `ng serve` por separado, el proxy por defecto apunta a `8081` (`frontend/proxy.conf.json`).
 
 El backend usa `backend/datos/mibasedatos` como base H2. `Ctrl+C` corta ambos procesos.
 

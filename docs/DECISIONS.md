@@ -57,7 +57,7 @@ Estados: Propuesta · Aceptada · Reemplazada por ADR-xxxx · Descartada
 
 **Contexto.** La SPA debe entregarse junta con la API y abrirse como aplicación local sin levantar dos servidores.
 
-**Decisión.** `frontend/` + `backend/` + scripts raíz sin dependencias (`Node .mjs`). `pnpm build` compila Angular, copia a `backend/src/main/resources/static` y empaqueta el jar con `mvnw -B clean package`. `pnpm start` ejecuta ese jar con `prod` por defecto. El 8080 queda reservado al jar; `pnpm dev` usa 8081–8089 y proxy. El `.exe` nativo se genera aparte y no reemplaza al jar.
+**Decisión.** `frontend/` + `backend/` + scripts raíz sin dependencias (`Node .mjs`). `pnpm build` compila Angular, copia a `backend/src/main/resources/static` y empaqueta el jar con `mvnw -B clean package`. `pnpm start` ejecuta ese jar con `prod` por defecto. El jar usa `server.port=0` (puerto efímero publicado en `backend/api-port.txt` y abierto por `DesktopLauncher`); `pnpm dev` usa 8081–8089 y proxy. El `.exe` nativo se genera aparte y no reemplaza al jar.
 
 **Alternativas consideradas.** Servir el frontend por separado (descartado: rompe la entrega de escritorio); usar solo el `.exe` (descartado: el jar sigue siendo el modo soportado y testeado).
 
