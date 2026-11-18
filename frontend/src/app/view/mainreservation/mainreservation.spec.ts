@@ -6,9 +6,8 @@ import { of } from 'rxjs';
 
 import { Mainreservation } from './mainreservation';
 import { Apartment } from '../../core/services/apartment/apartment';
-import { Booking } from '../../core/services/booking/booking';
+import { Booking, type IBooking } from '../../core/services/booking/booking';
 import { NotificationService } from '../../core/services/notification/notification';
-import { IBooking } from '../../core/interface/booking/booking';
 import { dniOrPassportValidator, phoneValidator } from '../../core/validators/contact';
 
 const apartmentMock = {

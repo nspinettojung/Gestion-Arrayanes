@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, EventEmitter, inject, OnInit, Output, signal } from '@angular/core';
-import { Dashboard } from '../../../core/services/dashboard/dashboard';
-import { ClientApartmentDTO } from '../../../core/interface/clients/client-apartment-dto';
+import { Dashboard, type ClientApartmentDTO } from '../../../core/services/dashboard/dashboard';
 import { toLocalIsoDate } from '../../../core/utils/date';
 
 export interface CalendarDay {

@@ -1,10 +1,40 @@
 import { computed, effect, inject, Injectable, signal, Signal } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { HttpClient, httpResource } from '@angular/common/http';
-import { IDashboard } from '../../interface/dashboard/dashboard';
-import { DashboardStats } from '../../interface/dashboard/dashboard-stats';
-import { DashboardSummary } from '../../interface/dashboard/dashboard-summary';
-import { ClientApartmentDTO } from '../../interface/clients/client-apartment-dto';
+import type { components } from '../../api/api-types';
+
+// Tipos generados desde los controladores por `pnpm api`; no se mantienen a mano.
+// Los esquemas tienen campos opcionales: `Required` recupera los que la UI siempre consume.
+type Schemas = components['schemas'];
+type DashboardDto = Schemas['DashboardDTO'];
+export type IDashboard = Omit<Required<DashboardDto>, 'transactionCode'> & {
+  transactionCode: string | null;
+};
+export type DashboardStats = Required<Schemas['DashboardStatsDTO']>;
+export type ClientApartmentDTO = Required<Schemas['ClientApartmentDTO']>;
+
+type CalendarDaySummary = Required<Schemas['CalendarDayDTO']>;
+type DaySummary = Required<Omit<Schemas['DaySummaryDTO'], 'arrivals' | 'departures'>> & {
+  arrivals: ClientApartmentDTO[];
+  departures: ClientApartmentDTO[];
+};
+type MonthlySummary = Required<
+  Omit<Schemas['MonthlySummaryDTO'], 'arrivals' | 'departures' | 'calendar'>
+> & {
+  arrivals: ClientApartmentDTO[];
+  departures: ClientApartmentDTO[];
+  calendar: CalendarDaySummary[];
+};
+export type DashboardSummary = Required<
+  Omit<Schemas['DashboardSummaryDTO'], 'date' | 'day' | 'monthly'>
+> & {
+  date: string | null;
+  day: DaySummary;
+  monthly: MonthlySummary;
+};
+export type DashboardPage = Required<Pick<Schemas['PageDashboardDTO'], 'totalElements'>> & {
+  content: IDashboard[];
+};
 
 interface BookingFilter {
   lastName: string;
@@ -32,7 +62,7 @@ export class Dashboard {
   private summaryParams = signal<SummaryParams | null>(null);
 
   private statsResource = httpResource<DashboardStats>(() => `${this.apiUrl}/dashboard/stats`);
-  private filteredResource = httpResource<{ content: IDashboard[]; totalElements: number }>(() => {
+  private filteredResource = httpResource<DashboardPage>(() => {
     const filter = this.bookingFilter();
 
     if (!filter) {

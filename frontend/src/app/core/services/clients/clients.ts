@@ -1,8 +1,15 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { IClients } from '../../interface/clients/clients';
 import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable, finalize, tap } from 'rxjs';
+import type { components } from '../../api/api-types';
+
+// Tipos generados desde los controladores por `pnpm api`; no se mantienen a mano.
+type ClientDto = components['schemas']['ClientResponseDTO'];
+export type IClients = Omit<Required<ClientDto>, 'lastCheckIn'> & {
+  lastCheckIn: string | null;
+};
+export type ClientCreateRequest = components['schemas']['ClientRequestDTO'];
 
 @Injectable({
   providedIn: 'root',
@@ -30,12 +37,7 @@ export class Clients {
       });
   }
 
-  createClient(client: {
-    clientName: string;
-    clientLastName: string;
-    clientDni: string;
-    clientPhone: string;
-  }): Observable<IClients> {
+  createClient(client: ClientCreateRequest): Observable<IClients> {
     return this.http.post<IClients>(`${this.apiUrl}/clients`, client);
   }
 

@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
-import { IDashboard } from '../../core/interface/dashboard/dashboard';
+import type { IDashboard } from '../../core/services/dashboard/dashboard';
 import { Mainhistory } from './mainhistory';
 
 function buildBooking(id: string, transactionCode: string | null): IDashboard {

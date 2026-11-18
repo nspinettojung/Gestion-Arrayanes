@@ -7,8 +7,8 @@ import {
   signal,
   OnInit,
 } from '@angular/core';
-import { Apartment } from '../../core/services/apartment/apartment';
-import { Booking } from '../../core/services/booking/booking';
+import { Apartment, type IApartment } from '../../core/services/apartment/apartment';
+import { Booking, type BookingCreateRequest } from '../../core/services/booking/booking';
 import { CommonModule } from '@angular/common';
 import {
   AbstractControl,
@@ -25,8 +25,6 @@ import { NotificationService } from '../../core/services/notification/notificati
 import { finalize } from 'rxjs';
 import { addDays, daysBetween, toLocalIsoDate } from '../../core/utils/date';
 import { calculateBookingPrice, EXTRA_PERSON_PRICE } from '../../core/utils/booking-price';
-import { BookingCreateRequest } from '../../core/interface/booking/booking';
-import { IApartment } from '../../core/interface/apartment/apartment';
 import { ArsCurrencyPipe } from '../assets/pipes/ars-currency-pipe';
 import { dniOrPassportValidator, phoneValidator } from '../../core/validators/contact';
 

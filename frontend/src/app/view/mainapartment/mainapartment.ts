@@ -1,10 +1,9 @@
 import { Component, computed, inject, signal, OnInit } from '@angular/core';
-import { Apartment } from '../../core/services/apartment/apartment';
+import { Apartment, type IApartment } from '../../core/services/apartment/apartment';
 import { Table } from '../assets/table/table';
 
 import { Modal } from '../assets/modal/modal';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { IApartment } from '../../core/interface/apartment/apartment';
 import { NotificationService } from '../../core/services/notification/notification';
 import { ConfirmationService } from '../../core/services/confirmation/confirmation';
 import { finalize } from 'rxjs';

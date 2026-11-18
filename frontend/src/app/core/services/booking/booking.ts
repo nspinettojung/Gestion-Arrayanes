@@ -1,12 +1,19 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../../../environments/environment';
-import {
-  BookingCreateRequest,
-  BookingUpdateRequest,
-  IBooking,
-} from '../../interface/booking/booking';
 import { Observable, finalize } from 'rxjs';
+import type { components } from '../../api/api-types';
+
+// Tipos generados desde los controladores por `pnpm api`; no se mantienen a mano.
+// `Required` conserva los campos que la UI siempre recibe; `transactionCode` puede ser null.
+type BookingDto = components['schemas']['BookingResponseDTO'];
+export type IBooking = Omit<Required<BookingDto>, 'transactionCode'> & {
+  transactionCode: string | null;
+};
+export type BookingCreateRequest = Required<
+  components['schemas']['BookingWithNewClientRequestDTO']
+>;
+export type BookingUpdateRequest = Required<components['schemas']['BookingUpdateRequestDTO']>;
 
 @Injectable({
   providedIn: 'root',

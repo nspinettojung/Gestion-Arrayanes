@@ -1,11 +1,10 @@
 import { Component, computed, inject, signal, OnInit } from '@angular/core';
-import { Clients } from '../../core/services/clients/clients';
+import { Clients, type IClients } from '../../core/services/clients/clients';
 import { CommonModule } from '@angular/common';
 import { Modal } from '../assets/modal/modal';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { InitialsPipe } from '../assets/pipes/initials-pipe';
 import { Table } from '../assets/table/table';
-import { IClients } from '../../core/interface/clients/clients';
 import { NotificationService } from '../../core/services/notification/notification';
 import { ConfirmationService } from '../../core/services/confirmation/confirmation';
 import { finalize } from 'rxjs';

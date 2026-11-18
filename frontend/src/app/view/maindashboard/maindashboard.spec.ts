@@ -3,9 +3,8 @@ import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 
-import { IDashboard } from '../../core/interface/dashboard/dashboard';
 import { Booking } from '../../core/services/booking/booking';
-import { Dashboard } from '../../core/services/dashboard/dashboard';
+import { Dashboard, type IDashboard } from '../../core/services/dashboard/dashboard';
 import { addDays, toLocalIsoDate } from '../../core/utils/date';
 import { Maindashboard } from './maindashboard';
 
