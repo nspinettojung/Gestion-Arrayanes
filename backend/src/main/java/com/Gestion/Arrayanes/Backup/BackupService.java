@@ -33,21 +33,35 @@ public class BackupService {
     private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private static final Pattern FILE_NAME =
             Pattern.compile("backup-([a-z]+)-(\\d{8}-\\d{6})(?:-\\d+)?\\.zip");
+    private static final Comparator<Path> NEWEST_FIRST =
+            Comparator.comparingLong((Path path) -> modifiedAt(path).toEpochMilli())
+                    .reversed()
+                    .thenComparing(path -> path.getFileName().toString(), Comparator.reverseOrder());
 
     private final Path directory;
     private final Path databaseFile;
     private final JdbcTemplate jdbc;
     private final Clock clock;
+    private final int maxCopies;
+    private final Pattern safetyCopyName;
 
     public BackupService(
             @Value("${arrayanes.backup.directory:./datos/backups}") String directory,
             @Value("${spring.datasource.url:}") String datasourceUrl,
+            @Value("${arrayanes.backup.max-copies:10}") int maxCopies,
             JdbcTemplate jdbc,
             Clock clock) {
         this.directory = Path.of(directory).toAbsolutePath().normalize();
-        this.databaseFile = BackupFiles.databaseFileFromJdbcUrl(datasourceUrl).orElse(null);
+        this.databaseFile = BackupFiles.databaseFileFromJdbcUrl(datasourceUrl)
+                .map(path -> path.toAbsolutePath().normalize())
+                .orElse(null);
+        this.maxCopies = Math.max(1, maxCopies);
         this.jdbc = jdbc;
         this.clock = clock;
+        this.safetyCopyName = this.databaseFile == null
+                ? null
+                : Pattern.compile(Pattern.quote(this.databaseFile.getFileName() + ".bak-")
+                        + "\\d{8}-\\d{6}");
     }
 
     public BackupInfo createManual() {
@@ -74,6 +88,7 @@ public class BackupService {
             String sql = "BACKUP TO '" + BackupFiles.escapeSqlLiteral(target.toString()) + "'";
             jdbc.execute(sql);
             log.info("Copia de seguridad creada: {}", name);
+            pruneOldFiles();
             return toInfo(target, false);
         } catch (IOException e) {
             throw new IllegalStateException("No se pudo crear la copia de seguridad: " + e.getMessage(), e);
@@ -102,15 +117,56 @@ public class BackupService {
             List<BackupInfo> backups = files
                     .filter(Files::isRegularFile)
                     .filter(path -> path.getFileName().toString().endsWith(".zip"))
-                    .sorted(Comparator.comparingLong((Path path) -> modifiedAt(path).toEpochMilli())
-                            .reversed()
-                            .thenComparing(
-                                    path -> path.getFileName().toString(), Comparator.reverseOrder()))
+                    .sorted(NEWEST_FIRST)
                     .map(path -> toInfo(path, path.getFileName().toString().equals(pending)))
                     .toList();
             return new BackupListResponse(backups, pending);
         } catch (IOException e) {
             throw new IllegalStateException("No se pudieron listar las copias de seguridad.", e);
+        }
+    }
+
+    /**
+     * Mantiene como máximo `maxCopies` zips y copias de seguridad previas a una
+     * restauración. Nunca borra la copia marcada para restaurar. La limpieza es
+     * best-effort: un fallo al borrar no debe fallar la copia recién creada.
+     */
+    private void pruneOldFiles() {
+        try {
+            String pending = pendingRestore().orElse(null);
+            try (Stream<Path> files = Files.list(directory)) {
+                files.filter(Files::isRegularFile)
+                        .filter(path -> path.getFileName().toString().endsWith(".zip"))
+                        .sorted(NEWEST_FIRST)
+                        .skip(maxCopies)
+                        .filter(path -> !path.getFileName().toString().equals(pending))
+                        .forEach(this::deleteQuietly);
+            }
+            pruneSafetyCopies();
+        } catch (IOException e) {
+            log.warn("No se pudo aplicar la retención de copias: {}", e.getMessage());
+        }
+    }
+
+    private void pruneSafetyCopies() throws IOException {
+        if (safetyCopyName == null || databaseFile.getParent() == null) {
+            return;
+        }
+        try (Stream<Path> files = Files.list(databaseFile.getParent())) {
+            files.filter(Files::isRegularFile)
+                    .filter(path -> safetyCopyName.matcher(path.getFileName().toString()).matches())
+                    .sorted(NEWEST_FIRST)
+                    .skip(maxCopies)
+                    .forEach(this::deleteQuietly);
+        }
+    }
+
+    private void deleteQuietly(Path file) {
+        try {
+            Files.delete(file);
+            log.info("Copia antigua eliminada por retención: {}", file.getFileName());
+        } catch (IOException e) {
+            log.warn("No se pudo eliminar la copia antigua {}: {}", file.getFileName(), e.getMessage());
         }
     }
 
@@ -175,7 +231,7 @@ public class BackupService {
         }
     }
 
-    private Instant modifiedAt(Path file) {
+    private static Instant modifiedAt(Path file) {
         try {
             return Files.getLastModifiedTime(file).toInstant();
         } catch (IOException e) {
