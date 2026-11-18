@@ -34,9 +34,9 @@ Gestión Arrayanes es una aplicación de escritorio para gestionar reservas de d
 
 ## 5. Alcance
 
-**Dentro (esta versión):** reservas, clientes, departamentos, dashboard, historial, copias de seguridad, modo escritorio del jar, contrato OpenAPI y ejecutable nativo.
+**Dentro (esta versión):** reservas, clientes, departamentos, dashboard, historial, copias de seguridad con retención automática, modo escritorio del jar, contrato OpenAPI, servicios Angular migrados al contrato generado y ejecutable nativo.
 
-**Fuera (para después o nunca):** retención automática de copias, autenticación, upgrade de Angular/Spring Boot, migración completa de servicios al contrato generado, corrección de warnings de accesibilidad preexistentes.
+**Fuera (para después o nunca):** autenticación, upgrade de Angular/Spring Boot, corrección de warnings de accesibilidad preexistentes.
 
 ## 6. Requisitos funcionales
 
@@ -56,7 +56,7 @@ Gestión Arrayanes es una aplicación de escritorio para gestionar reservas de d
 | RF-12 | Generar el ejecutable nativo GraalVM | Should | Dado el entorno con `vcvars64`, cuando se compila con el perfil `native`, entonces se produce `backend/target/Arrayanes.exe` |
 | RF-13 | Quitar la sección Calendario duplicada | Should | Dado que `/booking` ya incrusta `gda-calendar`, cuando se navega el menú, entonces no aparece un enlace Calendario ni existe la ruta `/calendar` |
 | RF-14 | Migrar el resto de servicios Angular a los tipos generados | Could | Dados bookings/clientes/departamentos/dashboard, cuando se consumen DTOs, entonces usan `components['schemas']` y no interfaces duplicadas |
-| RF-15 | Definir retención y limpieza de copias | Could | Dadas copias diarias/cierre/manuales, cuando se supera la política acordada, entonces se limpian sin borrar la pendiente de restauración |
+| RF-15 | Definir retención y limpieza de copias | Could | Dadas más de 10 copias, cuando se crea una nueva, entonces se borran las más antiguas (zips y `.bak-*`), sin tocar la copia pendiente de restauración; el límite es configurable con `arrayanes.backup.max-copies` |
 | RF-16 | Resolver los 17 warnings de lint preexistentes | Could | Dado `pnpm lint`, entonces hay 0 errores y 0 warnings |
 
 ## 7. Requisitos no funcionales
@@ -111,8 +111,9 @@ Angular standalone + signals, Tailwind v4 con design tokens, Material Symbols e 
 
 ## 14. Preguntas abiertas
 
-- [ ] Confirmar el texto literal de la solicitud original y pegarlo en §1.
-- [ ] Definir la política concreta de retención de copias (RF-15).
+- [ ] Armar el PRD definitivo con la solicitud original del usuario (§1 sigue como `(inferido)`).
+
+**Resuelta el 2026-11-18:** retención de copias (RF-15) → máximo 10 zips y 10 `.bak-*` por configuración, sin borrar la copia pendiente.
 
 ## 15. Definición de terminado
 

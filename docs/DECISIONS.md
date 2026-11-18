@@ -15,6 +15,7 @@
 | ADR-0006 | No actualizar Angular ni Spring Boot en esta ronda | Aceptada | 2026-11-18 |
 | ADR-0007 | Adoptar la memoria de la skill en `docs/` | Aceptada | 2026-11-18 |
 | ADR-0008 | Tipos de dominio derivados del contrato en cada servicio | Aceptada | 2026-11-18 |
+| ADR-0009 | Retención de copias por cantidad | Aceptada | 2026-11-18 |
 
 Estados: Propuesta · Aceptada · Reemplazada por ADR-xxxx · Descartada
 
@@ -149,3 +150,19 @@ Estados: Propuesta · Aceptada · Reemplazada por ADR-xxxx · Descartada
 **Alternativas consideradas.** Usar los DTO opcionales tal cual (descartado: obligaría a llenar la UI de aserciones y ocultaría errores reales del contrato); mantener interfaces manuales paralelas (descartado: se desincronizan del contrato); generar clientes HTTP (descartado en ADR-0005).
 
 **Consecuencias.** Si el backend cambia un campo, `pnpm api` regenera los tipos y la compilación falla en el alias correspondiente. Los tipos siguen siendo propiedad del servicio, no un archivo global.
+
+---
+
+## ADR-0009 — Retención de copias por cantidad
+
+- **Estado:** Aceptada
+- **Fecha:** 2026-11-18
+- **Motiva:** RF-08, RF-15
+
+**Contexto.** Las copias diarias, de cierre y manuales, más los `.bak-*` previos a cada restauración, se acumulan sin límite en una instalación de escritorio.
+
+**Decisión.** Al crear una copia se conservan como máximo 10 zips y 10 `.bak-*`, ordenados por fecha de modificación y nombre. El límite se configura con `arrayanes.backup.max-copies` (mínimo 1). La copia marcada en `.restore-pending` nunca se elimina. La limpieza es best-effort: un error al borrar no falla la copia recién creada. El usuario eligió esta opción ("máximo 10 copias") frente a la retención por días o la combinación de ambas.
+
+**Alternativas consideradas.** Conservar 30 días por `createdAt` (descartado: depende del reloj y deja picos variables); combinar cantidad y antigüedad (descartado: más reglas sin beneficio para el tamaño real de las copias); no borrar nada (descartado: deja RF-15 sin resolver).
+
+**Consecuencias.** El historial visible en la UI se acorta a 10 copias; los `.bak-*` más antiguos dejan de estar disponibles. Los tests cubren el límite, la protección de la copia pendiente y el límite configurable.

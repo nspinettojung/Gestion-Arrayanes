@@ -12,9 +12,8 @@
 
 ## Siguiente paso
 
-1. RF-15: definir e implementar la política de retención de copias en `backend/.../Backup` (pregunta abierta, requiere visto bueno del usuario).
-2. RF-16: revisar los 17 warnings de lint preexistentes.
-3. Al terminar la ronda, armar el PRD definitivo (la "Solicitud original" sigue sin texto literal) y corregir la doc del puerto efímero.
+1. RF-16: revisar los 17 warnings de lint preexistentes (accesibilidad en plantillas, selectores y `prefer-inject`).
+2. Al terminar la ronda, armar el PRD definitivo (la "Solicitud original" sigue sin texto literal) y corregir la doc del puerto efímero.
 
 ## Tablero de requisitos
 
@@ -34,7 +33,7 @@
 | RF-12 nativo | Hecho | `backend/target/Arrayanes.exe` | build verificado | GraalVM 25.0.4, 17:38 min |
 | RF-13 quitar Calendario | Hecho | ruta y enlace eliminados, `maincalendar/` borrado | frontend 56 tests | `/booking` ya incrusta `gda-calendar` |
 | RF-14 migrar servicios a tipos | Hecho | `core/services/` (booking, clients, apartment, dashboard) | build + 56 tests | Interfaces manuales borradas; alias derivados de `components['schemas']` (ADR-0008) |
-| RF-15 retención de copias | Pendiente | `backend/.../Backup` | por escribir | No hay política de limpieza |
+| RF-15 retención de copias | Hecho | `BackupService.java`, `application.properties` | 4 tests nuevos (254 backend) | Máximo 10 zips y 10 `.bak-*`, configurable; protege la copia pendiente (ADR-0009) |
 | RF-16 warnings de lint | Pendiente | plantillas y `navbar.ts` | lint | 17 warnings preexistentes |
 
 ## Mapa del repositorio
@@ -74,7 +73,7 @@ cmd /c '"D:\ProgramData\Microsoft\VisualStudio\VC\Auxiliary\Build\vcvars64.bat" 
 | Qué | Resultado | Fecha |
 |---|---|---|
 | Compila backend | Sí (`mvnw -B clean package`) | 2026-11-17 |
-| Tests backend | Sí, 250 tests | 2026-11-17 |
+| Tests backend | Sí, 250 tests → 254 con RF-15 | 2026-11-17 → 2026-11-18 |
 | Build frontend | Sí | 2026-11-17 |
 | Tests frontend | Sí, 63 tests (56 tras quitar Calendario) | 2026-11-17 → 2026-11-18 |
 | Lint / formato | 0 errores, 17 warnings / OK | 2026-11-17 → 2026-11-18 |
@@ -89,15 +88,18 @@ cmd /c '"D:\ProgramData\Microsoft\VisualStudio\VC\Auxiliary\Build\vcvars64.bat" 
 
 - El jar usa `server.port=0` (puerto efímero publicado en `backend/api-port.txt`), no el 8080 fijo que dicen algunos comentarios/README; el navegador se abre al puerto real. No rompe nada, pero conviene corregir la documentación.
 - 17 warnings de lint preexistentes (accesibilidad en plantillas, selectores, `prefer-inject`).
-- No hay política de retención de copias: zips y `.bak-*` se acumulan.
 - El build nativo depende de `vcvars64` y no existe un script raíz para él.
 
 ## Preguntas abiertas para el usuario
 
 - [ ] Confirmar el PRD reconstruido `(inferido)`, en especial la "Solicitud original" literal.
-- [ ] Definir cuántas copias conservar y durante cuánto tiempo (RF-15).
 
 ## Registro de sesiones (más reciente primero)
+
+### 2026-11-18 — RF-15: retención de copias
+- Hecho: `BackupService` conserva las 10 copias y los 10 `.bak-*` más recientes al crear una copia, con límite configurable (`arrayanes.backup.max-copies`). Nunca borra la copia marcada para restaurar. 4 tests nuevos; `pnpm test` en verde con 254 backend + 56 frontend.
+- Decisiones tomadas: ADR-0009 (el usuario eligió "máximo 10 copias" entre las opciones ofrecidas).
+- Quedó pendiente: RF-16, PRD definitivo, corregir la doc del puerto efímero.
 
 ### 2026-11-18 — RF-14: servicios migrados a los tipos del contrato
 - Hecho: booking, clients, apartment y dashboard exportan alias derivados de `components['schemas']`; se borraron las 8 interfaces manuales de `core/interface/` y se ajustaron vistas y specs. `createClient`, `addApartment` y `editApartment` ahora usan los DTO de request generados. `ng build`, 56 tests, formato y lint (0 errores, 17 warnings) en verde.
