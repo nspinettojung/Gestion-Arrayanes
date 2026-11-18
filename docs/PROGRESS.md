@@ -12,9 +12,9 @@
 
 ## Siguiente paso
 
-1. Seguir con RF-14 (migrar bookings, clientes, departamentos y dashboard a `components['schemas']`), empezando por `frontend/src/app/core/services/booking/booking.ts`.
-2. Luego RF-15 (retención de copias) y RF-16 (warnings de lint).
-3. Al terminar la ronda, armar el PRD definitivo (la "Solicitud original" sigue sin texto literal).
+1. RF-15: definir e implementar la política de retención de copias en `backend/.../Backup` (pregunta abierta, requiere visto bueno del usuario).
+2. RF-16: revisar los 17 warnings de lint preexistentes.
+3. Al terminar la ronda, armar el PRD definitivo (la "Solicitud original" sigue sin texto literal) y corregir la doc del puerto efímero.
 
 ## Tablero de requisitos
 
@@ -33,7 +33,7 @@
 | RF-11 OpenAPI | Hecho | `scripts/api.mjs`, `OpenApiSpecTest` | CI | Sin Swagger UI en prod |
 | RF-12 nativo | Hecho | `backend/target/Arrayanes.exe` | build verificado | GraalVM 25.0.4, 17:38 min |
 | RF-13 quitar Calendario | Hecho | ruta y enlace eliminados, `maincalendar/` borrado | frontend 56 tests | `/booking` ya incrusta `gda-calendar` |
-| RF-14 migrar servicios a tipos | Pendiente | `core/services/` | por actualizar | Solo Backup y LocalToken migrados |
+| RF-14 migrar servicios a tipos | Hecho | `core/services/` (booking, clients, apartment, dashboard) | build + 56 tests | Interfaces manuales borradas; alias derivados de `components['schemas']` (ADR-0008) |
 | RF-15 retención de copias | Pendiente | `backend/.../Backup` | por escribir | No hay política de limpieza |
 | RF-16 warnings de lint | Pendiente | plantillas y `navbar.ts` | lint | 17 warnings preexistentes |
 
@@ -43,7 +43,7 @@
 backend/src/main/java/com/Gestion/Arrayanes/  API Spring Boot, dominio y launcher de escritorio
 backend/src/main/resources/db/migration/      Flyway V1–V5
 backend/src/main/resources/static/            SPA copiada por prepare-static (ignorada por git)
-frontend/src/app/core/                        servicios, interfaces y contrato generado
+frontend/src/app/core/                        servicios, tipos derivados del contrato y contrato generado
 frontend/src/app/view/                        páginas y componentes compartidos
 scripts/                                      orquestación raíz (dev, build, test, start, api)
 docs/                                         PRD, DECISIONS y este PROGRESS
@@ -76,8 +76,9 @@ cmd /c '"D:\ProgramData\Microsoft\VisualStudio\VC\Auxiliary\Build\vcvars64.bat" 
 | Compila backend | Sí (`mvnw -B clean package`) | 2026-11-17 |
 | Tests backend | Sí, 250 tests | 2026-11-17 |
 | Build frontend | Sí | 2026-11-17 |
-| Tests frontend | Sí, 63 tests | 2026-11-17 |
-| Lint / formato | 0 errores, 17 warnings / OK | 2026-11-17 |
+| Tests frontend | Sí, 63 tests (56 tras quitar Calendario) | 2026-11-17 → 2026-11-18 |
+| Lint / formato | 0 errores, 17 warnings / OK | 2026-11-17 → 2026-11-18 |
+| Migración de tipos (RF-14) | Sí: `ng build` + 56 tests + formato + lint sin errores | 2026-11-18 |
 | Smoke del jar (`pnpm start`) | Sí: SPA 200, token, copia manual creada, apagado limpio; Brave abierto en modo app | 2026-11-18 |
 | Smoke de restauración | Sí: copia marcada, `.restore-pending` visible y aplicada al tercer arranque en sandbox | 2026-11-18 |
 | Flujo principal de punta a punta | Parcial: smoke de arranque/copias/restauración; recorrido visual de reservas no automatizado | 2026-11-18 |
@@ -89,7 +90,6 @@ cmd /c '"D:\ProgramData\Microsoft\VisualStudio\VC\Auxiliary\Build\vcvars64.bat" 
 - El jar usa `server.port=0` (puerto efímero publicado en `backend/api-port.txt`), no el 8080 fijo que dicen algunos comentarios/README; el navegador se abre al puerto real. No rompe nada, pero conviene corregir la documentación.
 - 17 warnings de lint preexistentes (accesibilidad en plantillas, selectores, `prefer-inject`).
 - No hay política de retención de copias: zips y `.bak-*` se acumulan.
-- Solo `BackupService` y `LocalTokenService` usan `components['schemas']`.
 - El build nativo depende de `vcvars64` y no existe un script raíz para él.
 
 ## Preguntas abiertas para el usuario
@@ -98,6 +98,11 @@ cmd /c '"D:\ProgramData\Microsoft\VisualStudio\VC\Auxiliary\Build\vcvars64.bat" 
 - [ ] Definir cuántas copias conservar y durante cuánto tiempo (RF-15).
 
 ## Registro de sesiones (más reciente primero)
+
+### 2026-11-18 — RF-14: servicios migrados a los tipos del contrato
+- Hecho: booking, clients, apartment y dashboard exportan alias derivados de `components['schemas']`; se borraron las 8 interfaces manuales de `core/interface/` y se ajustaron vistas y specs. `createClient`, `addApartment` y `editApartment` ahora usan los DTO de request generados. `ng build`, 56 tests, formato y lint (0 errores, 17 warnings) en verde.
+- Decisiones tomadas: ADR-0008 (alias con `Required` y overrides de `null` dentro de cada servicio).
+- Quedó pendiente: RF-15, RF-16, PRD definitivo.
 
 ### 2026-11-18 — Borrado del Calendario duplicado
 - Hecho: eliminados ruta `/calendar`, enlace del nav, directorio `maincalendar/` y los miembros sin uso de `DashboardService` (`calendarDays`, `loadingCalendar`, `getCalendar`). Frontend 56 tests, format y lint sin errores (17 warnings preexistentes).

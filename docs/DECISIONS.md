@@ -14,6 +14,7 @@
 | ADR-0005 | Contrato OpenAPI mínimo y tipos generados | Aceptada | 2026-11-18 |
 | ADR-0006 | No actualizar Angular ni Spring Boot en esta ronda | Aceptada | 2026-11-18 |
 | ADR-0007 | Adoptar la memoria de la skill en `docs/` | Aceptada | 2026-11-18 |
+| ADR-0008 | Tipos de dominio derivados del contrato en cada servicio | Aceptada | 2026-11-18 |
 
 Estados: Propuesta · Aceptada · Reemplazada por ADR-xxxx · Descartada
 
@@ -132,3 +133,19 @@ Estados: Propuesta · Aceptada · Reemplazada por ADR-xxxx · Descartada
 **Alternativas consideradas.** Mantener dos notas de progreso duplicadas (descartado: se desincronizan); versionar la skill (descartado: no es parte del producto).
 
 **Consecuencias.** Cualquier sesión nueva puede arrancar leyendo los tres archivos de `docs/`.
+
+---
+
+## ADR-0008 — Tipos de dominio derivados del contrato en cada servicio
+
+- **Estado:** Aceptada
+- **Fecha:** 2026-11-18
+- **Motiva:** RF-11, RF-14, RNF-05
+
+**Contexto.** Los DTO generados por OpenAPI marcan casi todos los campos como opcionales, pero la UI los consume como obligatorios (`booking.id`, `client.clientName`, etc.). Algunos campos además son `null` en la práctica (`transactionCode`, `lastCheckIn`) y el spec los modela como opcionales.
+
+**Decisión.** Cada servicio Angular exporta alias derivados de `components['schemas']`, siguiendo el patrón ya usado por `BackupService`. Se aplica `Required` a los esquemas de respuesta y se reescriben explícitamente los campos nullable. Los DTO de request se usan directamente. Se borraron las interfaces manuales de `core/interface/` y vistas/specs importan los tipos desde el servicio dueño del endpoint.
+
+**Alternativas consideradas.** Usar los DTO opcionales tal cual (descartado: obligaría a llenar la UI de aserciones y ocultaría errores reales del contrato); mantener interfaces manuales paralelas (descartado: se desincronizan del contrato); generar clientes HTTP (descartado en ADR-0005).
+
+**Consecuencias.** Si el backend cambia un campo, `pnpm api` regenera los tipos y la compilación falla en el alias correspondiente. Los tipos siguen siendo propiedad del servicio, no un archivo global.
