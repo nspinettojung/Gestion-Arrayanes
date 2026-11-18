@@ -8,7 +8,7 @@
 
 - **Fase:** Ronda de mejoras cerrada / entrega final
 - **Última actualización:** 2026-11-18 18:05
-- **Resumen:** Fase 2 (puntos 3 → 29 + OpenAPI) y ronda RF-13…RF-16 cerradas en `master @ 550feb3`; 254 tests backend y 56 frontend, lint 0 errores y 0 warnings. `pnpm build` regeneró el jar el 18/11 18:04 con el SPA copiado a las 18:03 (hash verificado dentro de `BOOT-INF/classes/static/`), y `.exe` + 10 DLL se restauraron desde copia con SHA-256. PRD definitivo: §1 permanece `(inferido)` porque el usuario no conserva las peticiones originales.
+- **Resumen:** Fase 2 (puntos 3 → 29 + OpenAPI) y ronda RF-13…RF-16 cerradas en `master @ 550feb3`; 254 tests backend y 56 frontend, lint 0 errores y 0 warnings. `pnpm build` regeneró el jar el 18/11 18:49 con el SPA copiado a las 18:49 (hash verificado dentro de `BOOT-INF/classes/static/`). El ejecutable nativo se recompiló con el código final el 18/11 18:48 (9m53) y se restauró con sus 10 DLL y SHA-256 verificado. PRD definitivo: §1 permanece `(inferido)` porque el usuario no conserva las peticiones originales.
 
 ## Siguiente paso
 
@@ -29,7 +29,7 @@
 | RF-09 token local | Hecho | `Launcher/SystemController`, `LocalTokenService` | 5 backend + 1 frontend | 403 RFC 9457 |
 | RF-10 jar escritorio | Hecho | `prod`, `DesktopLauncher`, `scripts/start.mjs` | tests de perfil + smoke 2026-11-18 | SPA 200, navegador modo app, puerto efímero publicado en `api-port.txt` |
 | RF-11 OpenAPI | Hecho | `scripts/api.mjs`, `OpenApiSpecTest` | CI | Sin Swagger UI en prod |
-| RF-12 nativo | Hecho | `backend/target/Arrayanes.exe` | build verificado | GraalVM 25.0.4, 17:38 min |
+| RF-12 nativo | Hecho | `backend/target/Arrayanes.exe` | build verificado 2026-11-18 | GraalVM 25.0.4, recompilado con RF-13…RF-16 en 9m53 |
 | RF-13 quitar Calendario | Hecho | ruta y enlace eliminados, `maincalendar/` borrado | frontend 56 tests | `/booking` ya incrusta `gda-calendar` |
 | RF-14 migrar servicios a tipos | Hecho | `core/services/` (booking, clients, apartment, dashboard) | build + 56 tests | Interfaces manuales borradas; alias derivados de `components['schemas']` (ADR-0008) |
 | RF-15 retención de copias | Hecho | `BackupService.java`, `application.properties` | 4 tests nuevos (254 backend) | Máximo 10 zips y 10 `.bak-*`, configurable; protege la copia pendiente (ADR-0009) |
@@ -76,12 +76,12 @@ cmd /c '"D:\ProgramData\Microsoft\VisualStudio\VC\Auxiliary\Build\vcvars64.bat" 
 | Build frontend | Sí, `ng build` dentro de `pnpm build` | 2026-11-17 → 2026-11-18 |
 | Tests frontend | Sí, 63 tests (56 tras quitar Calendario) | 2026-11-17 → 2026-11-18 |
 | Lint / formato | 0 errores y 0 warnings / OK | 2026-11-17 → 2026-11-18 |
-| Build final (`pnpm build`) | Sí: jar 18:04 con `static/index.html` 18:03, mismo SHA-256 dentro del jar; nativo restaurado | 2026-11-18 |
+| Build final (`pnpm build`) | Sí: jar 18:49 con `static/index.html` 18:49, mismo SHA-256 dentro del jar; nativo nuevo restaurado | 2026-11-18 |
 | Migración de tipos (RF-14) | Sí: `ng build` + 56 tests + formato + lint sin errores | 2026-11-18 |
 | Smoke del jar (`pnpm start`) | Sí: SPA 200, token, copia manual creada, apagado limpio; Brave abierto en modo app | 2026-11-18 |
 | Smoke de restauración | Sí: copia marcada, `.restore-pending` visible y aplicada al tercer arranque en sandbox | 2026-11-18 |
 | Flujo principal de punta a punta | Parcial: smoke de arranque/copias/restauración; recorrido visual de reservas no automatizado | 2026-11-18 |
-| Build nativo GraalVM | Sí, `Arrayanes.exe` + 10 DLL | 2026-11-17 |
+| Build nativo GraalVM | Sí, `Arrayanes.exe` + 10 DLL recompilados con el código final | 2026-11-18 |
 | Versiones | Java 25.0.4, Node 26.8.1 (repo `>=22`), pnpm 11.3.0 | 2026-11-18 |
 
 ## Problemas conocidos y deuda técnica
@@ -93,6 +93,11 @@ cmd /c '"D:\ProgramData\Microsoft\VisualStudio\VC\Auxiliary\Build\vcvars64.bat" 
 - Ninguna. El usuario confirmó el 2026-11-18 que no tiene las peticiones originales por separado; el PRD queda definitivo con §1 `(inferido)`.
 
 ## Registro de sesiones (más reciente primero)
+
+### 2026-11-18 — Recompilación del nativo con el código final
+- Hecho: el `.exe` del 17/11 no incluía RF-13…RF-16. Se ejecutó el perfil `native` con `vcvars64` y GraalVM 25.0.4 (9m53, BUILD SUCCESS) obteniendo nuevo `Arrayanes.exe` + 10 DLL a las 18:48. Después se volvió a correr `pnpm build` para dejar el jar normal del 18:49 y se restauraron los nativos nuevos; el SHA-256 del SPA dentro del jar coincide con `static/`.
+- Decisiones tomadas: el nativo pasa a ser parte de la entrega final, no un artefacto viejo complementario.
+- Quedó pendiente: push cancelado por el usuario; no hay remoto configurado.
 
 ### 2026-11-18 — Cierre de ronda y build final
 - Hecho: `pnpm build` compiló Angular, copió el SPA a `backend/src/main/resources/static` y empaquetó el jar con `mvnw -B clean package` (254 tests backend en verde). Se preservaron `Arrayanes.exe` y los 10 DLL en `C:\Users\nicos\AppData\Local\Temp\opencode\gestion-arrayanes-native-20261118-180300`, se restauraron y se verificaron por SHA-256. El `index.html` del jar coincide con el del `static`. PRD cerrado como definitivo con §1 `(inferido)`.

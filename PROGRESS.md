@@ -1,7 +1,7 @@
 # Progreso
 
 **Estado:** terminado
-**Actualizado:** 2026-11-18 18:05
+**Actualizado:** 2026-11-18 18:50
 **Rama:** master @ 550feb3
 **Sin commitear:** nada; el build final solo tocó artefactos ignorados (`static/`, `target/`)
 

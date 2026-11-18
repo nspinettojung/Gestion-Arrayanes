@@ -5,7 +5,7 @@
 
 | Campo | Valor |
 |---|---|
-| Versión del PRD | 1.1 |
+| Versión del PRD | 1.2 |
 | Fecha | 2026-11-18 |
 | Estado | Definitivo — reconstrucción `(inferido)` confirmada; la solicitud original literal no está disponible |
 
@@ -108,7 +108,7 @@ Angular standalone + signals, Tailwind v4 con design tokens, Material Symbols e 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
 | Smoke del escritorio tras la ronda RF-13…RF-16 | Medio | Ejecutado el 2026-11-18 con ese código: SPA 200, token, copias y restauración; el jar final se regeneró a las 18:04 y se verificó el hash del SPA empaquetado |
-| El build nativo necesita entorno MSVC y puede requerir metadatos de reflexión | Medio | Ya verificado el 2026-11-17; documentado el comando exacto en DECISIONS |
+| El build nativo necesita entorno MSVC y puede requerir metadatos de reflexión | Medio | Recompilado con el código final el 2026-11-18 (9m53) y documentado el comando exacto en DECISIONS |
 | Los artefactos OpenAPI cambian de orden entre ejecuciones | Bajo | El test canonicaliza claves; CI compara spec y tipos |
 
 ## 14. Preguntas abiertas
@@ -127,3 +127,4 @@ Requisitos Must y Should cumplidos, `pnpm test` en verde (backend + frontend), `
 |---|---|---|---|---|
 | 1.0 | 2026-11-18 | Versión inicial reconstruida `(inferido)` | El proyecto ya existía y no tenía PRD; se adoptó la memoria de la skill | Pendiente |
 | 1.1 | 2026-11-18 | PRD definitivo; §1 se mantiene `(inferido)` y se registra el build final | El usuario confirmó que no conserva las peticiones originales por separado | Usuario (confirmación 2026-11-18) |
+| 1.2 | 2026-11-18 | El ejecutable nativo se recompila con el código final y se regenera el jar normal | El `.exe` anterior era del 17/11 y no incluía RF-13…RF-16 | Usuario (pidió la recompilación) |

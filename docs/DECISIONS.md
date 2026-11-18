@@ -41,7 +41,7 @@ Estados: Propuesta · Aceptada · Reemplazada por ADR-xxxx · Descartada
 | pnpm | 11.3.0 | 2026-11-18 | `pnpm -v`; `packageManager` |
 | Base de datos | H2 2.4.240 | 2026-11-18 | `backend/pom.xml` / build nativo |
 | Build backend | Maven wrapper (mvnw) | 2026-11-18 | `backend/mvnw.cmd` |
-| Build nativo | GraalVM 25.0.4 + `native-maven-plugin` | 2026-11-17 | `native-image --version` |
+| Build nativo | GraalVM 25.0.4 + `native-maven-plugin` | 2026-11-18 | `native-image --version` |
 
 **Alternativas consideradas.** Angular 22.x y Spring Boot 4.1.x están disponibles, pero se descartaron por ahora (ADR-0006). PostgreSQL se descartó porque el modo escritorio usa una base local de archivo.
 
