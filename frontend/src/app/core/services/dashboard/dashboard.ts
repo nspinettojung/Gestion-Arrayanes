@@ -3,7 +3,6 @@ import { environment } from '../../../../environments/environment';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { IDashboard } from '../../interface/dashboard/dashboard';
 import { DashboardStats } from '../../interface/dashboard/dashboard-stats';
-import { CalendarDay } from '../../interface/dashboard/calendar-day';
 import { DashboardSummary } from '../../interface/dashboard/dashboard-summary';
 import { ClientApartmentDTO } from '../../interface/clients/client-apartment-dto';
 
@@ -100,11 +99,6 @@ export class Dashboard {
   );
   totalElements: Signal<number> = computed(() => this.filteredResource.value()?.totalElements ?? 0);
 
-  calendarDays = computed<CalendarDay[]>(
-    () => this.summaryResource.value()?.monthly.calendar ?? [],
-  );
-  loadingCalendar = computed(() => this.summaryResource.isLoading());
-
   constructor() {
     effect(() => {
       const error = this.statsResource.error();
@@ -178,10 +172,5 @@ export class Dashboard {
     }
 
     this.summaryParams.set({ month, year, day });
-  }
-
-  /** Alias conservado para los componentes que piden el calendario del mes. */
-  getCalendar(month: number, year: number): void {
-    this.loadSummary(month, year);
   }
 }
